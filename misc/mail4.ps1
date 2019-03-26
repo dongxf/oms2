@@ -1,0 +1,2 @@
+﻿#using mailsend 1.19
+mailsend -smtp smtp.exmail.qq.com -port 465 -ssl -auth -user pcron@foodtrust.cn -pass P123456n  -f pcron@foodtrust.cn -t opalus460b@foodtrust.cn -sub "pospal order 3" -M "Hello" -attach "C:\FC3.0\pospal_orders\incoming\20190322164129-order-E29CA813.pdf"
