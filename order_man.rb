@@ -42,17 +42,12 @@ orders = JSON.parse(res.body)['data']['result']
 orders.each do |order|
 
     #add header twice
-
-    # remove '104' from the tail
-    content = "##{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
-    content +=  order['orderNo'] + "-" + order['customerNumber'] + "\n"
-    content += "#{order['contactAddress'].strip}\n"
-    content += "#{order['contactName']}    #{order['contactTel']}\n"
-    content += "[G] [P] [K] [Q] [Z]                ___ of  1  2  __\n"
-    content += ">#{order['orderRemark']}\n"
+    content  = "                            FOODTRUST 丰巢优选\n"
+    content += "                           每一天，更安心的选择\n"
+    content += "\n"
     content += "\n"
 
-    content += "----------------------------------------------------\n"
+    # remove '104' from the tail
     content += "##{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
     content +=  order['orderNo'] + "-" + order['customerNumber'] + "\n"
     content += "#{order['contactAddress'].strip}\n"
@@ -61,7 +56,16 @@ orders.each do |order|
     content += ">#{order['orderRemark']}\n"
     content += "\n"
 
-    content += "----------------------------------------------------\n"
+    content += "-----------------------------------------------------------------\n"
+    content += "##{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
+    content +=  order['orderNo'] + "-" + order['customerNumber'] + "\n"
+    content += "#{order['contactAddress'].strip}\n"
+    content += "#{order['contactName']}    #{order['contactTel']}\n"
+    content += "[G] [P] [K] [Q] [Z]                ___ of  1  2  __\n"
+    content += ">#{order['orderRemark']}\n"
+    content += "\n"
+
+    content += "-----------------------------------------------------------------\n"
     content += "数量 核对 商品名及规格\n"
     items = order['items']
     items.each do |item|
@@ -77,11 +81,11 @@ orders.each do |order|
     content += "\n"
 
     #add footer
-    content += "----------------------------------------------------\n"
+    content += "-----------------------------------------------------------------\n"
     content += "若因欠收或品控问题缺货，24小时内原路退款，请留意查收\n"
     content += "售后不满意无障碍退换，联系小蜜18998382701，微信同号\n"
     content += "              foodtrust.cn\n"
-    content += "          每一天，更安心的选择\n"
+    content += "             买有机，到丰巢\n"
 =begin
     content += "\n"
     content += "产品标准：蔬菜生鲜有机种植，深加工品无负面添加\n"
