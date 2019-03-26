@@ -48,7 +48,7 @@ orders.each do |order|
     content +=  order['orderNo'] + "-" + order['customerNumber'] + "\n"
     content += "#{order['contactAddress'].strip}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
-    content += "[G] [P] [K] [Q] [Z]               ___ of [1] [2] [ ]\n"
+    content += "[G] [P] [K] [Q] [Z]                ___ of  1  2  __\n"
     content += ">#{order['orderRemark']}\n"
     content += "\n"
 
@@ -57,7 +57,7 @@ orders.each do |order|
     content +=  order['orderNo'] + "-" + order['customerNumber'] + "\n"
     content += "#{order['contactAddress'].strip}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
-    content += "[G] [P] [K] [Q] [Z]               ___ of [1] [2] [ ]\n"
+    content += "[G] [P] [K] [Q] [Z]                ___ of  1  2  __\n"
     content += ">#{order['orderRemark']}\n"
     content += "\n"
 
