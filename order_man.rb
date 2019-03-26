@@ -1,5 +1,6 @@
 ﻿#encoding: utf-8
-#This ruby file will get new orders from pospal and send them to email
+#This ruby file will get new orders from pospal and save them to text file
+#those text file will be printed to pdf printer and send to printer by powershell scripts
 
 require 'digest/md5'
 require 'net/http'
