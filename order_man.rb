@@ -8,7 +8,7 @@ require 'uri'
 require 'json'
 require 'awesome_print'
 
-#please set POSPAL_APPID in .bashrc
+#please set POSPAL_APPID and APPKEY in .bashrc
 pospal_appid=ENV['POSPAL_APPID']
 pospal_appkey=ENV['POSPAL_APPKEY']
 s_time = '2019-03-25 20:00:00'
@@ -38,41 +38,53 @@ orders.each do |order|
 
     #add header twice
     content  = "\n"
-    content += "订单# #{order['orderNo']}    #{order['orderDateTime']}\n"
-    content += "会员# #{order['customerNumber']}\n"
-    content += "地址: #{order['contactAddress'].strip}\n"
+    # remove '104' from the tail
+    content += "订单# #{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
+    content +=  order['orderNo'] + "-" + order['customerNumber'] + "\n\n"
+    content += "#{order['contactAddress'].strip}\n"
     content += "#{order['contactName']} 电话: #{order['contactTel']}\n"
+    content += "\n"
+    content += "[   ]  of 【1】【2】【3】\n"
     content += "-------------------------------------\n"
     content += "\n"
-    content += "订单# #{order['orderNo']}    #{order['orderDateTime']}\n"
-    content += "会员# #{order['customerNumber']}\n"
-    content += "地址: #{order['contactAddress'].strip}\n"
+    content += "订单# #{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
+    content +=  order['orderNo'] + "-" + order['customerNumber'] + "\n\n"
+    content += "#{order['contactAddress'].strip}\n"
     content += "#{order['contactName']} 电话: #{order['contactTel']}\n"
+    content += "\n"
+    content += "[   ]  of 【1】【2】【3】\n"
     content += "-------------------------------------\n"
     content += "\n"
 
     items = order['items']
     items.each do |item|
         if item['productQuantity']>1 
-            qty = "[  ]  >>" + sprintf("%d",item['productQuantity'])
+            qty = " >" + sprintf("%d",item['productQuantity'])
         else
-            qty = "[  ]    " + sprintf("%d",item['productQuantity'])
+            qty = "  " + sprintf("%d",item['productQuantity'])
         end
-        content += "#{qty}   #{item['productName']}\n"
+        content += "#{qty} [   ]#{item['productName']}\n"
     end
 
     #add footer
     content +="\n"
-    content += "-------------------------------------\n"
-    content += "丰巢有机生鲜宅配服务概述\n"
-    content += "1、农场蔬菜凌晨到店，每天配送，逢周六休息\n"
-    content += "2、线上商店营业时间为前晚20:00-当天16:00\n"
-    content += "3、万科欧泊及南村雅居乐上下午各集中配送一次\n"
-    content += "4、广州其他区域上午九点前订单下午六点前送达\n"
-    content += "5、不满意无障碍退换，请联系丰巢小蜜18998382701\n"
+    content += "           >>>>>售后需知<<<<<\n"
+    content += "如有缺货，24小时内为您原路退款，请留意查收\n"
+    content += "售后不满意无障碍退换，小蜜微信18998382701\n"
+    content += "更多服务水平说明，详情请参见foodtrust.cn\n"
+    content += "          每一天，更安心的选择\n"
+    content += "\n"
+=begin
+    content += "产品标准：蔬菜生鲜有机种植，深加工品无负面添加\n"
+    content += "供应周期：农场蔬菜凌晨到店，每天配送，逢周六休息\n"
+    content += "下单时间：每晚20:00至次日16:00接单，16:00停业上新\n"
+    content += "周边配送：线下店周边（欧泊雅居乐）上下午各送一次\n"
+    content += "广州宅配：广州城区上午9:00前订单下午18:00前送达\n"
+    content += "省内快递：上午9:00前订单，当天晚上或次日上午送达\n"
+    content += "售后服务：不满意无障碍退换，丰巢小蜜18998382701\n"
+=end
 
-
-    fn_name = ".\\incoming\\" + order['orderNo'] + "-" +order['customerNumber'] +".txt"
+    fn_name = ".\\incoming\\" + order['orderNo'] + "-" + order['customerNumber'] + ".txt"
     File.open(fn_name,"w:UTF-8") do |f|
         f.write content
     end
