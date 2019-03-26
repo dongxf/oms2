@@ -3,16 +3,20 @@
 
 require 'digest/md5'
 require 'net/http'
-require 'net/https'
-require 'uri'
 require 'json'
-require 'awesome_print'
+require 'date'
 
 #please set POSPAL_APPID and APPKEY in .bashrc
 pospal_appid=ENV['POSPAL_APPID']
 pospal_appkey=ENV['POSPAL_APPKEY']
-s_time = '2019-03-25 20:00:00'
-e_time = '2019-03-26 19:59:59'
+
+#s_time = '2019-03-25 20:00:00'
+#e_time = '2019-03-26 19:59:59'
+
+today = Date.today
+yesterday = Date.today.prev_day
+s_time = yesterday.strftime('%Y-%m-%d') + ' 19:00:00'
+e_time = today.strftime('%Y-%m-%d') + ' 18:00:00'
 
 request_body = {
     'appId'=> pospal_appid,
@@ -37,44 +41,48 @@ orders = JSON.parse(res.body)['data']['result']
 orders.each do |order|
 
     #add header twice
-    content  = "\n"
+
     # remove '104' from the tail
-    content += "订单# #{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
-    content +=  order['orderNo'] + "-" + order['customerNumber'] + "\n\n"
+    content = "##{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
+    content +=  order['orderNo'] + "-" + order['customerNumber'] + "\n"
     content += "#{order['contactAddress'].strip}\n"
-    content += "#{order['contactName']} 电话: #{order['contactTel']}\n"
-    content += "\n"
-    content += "[   ]  of 【1】【2】【3】\n"
-    content += "-------------------------------------\n"
-    content += "\n"
-    content += "订单# #{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
-    content +=  order['orderNo'] + "-" + order['customerNumber'] + "\n\n"
-    content += "#{order['contactAddress'].strip}\n"
-    content += "#{order['contactName']} 电话: #{order['contactTel']}\n"
-    content += "\n"
-    content += "[   ]  of 【1】【2】【3】\n"
-    content += "-------------------------------------\n"
+    content += "#{order['contactName']}    #{order['contactTel']}\n"
+    content += "[G] [P] [K] [Q] [Z]               ___ of [1] [2] [ ]\n"
+    content += ">#{order['orderRemark']}\n"
     content += "\n"
 
+    content += "----------------------------------------------------\n"
+    content += "##{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
+    content +=  order['orderNo'] + "-" + order['customerNumber'] + "\n"
+    content += "#{order['contactAddress'].strip}\n"
+    content += "#{order['contactName']}    #{order['contactTel']}\n"
+    content += "[G] [P] [K] [Q] [Z]               ___ of [1] [2] [ ]\n"
+    content += ">#{order['orderRemark']}\n"
+    content += "\n"
+
+    content += "----------------------------------------------------\n"
+    content += "数量 核对 商品名及规格\n"
     items = order['items']
     items.each do |item|
         if item['productQuantity']>1 
-            qty = " >" + sprintf("%d",item['productQuantity'])
+            bold = " *"
+            bold = "**" if item['productQuantity']>2
+            qty = bold + sprintf("%d",item['productQuantity'])
         else
             qty = "  " + sprintf("%d",item['productQuantity'])
         end
-        content += "#{qty} [   ]#{item['productName']}\n"
+        content += "#{qty} [   ] #{item['productName']}\n"
     end
+    content += "\n"
 
     #add footer
-    content +="\n"
-    content += "           >>>>>售后需知<<<<<\n"
+    content += "----------------------------------------------------\n"
     content += "如有缺货，24小时内为您原路退款，请留意查收\n"
     content += "售后不满意无障碍退换，小蜜微信18998382701\n"
-    content += "更多服务水平说明，详情请参见foodtrust.cn\n"
+    content += "              foodtrust.cn\n"
     content += "          每一天，更安心的选择\n"
-    content += "\n"
 =begin
+    content += "\n"
     content += "产品标准：蔬菜生鲜有机种植，深加工品无负面添加\n"
     content += "供应周期：农场蔬菜凌晨到店，每天配送，逢周六休息\n"
     content += "下单时间：每晚20:00至次日16:00接单，16:00停业上新\n"
