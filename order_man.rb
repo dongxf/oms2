@@ -78,8 +78,8 @@ orders.each do |order|
 
     #add footer
     content += "----------------------------------------------------\n"
-    content += "如有缺货，24小时内为您原路退款，请留意查收\n"
-    content += "售后不满意无障碍退换，小蜜微信18998382701\n"
+    content += "若因欠收或品控问题缺货，24小时内原路退款，请留意查收\n"
+    content += "售后不满意无障碍退换，联系小蜜18998382701，微信同号\n"
     content += "              foodtrust.cn\n"
     content += "          每一天，更安心的选择\n"
 =begin
