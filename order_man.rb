@@ -48,23 +48,23 @@ orders.each do |order|
     content += "\n"
 
     # remove '104' from the tail
-    content += "##{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
-    content += " " + order['orderNo'] + "-" + order['customerNumber'] + "\n"
+    content += "订单##{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
+    content += "> " + order['orderNo'] + "-" + order['customerNumber'] + "\n"
 
 
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
       pay_method={'Cash'=>'现金','CustomerBalance'=>'余额','Wxpay'=>'微信','Alipay'=>'支付宝'}[order['payMethod']]
       delivery_type={0=>'自营',1=>'自助',2=>'自提',3=>'预约',4=>'三方'}[order['deliveryType']]
-      pay_online={0=>'未经',1=>'通过'}[order['payOnLine']]
-      opay_completed={0=>'未',1=>'已'}[order['isOnlinePaymentCompleted']]
-      content += "异常>>>#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付#{opay_completed}完成 #{delivery_type}<<<警告"
+      pay_online={0=>'未用',1=>'通过'}[order['payOnLine']]
+      opay_completed={0=>'还未',1=>'已经'}[order['isOnlinePaymentCompleted']]
+      content += "> 状态#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}"
     end
     content +="\n"
 
     content += "#{order['contactAddress'].strip}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
-    content += ">#{order['orderRemark']}\n"
+    content += "> #{order['orderRemark']}\n"
     content += "\n"
     content += "[C] [G] [Z] [Q] [P] [K]                _____ of  1  2  ____\n"
 
@@ -74,11 +74,15 @@ orders.each do |order|
     content += "\n"
     content += "#{order['contactAddress'].strip}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
-    content += ">#{order['orderRemark']}\n"
+    content += "> #{order['orderRemark']}\n"
     content += "[C] [G] [Z] [Q] [P] [K]                _____ of  1  2  ____\n"
     content += "\n"
 
-    content += "-----------------------------------------------------------------\n"
+    if order['state']!= 4
+      content += ">>>>>>>>>警告：非常规状态，需单独处理<<<<<<<<<\n"
+    else
+      content += "-----------------------------------------------------------------\n"
+    end
     content += "数量 核对 商品名及规格\n"
     items = order['items']
     items.each do |item|
