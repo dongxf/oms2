@@ -1,1 +1,0 @@
-﻿      content += "异常警告>>> 状态#{order['state']} 方式#{order['payMethod']} 完成#{order['isOnlinePaymentCompleted']} 网付#{oder['payOnLine']} 交付#{order['deliveryType']}\n"
