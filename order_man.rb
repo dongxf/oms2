@@ -75,8 +75,8 @@ orders.each do |order|
     content += "#{order['contactAddress'].strip}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
     content += "> #{order['orderRemark']}\n"
-    content += "[C] [G] [Z] [Q] [P] [K]                _____ of  1  2  ____\n"
     content += "\n"
+    content += "[C] [G] [Z] [Q] [P] [K]                _____ of  1  2  ____\n"
 
     if order['state']!= 4
       content += ">>>>>>>>>警告：非常规状态，需单独处理<<<<<<<<<\n"
