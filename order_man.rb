@@ -6,6 +6,7 @@ require 'digest/md5'
 require 'net/http'
 require 'json'
 require 'date'
+require 'time'
 
 #please set POSPAL_APPID and APPKEY in .bashrc
 pospal_appid=ENV['POSPAL_APPID']
@@ -16,10 +17,15 @@ pospal_appkey=ENV['POSPAL_APPKEY']
 
 today = Date.today
 yesterday = Date.today.prev_day
+
+close_time = Time.parse today.strftime('%Y-%m-%d') + ' 16:00:00'
+right_now = Time.now
 s_time = yesterday.strftime('%Y-%m-%d') + ' 19:00:00'
 e_time = today.strftime('%Y-%m-%d') + ' 18:00:00'
-#s_time = "2019-03-26 15:16:00"
-#e_time = "2019-03-26 15:19:00"
+if ( right_now > close_time )
+  s_time = today.strftime('%Y-%m-%d') + ' 19:00:00'
+  e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
+end
 
 request_body = {
     'appId'=> pospal_appid,
