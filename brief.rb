@@ -47,6 +47,7 @@ orders = JSON.parse(res.body)['data']['result']
 index = 0
 
 orders.each do |order|
+    next if order['state'] == 3
     content = "orders[#{index}] #{order['orderDateTime']} ##{order['orderNo']} #{order['contactAddress'].strip} #{order['contactName']}  #{order['contactTel']}\n"
 
     if order['state']!= 4

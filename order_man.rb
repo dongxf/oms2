@@ -49,6 +49,8 @@ orders = JSON.parse(res.body)['data']['result']
 
 orders.each do |order|
 
+    next if order['state'] == 3 #skip canceled order print
+
     #add header twice
     content  = "                                   每一天,更安心的选择\n"
     content += "\n"
