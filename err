@@ -1,6 +1,0 @@
-﻿    fn_name = ".\\incoming\\" + order['orderNo'] + "-" + order['customerNumber'] + ".txt"
-    File.open(fn_name,"w:UTF-8") do |f|
-        f.write content
-    end
-end
-
