@@ -7,17 +7,19 @@ require 'net/http'
 require 'json'
 require 'date'
 require 'time'
-load 'router.rb'
+require 'mysql2'
 
 #please set POSPAL_APPID and APPKEY in .bashrc
 pospal_appid=ENV['POSPAL_APPID']
 pospal_appkey=ENV['POSPAL_APPKEY']
+rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 
 #s_time = '2019-03-25 20:00:00'
 #e_time = '2019-03-26 19:59:59'
 
 today = Date.today
 yesterday = Date.today.prev_day
+processing_date = today.strftime('%y-%m-%d')
 
 close_time = Time.parse today.strftime('%Y-%m-%d') + ' 16:00:00'
 right_now = Time.now
@@ -72,11 +74,10 @@ orders.each do |order|
     content +="\n"
 
     content += "#{order['contactAddress'].strip}\n"
-    addr = "#{order['contactAddress'].strip}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
     content += "> #{order['orderRemark']}\n"
     content += "\n"
-    content += "#{decide_route addr} [   ]                _____ of  1  2  ____\n"
+    content += "[C] [G] [Z] [Q] [P] [K]                _____ of  1  2  ____\n"
 
     content += "-----------------------------------------------------------------\n"
     content += "##{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
@@ -86,7 +87,7 @@ orders.each do |order|
     content += "#{order['contactName']}    #{order['contactTel']}\n"
     content += "> #{order['orderRemark']}\n"
     content += "\n"
-    content += "#{decide_route addr} [   ]                _____ of  1  2  ____\n"
+    content += "[C] [G] [Z] [Q] [P] [K]                _____ of  1  2  ____\n"
 
     if order['state']!= 4
       content += ">>>>>>>>>警告：非常规状态，需单独处理<<<<<<<<<\n"

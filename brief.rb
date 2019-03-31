@@ -7,6 +7,8 @@ require 'json'
 require 'time'
 require 'date'
 
+load 'router.rb'
+
 #please set POSPAL_APPID and APPKEY in .bashrc
 pospal_appid=ENV['POSPAL_APPID']
 pospal_appkey=ENV['POSPAL_APPKEY']
@@ -45,11 +47,19 @@ end
 
 orders = JSON.parse(res.body)['data']['result']
 index = 0
+lines = ['[Z]','[C]','[G]','[Q]','[P]','[K]']
+routes = {}
+lines.each do  |line|
+  routes[line] = {}
+end
+
+puts routes['Z']
+puts routes['C']
 
 orders.each do |order|
     next if order['state'] == 3
     content = "orders[#{index}] #{order['orderDateTime']} ##{order['orderNo']} #{order['contactAddress'].strip} #{order['contactName']}  #{order['contactTel']}\n"
-
+    addr = "#{order['contactName']}  #{order['contactTel']} | #{order['orderRemark']} \n #{order['contactAddress'].strip}\n"
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
       pay_method={'Cash'=>'现金','CustomerBalance'=>'余额','Wxpay'=>'微信','Alipay'=>'支付宝'}[order['payMethod']]
@@ -57,10 +67,33 @@ orders.each do |order|
       pay_online={0=>'未用',1=>'通过'}[order['payOnLine']]
       opay_completed={0=>'还未',1=>'已经'}[order['isOnlinePaymentCompleted']]
       content += "异常警告>>> 状态#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}\n"
+      addr += " >>#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}\n"
     end
+
+    line = decide_route addr
+    routes[line].store(order['contactTel'],addr)
 
     index +=1 
     puts content
 end
-
 puts "Total: " + s_time + "--" + e_time + " >>" + " #{orders.count}"
+
+#metrics.sort_by {|_key, value| value}.to_h
+  # ==> {"siteb.com" => 9, "sitec.com" => 10, "sitea.com", 745}
+
+rday =Date.today.strftime('%Y-%m-%d')
+lines.each do  |line|
+  rdex = 1
+  content = "\n\n>>>  LINE #{line} <<<\n\n"
+  routes[line].sort_by{|_key, value| value}.to_h.each { |tel, addr|
+    content += "#{rdex}) " + addr
+    rdex +=1
+  }
+  fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + ".txt"
+  File.open(fn_name,"w:UTF-8") do |f|
+      f.write content
+  end
+end
+
+
+
