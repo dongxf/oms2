@@ -19,12 +19,14 @@ pospal_appkey=ENV['POSPAL_APPKEY']
 today = Date.today
 yesterday = Date.today.prev_day
 
-close_time = Time.parse today.strftime('%Y-%m-%d') + ' 16:00:00'
+today = Date.today
+yesterday = today.prev_day
+close_time = Time.parse today.strftime('%Y-%m-%d') + ' 16:10:00'
 right_now = Time.now
-s_time = yesterday.strftime('%Y-%m-%d') + ' 19:00:00'
-e_time = today.strftime('%Y-%m-%d') + ' 18:00:00'
+s_time = yesterday.strftime('%Y-%m-%d') + ' 16:10:00'
+e_time = today.strftime('%Y-%m-%d') + ' 16:09:59'
 if ( right_now > close_time )
-  s_time = today.strftime('%Y-%m-%d') + ' 19:00:00'
+  s_time = today.strftime('%Y-%m-%d') + ' 16:10:00'
   e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
 end
 
