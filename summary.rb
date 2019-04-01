@@ -45,8 +45,7 @@ res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
   req.body = request_body.to_json
   http.request(req)
 end
-
-ap res.body
+#ap res.body
 
 orders = JSON.parse(res.body)['data']['result']
 lines = ['[Z]','[C]','[G]','[Q]','[P]','[K]']
@@ -59,50 +58,50 @@ puts routes['Z']
 puts routes['C']
 
 index = -1
+amt = 0.0
+good_orders = 0
 orders.each do |order|
     index +=1 
-    next if order['state'] == 3
+    amt += order['totalAmount'] if order['state'] != 3
+    good_orders +=1 if order['state'] == 4
     fat_addr = order['contactAddress'].gsub(" ","")
     slim_addr=fat_addr.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
 
-    content = "orders[#{index}] #{order['orderDateTime']} ##{order['orderNo']} #{slim_addr} #{order['contactName']}  #{order['contactTel']}\n"
-    addr = "#{slim_addr} \n  #{order['contactName']}  #{order['contactTel']} | #{order['orderRemark']} \n"
+    addr = "#{slim_addr} #{order['contactName']}  #{order['contactTel']} | #{order['orderRemark']} \n"
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
       pay_method={'Cash'=>'现金','CustomerBalance'=>'余额','Wxpay'=>'微信','Alipay'=>'支付宝'}[order['payMethod']]
       delivery_type={0=>'自营',1=>'自助',2=>'自提',3=>'预约',4=>'三方'}[order['deliveryType']]
       pay_online={0=>'未用',1=>'通过'}[order['payOnLine']]
       opay_completed={0=>'还未',1=>'已经'}[order['isOnlinePaymentCompleted']]
-      content += "异常警告>>> 状态#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}\n"
       addr += " >>#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}\n"
     end
 
     line = decide_route addr
     routes[line].store(order['contactTel'],addr)
 
-    puts content
+    #puts content
 end
-puts "Total: " + s_time + "--" + e_time + " >>" + " #{orders.count}"
 
-#metrics.sort_by {|_key, value| value}.to_h
-  # ==> {"siteb.com" => 9, "sitec.com" => 10, "sitea.com", 745}
 
 rday =Date.today.strftime('%Y-%m-%d')
 rtime=Time.now.strftime("%H%M%S")
 lines.each do  |line|
   rdex = 1
-  content = "\n\n\n>>>>>>>>>>  派线单 #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
+  content = ">>>>>>>>>>  Route #{line} <<<<<<<<<<\n"
   routes[line].sort_by{|_key, value| value}.to_h.each { |tel, addr|
     content += "#{rdex}) " + addr
     rdex +=1
   }
-  fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"
   if routes[line].size!= 0 
-    File.open(fn_name,"w:UTF-8") do |f|
-        f.write content
-    end
+    puts content
   end 
 end
 
 
 
+
+
+
+puts "------------------------------------"
+puts "Total: " + s_time + "--" + e_time + " >>" + " #{good_orders} of #{orders.count} RMB#{amt}"
