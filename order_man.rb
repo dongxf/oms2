@@ -73,12 +73,15 @@ orders.each do |order|
     end
     content +="\n"
 
-    content += "#{order['contactAddress'].strip}\n"
-    addr = "#{order['contactAddress'].strip}\n"
+
+    fat_addr = order['contactAddress'].gsub(" ","")
+    slim_addr=fat_addr.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
+
+    content += "#{slim_addr}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
     content += "> #{order['orderRemark']}\n"
     content += "\n"
-    content += "#{decide_route addr} [   ]                _____ of  1  2  ____\n"
+    content += "#{decide_route slim_addr} [   ]                _____ of  1  2  ____\n"
 
     content += "-----------------------------------------------------------------\n"
     content += "##{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
@@ -88,7 +91,7 @@ orders.each do |order|
     content += "#{order['contactName']}    #{order['contactTel']}\n"
     content += "> #{order['orderRemark']}\n"
     content += "\n"
-    content += "#{decide_route addr} [   ]                _____ of  1  2  ____\n"
+    content += "#{decide_route slim_addr} [   ]                _____ of  1  2  ____\n"
 
     if order['state']!= 4
       content += ">>>>>>>>>警告：非常规状态，需单独处理<<<<<<<<<\n"
@@ -114,16 +117,6 @@ orders.each do |order|
     content += "若因欠收或品控问题缺货，24小时内原路退款，请留意查收\n"
     content += "售后不满意无障碍退换，请联系小蜜18998382701微信同号\n"
     content += "                 foodtrust.cn 买有机，到丰巢\n"
-=begin
-    content += "\n"
-    content += "产品标准：蔬菜生鲜有机种植，深加工品无负面添加\n"
-    content += "供应周期：农场蔬菜凌晨到店，每天配送，逢周六休息\n"
-    content += "下单时间：每晚20:00至次日16:00接单，16:00停业上新\n"
-    content += "周边配送：线下店周边（欧泊雅居乐）上下午各送一次\n"
-    content += "广州宅配：广州城区上午9:00前订单下午18:00前送达\n"
-    content += "省内快递：上午9:00前订单，当天晚上或次日上午送达\n"
-    content += "售后服务：不满意无障碍退换，丰巢小蜜18998382701\n"
-=end
 
     fn_name = ".\\incoming\\" + order['orderNo'] + "-" + order['customerNumber'] + ".txt"
     File.open(fn_name,"w:UTF-8") do |f|
