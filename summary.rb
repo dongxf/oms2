@@ -9,13 +9,7 @@ require 'date'
 require 'awesome_print'
 
 load 'router.rb'
-
-#please set POSPAL_APPID and APPKEY in .bashrc
-pospal_appid=ENV['POSPAL_APPID']
-pospal_appkey=ENV['POSPAL_APPKEY']
-
-#s_time = '2019-03-25 20:00:00'
-#e_time = '2019-03-26 19:59:59'
+load 'pospal_api.rb'
 
 today = Date.today
 yesterday = today.prev_day
@@ -28,34 +22,21 @@ if ( right_now > close_time )
   e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
 end
 
-request_body = {
-    'appId'=> pospal_appid,
+req = {
     'startTime'=> s_time,
     'endTime'=> e_time
 }
 
-uri = URI('https://area24-win.pospal.cn:443/pospal-api2/openapi/v1/orderOpenApi/queryOrderPages')
-res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
-  req = Net::HTTP::Post.new(uri)
-  req['User-Agent']= 'openApi'
-  req['Content-Type']= 'application/json; charset=utf-8'
-  req['accept-encoding']= 'gzip,deflate'
-  req['time-stamp']= Time.now.getutc
-  req['data-signature']= Digest::MD5.hexdigest(pospal_appkey + request_body.to_json)
-  req.body = request_body.to_json
-  http.request(req)
-end
-#ap res.body
+res=pospal_api(:queryOrderPages,req)
 
-orders = JSON.parse(res.body)['data']['result']
+orders = res['data']['result']
+
 lines = ['[Z]','[C]','[G]','[Q]','[P]','[K]']
 routes = {}
 lines.each do  |line|
   routes[line] = {}
 end
 
-puts routes['Z']
-puts routes['C']
 
 index = -1
 amt = 0.0

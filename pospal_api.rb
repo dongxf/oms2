@@ -14,11 +14,11 @@ require 'awesome_print'
 # res = post_to_posal :shipOder, req
 # puts res.body
 
-def post_to_pospal api_name, request_body 
+def pospal_api api_name, request_body 
   api_urls={
     :shipOrder => 'orderOpenApi/shipOrder',
     :getCategoryPages => 'productOpenApi/queryProductCategoryPages',
-    :queryOrderPages => 'orderOpenApi/queryOderPages'
+    :queryOrderPages => 'orderOpenApi/queryOrderPages'
   }
 
   #please set POSPAL_APPID and APPKEY in .bashrc
