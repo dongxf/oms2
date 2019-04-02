@@ -3,12 +3,16 @@
 #In the end this should be done in database
 
 def decide_route address
+
     #strategy baiyun by self
     return '[C]' if address.include? '汇侨'
+
     #strategy daxuecheng using cnd
     return '[C]' if address.include? '大学小筑'
     return '[C]' if address.include? '长洲岛'
+
     return '[G]' if address.include? '丽江花园'
+    return '[G]' if address.include? '南浦'
 
     return '[Z]' if address.include? '到店自提'
     return '[K]' if !address.include?('广州')
