@@ -17,10 +17,9 @@ pospal_appkey=ENV['POSPAL_APPKEY']
 #e_time = '2019-03-26 19:59:59'
 
 today = Date.today
-yesterday = Date.today.prev_day
-
-today = Date.today
 yesterday = today.prev_day
+rday =Date.today.strftime('%Y-%m-%d')
+
 close_time = Time.parse today.strftime('%Y-%m-%d') + ' 16:10:00'
 right_now = Time.now
 s_time = yesterday.strftime('%Y-%m-%d') + ' 16:10:00'
@@ -118,10 +117,8 @@ orders.each do |order|
     content += "售后不满意无障碍退换，请联系小蜜18998382701微信同号\n"
     content += "                 foodtrust.cn 买有机，到丰巢\n"
 
-    fn_name = ".\\incoming\\" + order['orderNo'] + "-" + order['customerNumber'] + ".txt"
+    fn_name = ".\\incoming\\" + rday + "-order-" + order['orderNo'] + "-" + order['customerNumber'] + ".txt"
     File.open(fn_name,"w:UTF-8") do |f|
         f.write content
     end
 end
-
-#addr = orders[19]['contactAddress']
