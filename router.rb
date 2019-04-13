@@ -4,39 +4,25 @@
 
 def decide_route address
 
-    #strategy baiyun by self
-    return '[C]' if address.include? '汇侨'
-    return '[C]' if address.include? '尽早'
-    return '[C]' if address.include? '承诺达'
-    #return '[C]' if address.include? '洛溪新城'
-
-    #strategy daxuecheng using cnd
-    return '[C]' if address.include? '大学小筑'
-    return '[C]' if address.include? '大学城'
-    return '[C]' if address.include? '大学时光'
-    return '[C]' if address.include? '长洲岛'
-
-    #return '[G]' if address.include? '丽江花园'
-    #return '[G]' if address.include? '南浦'
-    #return '[G]' if address.include? '锦绣香江'
-    #return '[G]' if address.include? '星河湾'
-
-    return '[P]' if address.include? '雅居乐'
-    return '[P]' if address.include? '新月明珠花园'
 
     return '[Z]' if address.include? '到店自提'
-    return '[K]' if !address.include?('广州')
-    return '[C]' if address.include? '白云'  
-    return '[C]' if address.include? '萝岗' 
-    return '[C]' if address.include? '增城'
-    return '[C]' if address.include? '花都' 
-    return '[C]' if address.include? '从化' 
-    return '[C]' if address.include? '南沙' 
-    return '[C]' if address.include? '黄埔'
 
-    return '[P]' if address.include? '欧泊'
+    return '[K]' if !address.include?('广州') || address.include?('云浮') || address.include?('从化')
+
+    return '[P]' if address.include? '祈福'
+    return '[P]' if address.include? '金山谷'
+    return '[P]' if address.include? '欧泊' 
     return '[P]' if address.include? '红郡'
-    return '[P]' if address.include? '番禺'
+    return '[P]' if address.include? '富豪山庄'
+    return '[P]' if address.include?('雅居乐') && !address.include?('南城')
+    return '[P]' if address.include? '清华坊'
+    return '[P]' if address.include?('南奥') || address.include?('南国奥林匹克')
+    return '[P]' if address.include? '锦绣香江'
+    return '[P]' if address.include? '华南新城'
+    return '[P]' if address.include? '雅居乐'
+    return '[P]' if address.include? '华南碧桂园'
+    return '[P]' if address.include?('星河湾') && !address.include?('半岛')
 
-    return '[G]'
+    return '[C]'
+ 
 end
