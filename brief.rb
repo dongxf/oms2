@@ -85,7 +85,7 @@ orders.each do |order|
     line = decide_route addr
     routes[line].store(order['contactTel'],addr)
     if line == '[C]' || line == '[K]'
-        ship_info=['黄冲','18148475667','广州市番禺区汉溪村汉溪路6号201',slim_name,order['contactTel'],slim_addr,'生鲜食品','寄付月结',"10","200",order['orderRemark']]
+        ship_info=['黄冲','18148475667','广州市番禺区汉溪村汉溪路6号201',slim_name,order['contactTel'],slim_addr,'生鲜','寄付月结',"10","200",order['orderRemark']]
         #ap ship_info
         cnd_addrs.store(order['contactTel'],ship_info)
     end
