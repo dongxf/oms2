@@ -7,6 +7,7 @@ require 'json'
 require 'time'
 require 'date'
 require 'awesome_print'
+require 'spreadsheet'
 
 load 'router.rb'
 
@@ -46,24 +47,28 @@ res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
   http.request(req)
 end
 
-ap res.body
+#ap res.body
 
 orders = JSON.parse(res.body)['data']['result']
 lines = ['[Z]','[C]','[G]','[Q]','[P]','[K]']
 routes = {}
+cnd_addrs = {}
 lines.each do  |line|
   routes[line] = {}
 end
 
-puts routes['Z']
-puts routes['C']
+#puts routes['Z']
+#puts routes['C']
 
+#col_names=['发货人姓名(必填)','发货人电话(必填)','发件人地址(必填)','收件人姓名(必填)','收件人电话(必填)','收件人地址(必填)','品名(必填)  付款方式(默认寄付)  内件数量   货物价值（选填）','备注（选填）','物流编号（选填）','代收费用（选填）']
 index = -1
 orders.each do |order|
     index +=1 
     next if order['state'] == 3
     fat_addr = order['contactAddress'].gsub(" ","")
     slim_addr=fat_addr.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
+    fat_name = order['contactName'].gsub(" ","")
+    slim_name = fat_name.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
 
     content = "orders[#{index}] #{order['orderDateTime']} ##{order['orderNo']} #{slim_addr} #{order['contactName']}  #{order['contactTel']}\n"
     addr = "#{slim_addr} \n  #{order['contactName']}  #{order['contactTel']} | #{order['orderRemark']} \n"
@@ -79,7 +84,11 @@ orders.each do |order|
 
     line = decide_route addr
     routes[line].store(order['contactTel'],addr)
-
+    if line == '[C]' || line == '[K]'
+        ship_info=['黄冲','18148475667','广州市番禺区汉溪村汉溪路6号201',slim_name,order['contactTel'],slim_addr,'生鲜食品','寄付月结',"10","200",order['orderRemark']]
+        #ap ship_info
+        cnd_addrs.store(order['contactTel'],ship_info)
+    end
     puts content
 end
 puts "Total: " + s_time + "--" + e_time + " >>" + " #{orders.count}"
@@ -105,4 +114,35 @@ lines.each do  |line|
 end
 
 
+def toExcel line_items
 
+    #设置表格的编码为utf-8
+    Spreadsheet.client_encoding="utf-8"
+    #创建表格对象
+    book=Spreadsheet::Workbook.new
+    #创建工作表
+    sheet1=book.create_worksheet :name => "sheet1"
+    col_names=['发货人姓名(必填)','发货人电话(必填)','发件人地址(必填)','收件人姓名(必填)','收件人电话(必填)','收件人地址(必填)','品名(必填)','付款方式(默认寄付)','内件数量','货物价值（选填）','备注（选填）','物流编号（选填）','代收费用（选填）']
+
+    col_index=0
+    col_names.each do |cname|
+        sheet1.row(0)[col_index]=cname
+        col_index += 1
+    end
+
+    line_index = 0
+    line_items.each do |key, item_cells|
+            col_index=0
+            item_cells.each do |cell|
+                sheet1.row(line_index+1)[col_index]=cell
+                col_index += 1
+            end
+            line_index += 1
+    end
+    rday =Date.today.strftime('%Y-%m-%d')
+    rtime=Time.now.strftime("%H%M%S")
+    fn_name = ".\\incoming\\" + rday + "-CND-" + rtime + ".xls"
+    book.write fn_name
+end
+
+toExcel cnd_addrs
