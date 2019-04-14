@@ -15,19 +15,20 @@ load 'router.rb'
 pospal_appid=ENV['POSPAL_APPID']
 pospal_appkey=ENV['POSPAL_APPKEY']
 
-#s_time = '2019-03-25 20:00:00'
-#e_time = '2019-03-26 19:59:59'
-
 today = Date.today
 yesterday = today.prev_day
-close_time = Time.parse today.strftime('%Y-%m-%d') + ' 16:10:00'
+rday =Date.today.strftime('%Y-%m-%d')
+rtime=Time.now.strftime("%H%M%S")
+close_time = Time.parse today.strftime('%Y-%m-%d') + ' 15:10:00'
 right_now = Time.now
-s_time = yesterday.strftime('%Y-%m-%d') + ' 16:10:00'
-e_time = today.strftime('%Y-%m-%d') + ' 16:09:59'
+s_time = yesterday.strftime('%Y-%m-%d') + ' 15:10:00'
+e_time = today.strftime('%Y-%m-%d') + ' 15:09:59'
 if ( right_now > close_time )
-  s_time = today.strftime('%Y-%m-%d') + ' 16:10:00'
+  s_time = today.strftime('%Y-%m-%d') + ' 15:10:00'
   e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
 end
+#s_time = today.strftime('%Y-%m-%d') + ' 00:00:00'
+#e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
 
 request_body = {
     'appId'=> pospal_appid,
@@ -96,8 +97,6 @@ puts "Total: " + s_time + "--" + e_time + " >>" + " #{orders.count}"
 #metrics.sort_by {|_key, value| value}.to_h
   # ==> {"siteb.com" => 9, "sitec.com" => 10, "sitea.com", 745}
 
-rday =Date.today.strftime('%Y-%m-%d')
-rtime=Time.now.strftime("%H%M%S")
 lines.each do  |line|
   rdex = 1
   content = "\n\n\n>>>>>>>>>>  派线单 #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
@@ -141,7 +140,7 @@ def toExcel line_items
     end
     rday =Date.today.strftime('%Y-%m-%d')
     rtime=Time.now.strftime("%H%M%S")
-    fn_name = ".\\routing\\" + rday + "-CND-" + rtime + ".xls"
+    fn_name = ".\\incoming\\" + rday + "-CND-" + rtime + ".xls"
     book.write fn_name
 end
 

@@ -13,21 +13,20 @@ load 'router.rb'
 pospal_appid=ENV['POSPAL_APPID']
 pospal_appkey=ENV['POSPAL_APPKEY']
 
-#s_time = '2019-03-25 20:00:00'
-#e_time = '2019-03-26 19:59:59'
-
 today = Date.today
 yesterday = today.prev_day
 rday =Date.today.strftime('%Y-%m-%d')
-
-close_time = Time.parse today.strftime('%Y-%m-%d') + ' 16:10:00'
+rtime=Time.now.strftime("%H%M%S")
+close_time = Time.parse today.strftime('%Y-%m-%d') + ' 15:10:00'
 right_now = Time.now
-s_time = yesterday.strftime('%Y-%m-%d') + ' 16:10:00'
-e_time = today.strftime('%Y-%m-%d') + ' 16:09:59'
+s_time = yesterday.strftime('%Y-%m-%d') + ' 15:10:00'
+e_time = today.strftime('%Y-%m-%d') + ' 15:09:59'
 if ( right_now > close_time )
-  s_time = today.strftime('%Y-%m-%d') + ' 16:10:00'
+  s_time = today.strftime('%Y-%m-%d') + ' 15:10:00'
   e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
 end
+#s_time = today.strftime('%Y-%m-%d') + ' 00:00:00'
+#e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
 
 request_body = {
     'appId'=> pospal_appid,

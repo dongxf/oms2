@@ -6,6 +6,7 @@ def decide_route address
 
 
     return '[Z]' if address.include? '到店自提'
+    return '[Z]' if address.include? '汉溪'
 
     return '[K]' if !address.include?('广州') || address.include?('云浮') || address.include?('从化')
 
