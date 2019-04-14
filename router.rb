@@ -23,6 +23,12 @@ def decide_route address
     return '[P]' if address.include? '华南碧桂园'
     return '[P]' if address.include?('星河湾') && !address.include?('半岛')
 
+    if address.include? '广州'
+      return '[G]' if address.include? '天河'
+      return '[G]' if address.include? '海珠'
+      return '[G]' if address.include? '越秀'
+    end
+
     return '[C]'
  
 end
