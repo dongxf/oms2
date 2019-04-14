@@ -141,7 +141,7 @@ def toExcel line_items
     end
     rday =Date.today.strftime('%Y-%m-%d')
     rtime=Time.now.strftime("%H%M%S")
-    fn_name = ".\\incoming\\" + rday + "-CND-" + rtime + ".xls"
+    fn_name = ".\\routing\\" + rday + "-CND-" + rtime + ".xls"
     book.write fn_name
 end
 
