@@ -15,12 +15,14 @@ today = Date.today
 yesterday = today.prev_day
 rday =Date.today.strftime('%Y-%m-%d')
 rtime=Time.now.strftime("%H%M%S")
-close_time = Time.parse today.strftime('%Y-%m-%d') + ' 15:10:00'
+c1 = ' 17:59:59'
+c2 = ' 17:58:59'
+close_time = Time.parse today.strftime('%Y-%m-%d') + c1
 right_now = Time.now
-s_time = yesterday.strftime('%Y-%m-%d') + ' 15:10:00'
-e_time = today.strftime('%Y-%m-%d') + ' 15:09:59'
+s_time = yesterday.strftime('%Y-%m-%d') + c1
+e_time = today.strftime('%Y-%m-%d') + c2
 if ( right_now > close_time )
-  s_time = today.strftime('%Y-%m-%d') + ' 15:10:00'
+  s_time = today.strftime('%Y-%m-%d') + c1
   e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
 end
 #s_time = today.strftime('%Y-%m-%d') + ' 00:00:00'

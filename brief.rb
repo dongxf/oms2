@@ -72,7 +72,8 @@ orders.each do |order|
     slim_name = fat_name.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
 
     content = "orders[#{index}] #{order['orderDateTime']} ##{order['orderNo']} #{slim_addr} #{order['contactName']}  #{order['contactTel']}\n"
-    addr = "#{slim_addr} \n  #{order['contactName']}  #{order['contactTel']} | #{order['orderRemark']} \n"
+    odrmk = order['orderRemark'].gsub('配送','')
+    addr = "#{slim_addr} \n  #{order['orderDateTime']} | #{order['contactName']}  #{order['contactTel']} | #{odrmk}\n"
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
       pay_method={'Cash'=>'现金','CustomerBalance'=>'余额','Wxpay'=>'微信','Alipay'=>'支付宝'}[order['payMethod']]
@@ -86,7 +87,7 @@ orders.each do |order|
     line = decide_route addr
     routes[line].store(order['contactTel'],addr)
     if line == '[C]' || line == '[K]' || line == '[G]'
-        orderRemark = '送货上门，不能当面交付请电话联系 ' + order['orderRemark']
+      orderRemark = '送货上门，不能当面交付请电话联系 ' + order['orderRemark'].gsub('配送','')
         ship_info=['丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201',slim_name,order['contactTel'],slim_addr,'生鲜','寄付',"1","999",orderRemark]
         #ap ship_info
         cnd_addrs.store(order['contactTel'],ship_info)
