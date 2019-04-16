@@ -17,7 +17,7 @@ def decide_route address
     return '[P]' if address.include? '富豪山庄'
     return '[P]' if address.include?('雅居乐') && !address.include?('南城')
     return '[P]' if address.include? '清华坊'
-    return '[P]' if address.include?('南奥') || address.include?('南国奥林匹克')
+    return '[P]' if address.include?('南奥') || address.include?('南国奥')
     return '[P]' if address.include? '锦绣香江'
     return '[P]' if address.include? '华南新城'
     return '[P]' if address.include? '雅居乐'
