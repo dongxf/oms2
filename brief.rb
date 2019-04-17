@@ -19,13 +19,33 @@ today = Date.today
 yesterday = today.prev_day
 rday =Date.today.strftime('%Y-%m-%d')
 rtime=Time.now.strftime("%H%M%S")
+
 close_time = Time.parse today.strftime('%Y-%m-%d') + ' 15:10:00'
+batch1_time = Time.parse today.strftime('%Y-%m-%d') + ' 09:01:00'
+brief_title = '订单交付表-上午'
+
 right_now = Time.now
 s_time = yesterday.strftime('%Y-%m-%d') + ' 15:10:00'
 e_time = today.strftime('%Y-%m-%d') + ' 15:09:59'
+
 if ( right_now > close_time )
+  # 当前时间大于3:10pm，说明是新一轮订单的前一天晚上
   s_time = today.strftime('%Y-%m-%d') + ' 15:10:00'
   e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
+  brief_title = '订单交付表-上午'
+else
+  # 当时间早于3:10pm，说明是新一轮订单的交付当天
+  if ( right_now <  batch1_time)
+    #如果早于9:01am，则订单查询时间范围设为昨天15:10:00-今天的9:00-今日结束
+    s_time = yesterday.strftime('%Y-%m-%d') + ' 15:10:00'
+    e_time = today.strftime('%Y-%m-%d') + ' 09:00:00'
+    brief_title = '订单交付表-上午'
+  else
+    #如果晚于9:01am，则订单查询时间范围设为今天的9:00-今日结束
+    s_time = today.strftime('%Y-%m-%d') + ' 09:00:01'
+    e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
+    brief_title = '订单交付表-下午'
+  end
 end
 #s_time = today.strftime('%Y-%m-%d') + ' 00:00:00'
 #e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
@@ -101,7 +121,7 @@ puts "Total: " + s_time + "--" + e_time + " >>" + " #{orders.count}"
 
 lines.each do  |line|
   rdex = 1
-  content = "\n\n\n>>>>>>>>>>  派线单 #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
+  content = "\n\n\n>>>>>>>>>>  #{brief_title} #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
   routes[line].sort_by{|_key, value| value}.to_h.each { |tel, addr|
     content += "#{rdex}) " + addr
     rdex +=1
