@@ -15,37 +15,20 @@ load 'router.rb'
 pospal_appid=ENV['POSPAL_APPID']
 pospal_appkey=ENV['POSPAL_APPKEY']
 
+brief_title = '订单交付表'
 today = Date.today
 yesterday = today.prev_day
 rday =Date.today.strftime('%Y-%m-%d')
 rtime=Time.now.strftime("%H%M%S")
-
-close_time = Time.parse today.strftime('%Y-%m-%d') + ' 15:10:00'
-batch1_time = Time.parse today.strftime('%Y-%m-%d') + ' 09:01:00'
-brief_title = '订单交付表'
-
+c1 = ' 17:59:59'
+c2 = ' 17:58:59'
+close_time = Time.parse today.strftime('%Y-%m-%d') + c1
 right_now = Time.now
-s_time = yesterday.strftime('%Y-%m-%d') + ' 15:10:00'
-e_time = today.strftime('%Y-%m-%d') + ' 15:09:59'
-
+s_time = yesterday.strftime('%Y-%m-%d') + c1
+e_time = today.strftime('%Y-%m-%d') + c2
 if ( right_now > close_time )
-  # 当前时间大于3:10pm，说明是新一轮订单的前一天晚上
-  s_time = today.strftime('%Y-%m-%d') + ' 15:10:00'
+  s_time = today.strftime('%Y-%m-%d') + c1
   e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
-  brief_title = '订单交付表-次日上午'
-else
-  # 当时间早于3:10pm，说明是新一轮订单的交付当天
-  if ( right_now <  batch1_time)
-    #如果早于9:01am，则订单查询时间范围设为昨天15:10:00-今天的9:00-今日结束
-    s_time = yesterday.strftime('%Y-%m-%d') + ' 15:10:00'
-    e_time = today.strftime('%Y-%m-%d') + ' 09:00:00'
-    brief_title = '订单交付表-今日上午'
-  else
-    #如果晚于9:01am，则订单查询时间范围设为今天的9:00-今日结束
-    s_time = today.strftime('%Y-%m-%d') + ' 09:00:01'
-    e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
-    brief_title = '订单交付表-今日下午'
-  end
 end
 #s_time = today.strftime('%Y-%m-%d') + ' 00:00:00'
 #e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
@@ -93,7 +76,13 @@ orders.each do |order|
 
     content = "orders[#{index}] #{order['orderDateTime']} ##{order['orderNo']} #{slim_addr} #{order['contactName']}  #{order['contactTel']}\n"
     odrmk = order['orderRemark'].gsub('配送','')
-    addr = "#{slim_addr} \n  #{order['orderDateTime']} | #{order['contactName']}  #{order['contactTel']} | #{odrmk}\n"
+
+    #mark orders late then 9:00am with *
+    order_time = Time.parse order['orderDateTime']
+    batch_time = Time.parse today.strftime('%Y-%m-%d') + ' 09:00:00' 
+    batch_mark =  order_time > batch_time ? '**' : ' '
+
+    addr = "#{slim_addr} \n#{batch_mark} #{order['contactName']}  #{order['contactTel']} | #{odrmk}\n"
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
       pay_method={'Cash'=>'现金','CustomerBalance'=>'余额','Wxpay'=>'微信','Alipay'=>'支付宝'}[order['payMethod']]

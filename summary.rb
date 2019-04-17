@@ -54,7 +54,12 @@ orders.each do |order|
     fat_addr = order['contactAddress'].gsub(" ","")
     slim_addr=fat_addr.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
 
-    addr = "#{slim_addr} #{order['contactName']}  #{order['contactTel']} | #{order['orderRemark']} | #{order['orderDateTime']} \n"
+    #mark orders late then 9:00am with *
+    order_time = Time.parse order['orderDateTime']
+    batch_time = Time.parse today.strftime('%Y-%m-%d') + ' 09:00:00' 
+    batch_mark =  order_time > batch_time ? '*' : ' '
+
+    addr = "#{batch_mark} #{slim_addr} #{order['contactName']}  #{order['contactTel']} | #{order['orderRemark']} | #{order['orderDateTime']} \n"
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
       pay_method={'Cash'=>'现金','CustomerBalance'=>'余额','Wxpay'=>'微信','Alipay'=>'支付宝'}[order['payMethod']]
