@@ -88,7 +88,7 @@ orders.each do |order|
     routes[line].store(order['contactTel'],addr)
     if line == '[C]' || line == '[K]' || line == '[G]'
       orderRemark = '不能当面交付请电话联系,谢谢 ' + order['orderRemark'].gsub('配送','')
-        ship_info=['丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201',slim_name,order['contactTel'],slim_addr,'生鲜','寄付',"1","999",orderRemark]
+        ship_info=['丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201',slim_name,order['contactTel'],slim_addr,'生鲜','寄付',"1","999",orderRemark,order['orderNo']]
         #ap ship_info
         cnd_addrs.store(order['contactTel'],ship_info)
     end
