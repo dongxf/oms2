@@ -22,7 +22,7 @@ rtime=Time.now.strftime("%H%M%S")
 
 close_time = Time.parse today.strftime('%Y-%m-%d') + ' 15:10:00'
 batch1_time = Time.parse today.strftime('%Y-%m-%d') + ' 09:01:00'
-brief_title = '订单交付表-上午'
+brief_title = '订单交付表'
 
 right_now = Time.now
 s_time = yesterday.strftime('%Y-%m-%d') + ' 15:10:00'
@@ -32,19 +32,19 @@ if ( right_now > close_time )
   # 当前时间大于3:10pm，说明是新一轮订单的前一天晚上
   s_time = today.strftime('%Y-%m-%d') + ' 15:10:00'
   e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
-  brief_title = '订单交付表-上午'
+  brief_title = '订单交付表-次日上午'
 else
   # 当时间早于3:10pm，说明是新一轮订单的交付当天
   if ( right_now <  batch1_time)
     #如果早于9:01am，则订单查询时间范围设为昨天15:10:00-今天的9:00-今日结束
     s_time = yesterday.strftime('%Y-%m-%d') + ' 15:10:00'
     e_time = today.strftime('%Y-%m-%d') + ' 09:00:00'
-    brief_title = '订单交付表-上午'
+    brief_title = '订单交付表-今日上午'
   else
     #如果晚于9:01am，则订单查询时间范围设为今天的9:00-今日结束
     s_time = today.strftime('%Y-%m-%d') + ' 09:00:01'
     e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
-    brief_title = '订单交付表-下午'
+    brief_title = '订单交付表-今日下午'
   end
 end
 #s_time = today.strftime('%Y-%m-%d') + ' 00:00:00'
