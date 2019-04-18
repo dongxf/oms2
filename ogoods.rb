@@ -12,13 +12,15 @@ oNames = {};
 oPrices = {};
 oDescription = {};
 overwrite_mode = false
+xls_file=".\\goods_exported\\商品资料.xls"
 
-ARGV.each { |arg| 
-        if arg=='-f' 
-            overwrite_mode=true 
-            puts 'force mode actived'
-        end
-}
+args = ''
+ARGV.each { |arg| args+=arg }
+xls_file=args if args!='' && args!='-f'
+if args=='-f'
+    overwrite_mode=true 
+    puts 'force mode actived'
+end
 
 # get current name and price list from ogoods db
 sql1 = 'select * from ogoods.pospal_goods'
@@ -45,7 +47,8 @@ if existed new excel data
 =end
 Spreadsheet.client_encoding='UTF-8'
 begin
-    book = Spreadsheet.open ".\\goods_exported\\商品资料.xls"
+    #book = Spreadsheet.open ".\\goods_exported\\商品资料.xls"
+    book = Spreadsheet.open xls_file
     sheet1 = book.worksheet 0
     line_idx = 0
     sheet1.each do |row|
@@ -53,6 +56,7 @@ begin
         next if line_idx == 1
         code = row[2]
         descrp = row[25]
+        descrp = '' if descrp.nil?  #to prevent bugs caused by nil != nil when compring database record with excel data
         #will remove all links in description here
 
         if oNames[code].nil?
@@ -75,7 +79,7 @@ begin
             resu = rds.query(sqlu)
         else
            #sqlu = "update psi.t_inventory_detail set balance_count=#{sprintf('%.8f', b_count)}, balance_money=#{sprintf('%.8f', b_money)}, balance_price=#{sprintf('%.8f', b_price)}, out_money=#{sprintf('%.8f', out_money)}, out_price=#{sprintf('%.3f', out_price)}, fixed='fixed' where id='#{inv_detail_id}'"
-           if overwrite_mode || oNames[code]!= row[0] || oPrices[code]!= row[7] || oDescription[code]!= row[25]
+           if overwrite_mode || oNames[code]!= row[0] || oPrices[code]!= row[7] || oDescription[code]!= descrp
                 puts "update #{row[2]} #{row[0]}"
                 sqlu = "update ogoods.pospal_goods set
                     name='#{row[0]}',catalog='#{row[1]}',code='#{row[2]}',size='#{row[3]}',unit='#{row[4]}',
