@@ -57,9 +57,9 @@ orders.each do |order|
     #mark orders late then 9:00am with *
     order_time = Time.parse order['orderDateTime']
     batch_time = Time.parse today.strftime('%Y-%m-%d') + ' 09:00:00' 
-    batch_mark =  order_time > batch_time ? '*' : ' '
+    batch_mark =  order_time > batch_time ? '**' : '  '
 
-    addr = "#{batch_mark} #{slim_addr} #{order['contactName']}  #{order['contactTel']} | #{order['orderRemark']} | #{order['orderDateTime']} \n"
+    addr = "#{batch_mark}#{order['orderDateTime']} #{slim_addr} #{order['contactName']}  #{order['contactTel']} | #{order['orderRemark']} \n"
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
       pay_method={'Cash'=>'现金','CustomerBalance'=>'余额','Wxpay'=>'微信','Alipay'=>'支付宝'}[order['payMethod']]
@@ -82,7 +82,7 @@ lines.each do  |line|
   rdex = 1
   content = ">>>>>>>>>>  Route #{line} <<<<<<<<<<\n"
   routes[line].sort_by{|_key, value| value}.to_h.each { |tel, addr|
-    content += "#{rdex}) " + addr
+    content += "#{rdex})" + addr
     rdex +=1
   }
   if routes[line].size!= 0 
