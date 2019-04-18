@@ -83,6 +83,7 @@ orders.each do |order|
     batch_mark =  order_time > batch_time ? '**' : ' '
 
     addr = "#{slim_addr} \n#{batch_mark} #{order['contactName']}  #{order['contactTel']} | #{odrmk}\n"
+    addr_body = "#{slim_addr}"
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
       pay_method={'Cash'=>'现金','CustomerBalance'=>'余额','Wxpay'=>'微信','Alipay'=>'支付宝'}[order['payMethod']]
@@ -93,9 +94,10 @@ orders.each do |order|
       addr += " >>#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}\n"
     end
 
+    #准备派线单数据
     line = decide_route addr
-    addr= "**"+addr if routes[line].has_key? order['contactTel']
-    routes[line].store(order['contactTel'],addr)
+    addr = "** " + addr if routes[line].has_key? addr_body
+    routes[line].store(addr_body,addr)
 
     #准备快递数据
     if line == '[C]' || line == '[K]' || line == '[G]'
@@ -108,10 +110,11 @@ orders.each do |order|
 end
 puts "Total: " + s_time + "--" + e_time + " >>" + " #{orders.count}"
 
+#生成派线单文件
 lines.each do  |line|
   rdex = 1
   content = "\n\n\n>>>>>>>>>>  #{brief_title} #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
-  routes[line].sort_by{|_key, value| value}.to_h.each { |tel, addr|
+  routes[line].sort_by{|_key, addr| _key}.to_h.each { |body, addr|
     content += "#{rdex}) " + addr
     rdex +=1
   }
