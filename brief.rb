@@ -73,9 +73,9 @@ orders.each do |order|
     slim_addr=fat_addr.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
     fat_name = order['contactName'].gsub(" ","")
     slim_name = fat_name.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
+    odrmk = order['orderRemark'].gsub('配送','')
 
     content = "orders[#{index}] #{order['orderDateTime']} ##{order['orderNo']} #{slim_addr} #{order['contactName']}  #{order['contactTel']}\n"
-    odrmk = order['orderRemark'].gsub('配送','')
 
     #mark orders late then 9:00am with *
     order_time = Time.parse order['orderDateTime']
@@ -94,7 +94,10 @@ orders.each do |order|
     end
 
     line = decide_route addr
+    addr= "**"+addr if routes[line].has_key? order['contactTel']
     routes[line].store(order['contactTel'],addr)
+
+    #准备快递数据
     if line == '[C]' || line == '[K]' || line == '[G]'
       orderRemark = '不能当面交付请电话联系,谢谢 ' + order['orderRemark'].gsub('配送','')
         ship_info=['丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201',slim_name,order['contactTel'],slim_addr,'生鲜','寄付',"1","999",orderRemark,order['orderNo']]
@@ -104,9 +107,6 @@ orders.each do |order|
     puts content
 end
 puts "Total: " + s_time + "--" + e_time + " >>" + " #{orders.count}"
-
-#metrics.sort_by {|_key, value| value}.to_h
-  # ==> {"siteb.com" => 9, "sitec.com" => 10, "sitea.com", 745}
 
 lines.each do  |line|
   rdex = 1

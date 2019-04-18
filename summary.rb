@@ -51,15 +51,19 @@ orders.each do |order|
     index +=1 
     amt += order['totalAmount'] if order['state'] != 3
     good_orders +=1 if order['state'] == 4
+
     fat_addr = order['contactAddress'].gsub(" ","")
     slim_addr=fat_addr.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
+    fat_name = order['contactName'].gsub(" ","")
+    slim_name = fat_name.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
+    odrmk = order['orderRemark'].gsub('配送','')
 
     #mark orders late then 9:00am with *
     order_time = Time.parse order['orderDateTime']
     batch_time = Time.parse today.strftime('%Y-%m-%d') + ' 09:00:00' 
     batch_mark =  order_time > batch_time ? '**' : '  '
 
-    addr = "#{batch_mark}#{order['orderDateTime']} #{slim_addr} #{order['contactName']}  #{order['contactTel']} | #{order['orderRemark']} \n"
+    addr = "#{batch_mark}#{order['orderDateTime']} #{slim_addr} #{slim_name} #{order['contactTel']} | #{odrmk} \n"
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
       pay_method={'Cash'=>'现金','CustomerBalance'=>'余额','Wxpay'=>'微信','Alipay'=>'支付宝'}[order['payMethod']]
@@ -78,10 +82,12 @@ end
 
 rday =Date.today.strftime('%Y-%m-%d')
 rtime=Time.now.strftime("%H%M%S")
+merged_orders = 0
 lines.each do  |line|
   rdex = 1
   content = ">>>>>>>>>>  Route #{line} <<<<<<<<<<\n"
   routes[line].sort_by{|_key, value| value}.to_h.each { |tel, addr|
+    merged_orders += 1
     content += "#{rdex})" + addr
     rdex +=1
   }
@@ -96,4 +102,4 @@ end
 
 
 puts "------------------------------------"
-puts "Total: " + s_time + "--" + e_time + " >>" + " #{good_orders} of #{orders.count} RMB#{amt}"
+puts "Total: " + s_time + "--" + e_time + " >>" + " #{merged_orders} of #{orders.count} RMB#{amt}"
