@@ -80,7 +80,8 @@ orders.each do |order|
     #mark orders late then 9:00am with *
     order_time = Time.parse order['orderDateTime']
     batch_time = Time.parse today.strftime('%Y-%m-%d') + ' 09:00:00' 
-    batch_mark =  order_time > batch_time ? '**' : ' '
+    new_round_time = Time.parse today.strftime('%Y-%m-%d') + ' 15:00:01' 
+    batch_mark =  order_time > batch_time && order_time < new_round_time ? '**' : ' '
 
     addr = "#{slim_addr} \n#{batch_mark} #{order['contactName']}  #{order['contactTel']} | #{odrmk}\n"
     addr_body = "#{slim_addr}"
