@@ -81,9 +81,9 @@ orders.each do |order|
     order_time = Time.parse order['orderDateTime']
     batch_time = Time.parse today.strftime('%Y-%m-%d') + ' 09:00:00' 
     new_round_time = Time.parse today.strftime('%Y-%m-%d') + ' 15:00:01' 
-    batch_mark =  order_time > batch_time && order_time < new_round_time ? '**' : ' '
+    batch_mark =  order_time > batch_time && order_time < new_round_time ? '# ' : '  '
 
-    addr = "#{slim_addr} \n#{batch_mark} #{order['contactName']}  #{order['contactTel']} | #{odrmk}\n"
+    addr = "#{slim_addr}\n#{batch_mark} #{order['contactName']}  #{order['contactTel']} | #{odrmk}\n"
     addr_body = "#{slim_addr}"
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
@@ -101,7 +101,7 @@ orders.each do |order|
     routes[line].store(addr_body,addr)
 
     #准备快递数据
-    if line == '[C]' || line == '[K]' || line == '[G]'
+    if line == '[C]' || line == '[K]' 
       orderRemark = '不能当面交付请电话联系,谢谢 ' + order['orderRemark'].gsub('配送','')
         ship_info=['丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201',slim_name,order['contactTel'],slim_addr,'生鲜','寄付',"1","999",orderRemark,order['orderNo']]
         #ap ship_info
@@ -116,7 +116,7 @@ lines.each do  |line|
   rdex = 1
   content = "\n\n\n>>>>>>>>>>  #{brief_title} #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
   routes[line].sort_by{|_key, addr| _key}.to_h.each { |body, addr|
-    content += "#{rdex}) " + addr
+    content += "#{rdex}[   ] " + addr
     rdex +=1
   }
   fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"

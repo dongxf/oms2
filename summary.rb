@@ -62,7 +62,7 @@ orders.each do |order|
     order_time = Time.parse order['orderDateTime']
     batch_time = Time.parse today.strftime('%Y-%m-%d') + ' 09:00:00' 
     new_round_time = Time.parse today.strftime('%Y-%m-%d') + ' 15:00:01' 
-    batch_mark =  order_time > batch_time && order_time < new_round_time ? '**' : '  '
+    batch_mark =  order_time > batch_time && order_time < new_round_time ? '# ' : '  '
 
     addr = "#{batch_mark}#{order['orderDateTime']} #{slim_addr} #{slim_name} #{order['contactTel']} | #{odrmk} \n"
     if order['state']!= 4
