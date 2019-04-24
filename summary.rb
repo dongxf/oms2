@@ -37,7 +37,7 @@ res=pospal_api(:queryOrderPages,req)
 
 orders = res['data']['result']
 
-lines = ['[Z]','[C]','[G]','[Q]','[P]','[K]']
+lines = ['[Z]','[C]','[G]','[Q]','[P]','[K]', '[T]']
 routes = {}
 lines.each do  |line|
   routes[line] = {}
@@ -56,7 +56,7 @@ orders.each do |order|
     slim_addr=fat_addr.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
     fat_name = order['contactName'].gsub(" ","")
     slim_name = fat_name.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
-    odrmk = order['orderRemark'].gsub('配送','')
+    odrmk = order['orderRemark'] ? order['orderRemark'].gsub('配送','') : ''
 
     #mark orders late then 9:00am with *
     order_time = Time.parse order['orderDateTime']
@@ -64,7 +64,8 @@ orders.each do |order|
     new_round_time = Time.parse today.strftime('%Y-%m-%d') + ' 15:00:01' 
     batch_mark =  order_time > batch_time && order_time < new_round_time ? '# ' : '  '
 
-    addr = "#{batch_mark}#{order['orderDateTime']} #{slim_addr} #{slim_name} #{order['contactTel']} | #{odrmk} \n"
+    addr = "#{batch_mark} #{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}"
+    addr += " #{slim_addr} #{slim_name} #{order['contactTel']} | #{odrmk} \n"
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
       pay_method={'Cash'=>'现金','CustomerBalance'=>'余额','Wxpay'=>'微信','Alipay'=>'支付宝'}[order['payMethod']]
@@ -74,7 +75,7 @@ orders.each do |order|
       addr += " >>#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}\n"
     end
 
-    line = decide_route addr
+    line = decide_route order
     routes[line].store(order['contactTel'],addr)
 
     #puts content

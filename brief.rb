@@ -54,7 +54,7 @@ end
 #ap res.body
 
 orders = JSON.parse(res.body)['data']['result']
-lines = ['[Z]','[C]','[G]','[Q]','[P]','[K]']
+lines = ['[Z]','[C]','[G]','[Q]','[P]','[K]','[T]']
 routes = {}
 cnd_addrs = {}
 lines.each do  |line|
@@ -73,7 +73,7 @@ orders.each do |order|
     slim_addr=fat_addr.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
     fat_name = order['contactName'].gsub(" ","")
     slim_name = fat_name.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
-    odrmk = order['orderRemark'].gsub('配送','')
+    odrmk = order['orderRemark'] ? order['orderRemark'].gsub('配送','') : ''
 
     content = "orders[#{index}] #{order['orderDateTime']} ##{order['orderNo']} #{slim_addr} #{order['contactName']}  #{order['contactTel']}\n"
 
@@ -96,7 +96,7 @@ orders.each do |order|
     end
 
     #准备派线单数据
-    line = decide_route addr
+    line = decide_route order 
     addr = "** " + addr if routes[line].has_key? addr_body
     routes[line].store(addr_body,addr)
 

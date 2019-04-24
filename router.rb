@@ -1,8 +1,26 @@
 ﻿#encoding 'utf-8'
 #This file provide an common method to decide with route should be allocated to specified order
 #In the end this should be done in database
+require 'time'
 
-def decide_route address
+def decide_route order
+
+    return '[T]' if order.nil?
+
+    fat_addr = order['contactAddress'].gsub(" ","")
+    address=fat_addr.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
+
+    return '[T]' if order['state'] != 4
+=begin
+    if order['state'] = 4
+      return '[T]' if pay_online==1 && opay_completed==1
+      order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
+      pay_method={'Cash'=>'现金','CustomerBalance'=>'余额','Wxpay'=>'微信','Alipay'=>'支付宝'}[order['payMethod']]
+      delivery_type={0=>'自营',1=>'自助',2=>'自提',3=>'预约',4=>'三方'}[order['deliveryType']]
+      pay_online={0=>'未用',1=>'通过'}[order['payOnLine']]
+      opay_completed={0=>'还未',1=>'已经'}[order['isOnlinePaymentCompleted']]
+    end
+=end
 
     return '[Z]' if address.include? '到店自提'
     return '[Z]' if address.include? '汉溪村'
@@ -38,6 +56,6 @@ def decide_route address
       return '[G]' if address.include? '荔湾'
     end
 
-    return '[C]'
+    return '[K]'
  
 end

@@ -54,12 +54,9 @@ orders.each do |order|
 
     #add header twice
     content  = "                                   每一天,更安心的选择\n"
-    content += "\n"
 
     # remove '104' from the tail
-    content += "订单##{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
-    content += "> " + order['orderNo'] + "-" + order['customerNumber'] + "\n"
-
+    content += "##{order['orderNo'][0..order['orderNo'].length-4]} #{order['orderDateTime']}\n"
 
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
@@ -67,31 +64,27 @@ orders.each do |order|
       delivery_type={0=>'自营',1=>'自助',2=>'自提',3=>'预约',4=>'三方'}[order['deliveryType']]
       pay_online={0=>'未用',1=>'通过'}[order['payOnLine']]
       opay_completed={0=>'还未',1=>'已经'}[order['isOnlinePaymentCompleted']]
-      content += "> 状态#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}"
+      content += "> 状态#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}\n"
     end
-    content +="\n"
-
 
     fat_addr = order['contactAddress'].gsub(" ","")
     slim_addr=fat_addr.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
+    line_mark = decide_route order
+    odrmk = order['orderRemark'] ? order['orderRemark'].gsub('配送','') : ''
 
     content += "#{slim_addr}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
-    content += "> #{order['orderRemark']}\n"
-    content += "\n"
-    content += "#{decide_route slim_addr} [   ]                _____ of  1  2  ____\n"
+    content += "> #{odrmk}\n" if odrmk && odrmk != ''
+    content += "#{line_mark} [   ]                                _____ of  1  2  ____\n"
 
     content += "-----------------------------------------------------------------\n"
-    content += "##{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}\n"
     content +=  order['orderNo'] + "-" + order['customerNumber'] + "\n"
-    content += "\n"
     content += "#{order['contactAddress'].strip}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
-    content += "> #{order['orderRemark']}\n"
-    content += "\n"
-    content += "#{decide_route slim_addr} [   ]                _____ of  1  2  ____\n"
+    content += "> #{odrmk}\n" if odrmk && odrmk != ''
+    content += "#{line_mark} [   ]                                _____ of  1  2  ____\n"
 
-    if order['state']!= 4
+    if order['state']!= 4 && order['state']!= 3
       content += ">>>>>>>>>警告：非常规状态，需单独处理<<<<<<<<<\n"
     else
       content += "-----------------------------------------------------------------\n"
