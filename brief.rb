@@ -83,7 +83,7 @@ orders.each do |order|
     new_round_time = Time.parse today.strftime('%Y-%m-%d') + ' 15:00:01' 
     batch_mark =  order_time > batch_time && order_time < new_round_time ? '# ' : '  '
 
-    addr = "#{slim_addr}\n#{batch_mark} #{order['contactName']}  #{order['contactTel']} | #{odrmk}\n"
+    addr = "#{slim_addr} [  ]\n#{batch_mark} #{order['contactName']}  #{order['contactTel']} | #{odrmk}\n"
     addr_body = "#{slim_addr}"
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
@@ -116,7 +116,7 @@ lines.each do  |line|
   rdex = 1
   content = "\n\n\n>>>>>>>>>>  #{brief_title} #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
   routes[line].sort_by{|_key, addr| _key}.to_h.each { |body, addr|
-    content += "#{rdex}[   ] " + addr
+    content += "#{rdex} " + addr
     rdex +=1
   }
   fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"

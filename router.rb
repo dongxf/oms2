@@ -7,23 +7,29 @@ def decide_route address
     return '[Z]' if address.include? '到店自提'
     return '[Z]' if address.include? '汉溪村'
 
+    # if G line worload is too low , otherwise use P line
+    return '[G]' if address.include? '欧泊' 
+    return '[G]' if address.include? '红郡'
+    return '[G]' if address.include? '华南新城'
+    return '[G]' if address.include? '雅居乐'
+
     return '[P]' if address.include? '祈福'
     return '[P]' if address.include? '金山谷'
-    return '[P]' if address.include? '欧泊' 
-    return '[P]' if address.include? '红郡'
     return '[P]' if address.include? '富豪山庄'
     return '[P]' if address.include?('雅居乐') && !address.include?('南城')
     return '[P]' if address.include? '清华坊'
     return '[P]' if address.include?('南奥') || address.include?('南国奥')
     return '[P]' if address.include? '锦绣香江'
-    return '[P]' if address.include? '华南新城'
-    return '[P]' if address.include? '雅居乐'
     return '[P]' if address.include? '华南碧桂园'
     return '[P]' if address.include?('星河湾') && !address.include?('半岛')
 
     if address.include? '广州'
       #Insert any exception here
+      #Exception in Area Name and Road name
       return '[G]' if address.include? '白云路'
+      #Exception in PanYu
+      return '[G]' if address.include? '星河湾半岛'
+      return '[G]' if address.include? '沙溪'
 
       #normal area
       return '[G]' if address.include? '天河'
