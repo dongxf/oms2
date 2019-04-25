@@ -48,6 +48,8 @@ def decide_route order
       #Exception in PanYu
       return '[G]' if address.include? '星河湾半岛'
       return '[G]' if address.include? '沙溪'
+      #Exception in YueXiu
+      return '[K]' if address.include? '机务段机山巷'
 
       #normal area
       return '[G]' if address.include? '天河'
