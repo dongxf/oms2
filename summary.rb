@@ -49,7 +49,9 @@ amt = 0.0
 good_orders = 0
 orders.each do |order|
     index +=1 
-    amt += order['totalAmount'] if order['state'] != 3
+    next if order['state'] == 3
+
+    amt += order['totalAmount']
     good_orders +=1 if order['state'] == 4
 
     fat_addr = order['contactAddress'].gsub(" ","")
