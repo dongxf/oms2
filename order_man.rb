@@ -74,14 +74,14 @@ orders.each do |order|
 
     content += "#{slim_addr}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
-    content += "> #{odrmk}\n" if odrmk && odrmk != ''
+    content += "> #{odrmk}\n"
     content += "#{line_mark} [   ]                                _____ of  1  2  ____\n"
 
     content += "-----------------------------------------------------------------\n"
     content +=  order['orderNo'] + "-" + order['customerNumber'] + "\n"
     content += "#{order['contactAddress'].strip}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
-    content += "> #{odrmk}\n" if odrmk && odrmk != ''
+    content += "> #{odrmk}\n"
     content += "#{line_mark} [   ]                                _____ of  1  2  ____\n"
 
     if order['state']!= 4 && order['state']!= 3
@@ -89,7 +89,7 @@ orders.each do |order|
     else
       content += "-----------------------------------------------------------------\n"
     end
-    content += "数量 核对 商品名及规格\n"
+    content += " 数量     商品名及规格\n"
     items = order['items']
     items.each do |item|
         if item['productQuantity']>1 
