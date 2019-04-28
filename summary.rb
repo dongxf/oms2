@@ -9,40 +9,22 @@ require 'date'
 require 'awesome_print'
 
 load 'router.rb'
-load 'pospal_api.rb'
+load 'get_orders.rb'
 
-today = Date.today
-yesterday = today.prev_day
-rday =Date.today.strftime('%Y-%m-%d')
-rtime=Time.now.strftime("%H%M%S")
-c1 = ' 15:00:01'
-c2 = ' 15:00:00'
-close_time = Time.parse today.strftime('%Y-%m-%d') + c2
-right_now = Time.now
-s_time = yesterday.strftime('%Y-%m-%d') + c1
-e_time = today.strftime('%Y-%m-%d') + c2
-if ( right_now > close_time )
-  s_time = today.strftime('%Y-%m-%d') + c1
-  e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
+the_day = Date.today
+orders = []
+1.times do 
+    orders += get_orders_by_shipdate the_day
+    the_day = the_day.prev_day
 end
-#s_time = today.strftime('%Y-%m-%d') + ' 00:00:00'
-#e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
-
-req = {
-    'startTime'=> s_time,
-    'endTime'=> e_time
-}
-
-res=pospal_api(:queryOrderPages,req)
-
-orders = res['data']['result']
 
 lines = ['[Z]','[C]','[G]','[Q]','[P]','[K]', '[T]']
 routes = {}
-lines.each do  |line|
-  routes[line] = {}
+line_data = {}
+lines.each do |line| 
+        line_data[line] = {}
+        routes[line] = {} 
 end
-
 
 index = -1
 amt = 0.0
@@ -54,38 +36,24 @@ orders.each do |order|
     amt += order['totalAmount']
     good_orders +=1 if order['state'] == 4
 
-    fat_addr = order['contactAddress'].gsub(" ","")
-    slim_addr=fat_addr.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
-    fat_name = order['contactName'].gsub(" ","")
-    slim_name = fat_name.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
-    odrmk = order['orderRemark'] ? order['orderRemark'].gsub('配送','') : ''
+    slim_addr=get_short_addr order
+    slim_name = get_short_name order
+    odrmk = "#{get_noti order} #{get_short_remark order}"
+    batch_mark =  get_batch_mark order
+    short_no = get_short_no order
 
-    #mark orders late then 9:00am with *
-    order_time = Time.parse order['orderDateTime']
-    batch_time = Time.parse today.strftime('%Y-%m-%d') + ' 09:00:00' 
-    new_round_time = Time.parse today.strftime('%Y-%m-%d') + ' 15:00:01' 
-    batch_mark =  order_time > batch_time && order_time < new_round_time ? '# ' : '  '
-
-    addr = "#{batch_mark} #{order['orderNo'][0..order['orderNo'].length-4]}    #{order['orderDateTime']}"
-    addr += " #{slim_addr} #{slim_name} #{order['contactTel']} #{order['totalAmount']} | #{odrmk} \n"
-    if order['state']!= 4
-      order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
-      pay_method={'Cash'=>'现金','CustomerBalance'=>'余额','Wxpay'=>'微信','Alipay'=>'支付宝'}[order['payMethod']]
-      delivery_type={0=>'自营',1=>'自助',2=>'自提',3=>'预约',4=>'三方'}[order['deliveryType']]
-      pay_online={0=>'未用',1=>'通过'}[order['payOnLine']]
-      opay_completed={0=>'还未',1=>'已经'}[order['isOnlinePaymentCompleted']]
-      addr += " >>#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}\n"
-    end
+    addr = "#{batch_mark} #{short_no} #{order['orderDateTime']}"
+    addr += " #{slim_addr} #{slim_name} #{order['contactTel']} #{order['totalAmount']} | #{odrmk}\n"
 
     line = decide_route order
-    routes[line].store(order['contactTel'],addr)
+    addr = "** " + addr if routes[line].has_key? slim_addr && line!='[T]'
+    routes[line].store(slim_addr,addr) #using slim_addr will merge orders
 
-    #puts content
+    ship_info=[ '丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201',slim_name,order['contactTel'],slim_addr,'生鲜','寄付',order['totalAmount']/10,"999",odrmk,short_no]
+    line_data[line].store(short_no,ship_info) #if want to avoid duplicate use contactTel
+
 end
 
-
-rday =Date.today.strftime('%Y-%m-%d')
-rtime=Time.now.strftime("%H%M%S")
 merged_orders = 0
 lines.each do  |line|
   rdex = 1
@@ -98,12 +66,11 @@ lines.each do  |line|
   if routes[line].size!= 0 
     puts content
   end 
+  if line_data[line].size!=0
+    save_line_excel line, line_data[line]
+  end
 end
 
-
-
-
-
-
 puts "------------------------------------"
-puts "Total: " + s_time + "--" + e_time + " >>" + " #{merged_orders} of #{orders.count} RMB#{amt}"
+#puts "Total: " + s_time + "--" + e_time + " >>" + " #{merged_orders} of #{orders.count} RMB#{amt}"
+puts "Total: " + " >>" + " #{merged_orders} of #{orders.count} RMB#{amt}"
