@@ -8,55 +8,34 @@ require 'json'
 require 'date'
 require 'time'
 load 'router.rb'
+load 'get_orders.rb'
 
-#please set POSPAL_APPID and APPKEY in .bashrc
-pospal_appid=ENV['POSPAL_APPID']
-pospal_appkey=ENV['POSPAL_APPKEY']
+forders = []
 
-today = Date.today
-yesterday = today.prev_day
-rday =Date.today.strftime('%Y-%m-%d')
-rtime=Time.now.strftime("%H%M%S")
-close_time = Time.parse today.strftime('%Y-%m-%d') + ' 15:10:00'
-right_now = Time.now
-s_time = yesterday.strftime('%Y-%m-%d') + ' 15:10:00'
-e_time = today.strftime('%Y-%m-%d') + ' 15:09:59'
-if ( right_now > close_time )
-  s_time = today.strftime('%Y-%m-%d') + ' 15:10:00'
-  e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
-end
-#s_time = today.strftime('%Y-%m-%d') + ' 00:00:00'
-#e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
+#days count backward from today, if days==0 then use tomrrow as shipdate
+day_count = ARGV[0].nil? ? 1 : ARGV[0].to_i
 
-request_body = {
-    'appId'=> pospal_appid,
-    'startTime'=> s_time,
-    'endTime'=> e_time
-}
-
-uri = URI('https://area24-win.pospal.cn:443/pospal-api2/openapi/v1/orderOpenApi/queryOrderPages')
-res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
-  req = Net::HTTP::Post.new(uri)
-  req['User-Agent']= 'openApi'
-  req['Content-Type']= 'application/json; charset=utf-8'
-  req['accept-encoding']= 'gzip,deflate'
-  req['time-stamp']= Time.now.getutc
-  req['data-signature']= Digest::MD5.hexdigest(pospal_appkey + request_body.to_json)
-  req.body = request_body.to_json
-  http.request(req)
+if day_count == 0
+   the_day = Date.today.next_day
+   forders = get_orders_by_shipdate the_day
+else
+   the_day = Date.today
+   day_count.times do 
+        forders += get_orders_by_shipdate the_day
+        the_day = the_day.prev_day
+   end
 end
 
-orders = JSON.parse(res.body)['data']['result']
+forders.each do |forder|
 
-orders.each do |order|
-
+    order = forder[:order]
     next if order['state'] == 3 #skip canceled order print
 
     #add header twice
     content  = "                                   每一天,更安心的选择\n"
 
     # remove '104' from the tail
-    content += "##{order['orderNo'][0..order['orderNo'].length-4]} #{order['orderDateTime']}\n"
+    content += "##{forder[:number]} #{order['orderDateTime']}\n"
 
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
@@ -113,6 +92,9 @@ orders.each do |order|
     customer_number = order['contactTel']
     customer_number += "-c#{order['customerNumber']}" if order['contactTel']!= order['customerNumber']
     #fn_name = ".\\incoming\\" + rday + "-order-" + order_short_number + "-" + order['customerNumber'] + ".txt"
+
+    rday =Date.today.strftime('%Y-%m-%d')
+    rtime=Time.now.strftime("%H%M%S")
     fn_name = ".\\incoming\\" + rday + "-order-" + order_short_number + "-" + customer_number + ".txt"
     File.open(fn_name,"w:UTF-8") do |f|
         f.write content
