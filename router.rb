@@ -6,6 +6,9 @@ require 'spreadsheet'
 
 def get_short_addr order
     fat_addr = order['contactAddress'].gsub(" ","")
+    fat_addr.gsub!('10座1101，梁幼花，15768099989','10座1101')
+    fat_addr.gsub!('侨朕中学（雅居乐旁，地铁员岗站A出口往西100米）','侨朕中学')
+    fat_addr.gsub!('五幢（入口在西城花园九街五座斜对面）602','五幢602')
     return fat_addr.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
 end
 
@@ -23,20 +26,22 @@ def get_short_date order
 end
 
 def get_short_remark order
-        return order['orderRemark'] ? order['orderRemark'].gsub('配送','').gsub(';','') : ''
+    omk = order['orderRemark'] ? order['orderRemark'].gsub('配送','').gsub(';','') : ''
+    return ' :' + omk if omk != ''
+    return omk
 end
 
 def get_batch_mark order
     order_time = Time.parse order['orderDateTime']
     batch2_start = Time.parse order_time.strftime('%Y-%m-%d') + ' 09:00:00' 
     batch2_end = Time.parse order_time.strftime('%Y-%m-%d') + ' 15:00:00' 
-    return order_time > batch2_start && order_time <= batch2_end ? '^ ' : '  '
+    return order_time > batch2_start && order_time <= batch2_end ? '#' : ' '
 end
 
 def get_noti order
 
     return '' if order['state'] == 4
-    return '已取消' if order['state'] == 3
+    return '| 已取消' if order['state'] == 3
 
     order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
     order_state="未定义" if order_state.nil?
@@ -45,8 +50,8 @@ def get_noti order
     pay_online={0=>'未用',1=>'通过'}[order['payOnLine']]
     opay_completed={0=>'未',1=>'已'}[order['isOnlinePaymentCompleted']]
 
-    return "团购单" if opay_completed=='已' && order_state=='未定义'
-    return ">>>#{order_state} #{delivery_type}#{pay_method}支付#{pay_online}网付#{opay_completed}完成"
+    return "| 团购单" if opay_completed=='已' && order_state=='未定义'
+    return "> #{order_state} #{delivery_type}#{pay_method}支付#{pay_online}网付#{opay_completed}完成"
 
 end
 
@@ -105,7 +110,7 @@ def decide_route order
  
 end
 
-def save_line_excel line, line_items
+def save_line_excel line_name, line_items
     #设置表格的编码为utf-8
     Spreadsheet.client_encoding="utf-8"
     #创建表格对象
@@ -131,7 +136,9 @@ def save_line_excel line, line_items
     end
     rday =Date.today.strftime('%Y-%m-%d')
     rtime=Time.now.strftime("%H%M%S")
-    fn_name = ".\\incoming\\" + rday + "-summary-" + line + '-' + rtime + ".xls"
+    fn_name = ".\\incoming\\" + rday + "-summary-" + line_name + '-' + rtime + ".xls"
     book.write fn_name
+    fn_name = ".\\incoming\\" + rday + "-CND-" + rtime + ".xls"
+    book.write fn_name if line_name == 'K'
 end
 

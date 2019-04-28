@@ -42,16 +42,18 @@ good_orders = 0
 forders.each do |forder|
     order = forder[:order]
 
-    addr = " #{forder[:number]} #{forder[:date_time]} #{sprintf('%4d',forder[:amt])} #{forder[:addr]} #{forder[:mark]} #{forder[:name]} #{forder[:tel]} | #{forder[:comment]}\n"
+    info =  " #{forder[:addr]} [  ]LFCR"
+    info += "  #{forder[:mark]}#{forder[:name]} #{forder[:tel]} #{forder[:comment]}LFCR"
+    info += "  :::#{forder[:date_time]} #{forder[:number]} #{forder[:amt]}\n" # " :::" 用于生成派线表时作为分割识别
 
     line = forder[:line]
     if routes[line].has_key? forder[:addr]
-        addr = "*" + routes[line][forder[:addr]]
+        info = "*" + routes[line][forder[:addr]]
     end
-    routes[line].store(forder[:addr],addr) #using addr to merge orders
+    routes[line].store(forder[:addr],info) #using addr to merge orders
 
     csv=[ '丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201', 
-          forder[:name],forder[:tel],forder[:addr], '生鲜','寄付',sprintf('%d',forder[:amt]/10),"999",forder[:comment],forder[:date]+'-'+forder[:number]
+          forder[:name],forder[:tel],forder[:addr], '生鲜','寄付',sprintf('%d',forder[:amt]/10),"1000",forder[:comment],forder[:date]+'-'+forder[:number]
     ]
     line_data[line].store(forder[:number],csv) #if want to avoid duplicate use contactTel
 
@@ -64,18 +66,28 @@ end
 
 merged_orders = 0
 lines.each do  |line|
+  rday =Date.today.strftime('%Y-%m-%d')
+  rtime=Time.now.strftime("%H%M%S")
   rdex = 1
-  content = ">>>>>>>>>>  Route #{line} <<<<<<<<<<\n"
-  routes[line].sort_by{|_key, value| value}.to_h.each { |tel, addr|
+  show_content =  "\n>>> Route #{line} <<<\n"
+  print_content = "\n\n\n>>>>>>>>>>  路线交付表 #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
+  routes[line].sort_by{|_key, value| value}.to_h.each { |tel, info|
     merged_orders += 1
-    content += "#{sprintf('%02d',rdex)})" + addr
+    s_info = info.gsub('LFCRLFCR','LFCR').gsub('LFCR',' ').gsub('[  ]','').gsub(':::','  ').gsub('  ',' ').gsub('  ',' ').gsub('  ',' ')
+    show_content += "#{sprintf('%02d',rdex)} " + s_info
+    p_info = info.gsub('LFCR',"\n").split("  :::")[0]
+    print_content += "#{sprintf('%02d',rdex)} " + p_info
     rdex +=1
   }
   if routes[line].size!= 0 
-    puts content
+    puts show_content
+    fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"
+    File.open(fn_name,"w:UTF-8") do |f|
+        f.write print_content
+    end
   end 
   if line_data[line].size!=0
-    save_line_excel line, line_data[line]
+    save_line_excel line[1], line_data[line]
   end
 end
 
