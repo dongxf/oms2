@@ -27,10 +27,34 @@ end
 # pospal only support to query orders within 24 hours
 def get_orders_within s_time, e_time
 
-        puts "retrieving orders within: #{s_time} ... #{e_time}\n"
+        forders=[]
+
+        puts "retrieving orders between #{s_time} and  #{e_time}\n"
 
         req = { 'startTime'=> s_time, 'endTime'=> e_time }
         res=pospal_api(:queryOrderPages,req)
         orders = res['data']['result']
-        return orders
+
+        orders.each do |order|
+            slim_addr=get_short_addr order
+            slim_name = get_short_name order
+            odrmk = "#{get_noti order} #{get_short_remark order}"
+            batch_mark =  get_batch_mark order
+            short_no = get_short_no order
+            forders += [{
+                    :line => decide_route(order),
+                    :mark => get_batch_mark(order),
+                    :number => get_short_no(order),
+                    :date_time => order['orderDateTime'],
+                    :name => get_short_name(order),
+                    :addr => get_short_addr(order),
+                    :tel => order['contactTel'],
+                    :amt => order['totalAmount'],
+                    :comment => get_noti(order) + get_short_remark(order),
+                    :date => get_short_date(order),
+                    :order => order
+            }]
+
+        end
+        return forders
 end

@@ -11,14 +11,25 @@ require 'awesome_print'
 load 'router.rb'
 load 'get_orders.rb'
 
-the_day = Date.today
-orders = []
-1.times do 
-    orders += get_orders_by_shipdate the_day
-    the_day = the_day.prev_day
+forders = []
+
+#days count backward from today, if days==0 then use tomrrow as shipdate
+day_count = ARGV[0].nil? ? 1 : ARGV[0].to_i
+
+if day_count == 0
+   the_day = Date.today.next_day
+   forders = get_orders_by_shipdate the_day
+else
+   the_day = Date.today
+   day_count.times do 
+        forders += get_orders_by_shipdate the_day
+        the_day = the_day.prev_day
+   end
 end
 
-lines = ['[Z]','[C]','[G]','[Q]','[P]','[K]', '[T]']
+#Z: 自提 C: 承诺达 G:广州 Q:祈福弃用 P:番禺自送 K：快递 T:团购 X:问题单
+#目前使用Z G P K T X
+lines = ['[Z]','[G]','[P]','[K]', '[T]', '[X]']
 routes = {}
 line_data = {}
 lines.each do |line| 
@@ -26,31 +37,28 @@ lines.each do |line|
         routes[line] = {} 
 end
 
-index = -1
 amt = 0.0
 good_orders = 0
-orders.each do |order|
-    index +=1 
-    next if order['state'] == 3
+forders.each do |forder|
+    order = forder[:order]
 
-    amt += order['totalAmount']
-    good_orders +=1 if order['state'] == 4
+    addr = " #{forder[:number]} #{forder[:date_time]} #{sprintf('%4d',forder[:amt])} #{forder[:addr]} #{forder[:mark]} #{forder[:name]} #{forder[:tel]} | #{forder[:comment]}\n"
 
-    slim_addr=get_short_addr order
-    slim_name = get_short_name order
-    odrmk = "#{get_noti order} #{get_short_remark order}"
-    batch_mark =  get_batch_mark order
-    short_no = get_short_no order
+    line = forder[:line]
+    if routes[line].has_key? forder[:addr]
+        addr = "*" + routes[line][forder[:addr]]
+    end
+    routes[line].store(forder[:addr],addr) #using addr to merge orders
 
-    addr = "#{batch_mark} #{short_no} #{order['orderDateTime']}"
-    addr += " #{slim_addr} #{slim_name} #{order['contactTel']} #{order['totalAmount']} | #{odrmk}\n"
+    csv=[ '丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201', 
+          forder[:name],forder[:tel],forder[:addr], '生鲜','寄付',sprintf('%d',forder[:amt]/10),"999",forder[:comment],forder[:date]+'-'+forder[:number]
+    ]
+    line_data[line].store(forder[:number],csv) #if want to avoid duplicate use contactTel
 
-    line = decide_route order
-    addr = "** " + addr if routes[line].has_key? slim_addr && line!='[T]'
-    routes[line].store(slim_addr,addr) #using slim_addr will merge orders
-
-    ship_info=[ '丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201',slim_name,order['contactTel'],slim_addr,'生鲜','寄付',order['totalAmount']/10,"999",odrmk,short_no]
-    line_data[line].store(short_no,ship_info) #if want to avoid duplicate use contactTel
+    if line!='[X]'
+        amt += order['totalAmount']
+        good_orders +=1
+    end
 
 end
 
@@ -60,7 +68,7 @@ lines.each do  |line|
   content = ">>>>>>>>>>  Route #{line} <<<<<<<<<<\n"
   routes[line].sort_by{|_key, value| value}.to_h.each { |tel, addr|
     merged_orders += 1
-    content += "#{rdex})" + addr
+    content += "#{sprintf('%02d',rdex)})" + addr
     rdex +=1
   }
   if routes[line].size!= 0 
@@ -72,5 +80,4 @@ lines.each do  |line|
 end
 
 puts "------------------------------------"
-#puts "Total: " + s_time + "--" + e_time + " >>" + " #{merged_orders} of #{orders.count} RMB#{amt}"
-puts "Total: " + " >>" + " #{merged_orders} of #{orders.count} RMB#{amt}"
+puts "Total: " + " >>" + " #{merged_orders} of #{forders.count} RMB#{amt}"
