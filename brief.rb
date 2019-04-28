@@ -7,156 +7,89 @@ require 'json'
 require 'time'
 require 'date'
 require 'awesome_print'
-require 'spreadsheet'
 
 load 'router.rb'
+load 'get_orders.rb'
 
-#please set POSPAL_APPID and APPKEY in .bashrc
-pospal_appid=ENV['POSPAL_APPID']
-pospal_appkey=ENV['POSPAL_APPKEY']
+forders = []
 
-brief_title = '订单交付表'
-today = Date.today
-yesterday = today.prev_day
-rday =Date.today.strftime('%Y-%m-%d')
-rtime=Time.now.strftime("%H%M%S")
-c1 = ' 15:00:01'
-c2 = ' 15:00:00'
-close_time = Time.parse today.strftime('%Y-%m-%d') + c2
-right_now = Time.now
-s_time = yesterday.strftime('%Y-%m-%d') + c1
-e_time = today.strftime('%Y-%m-%d') + c2
-if ( right_now > close_time )
-  s_time = today.strftime('%Y-%m-%d') + c1
-  e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
-end
-#s_time = today.strftime('%Y-%m-%d') + ' 00:00:00'
-#e_time = today.strftime('%Y-%m-%d') + ' 23:59:59'
+#days count backward from today, if days==0 then use tomrrow as shipdate
+day_count = ARGV[0].nil? ? 1 : ARGV[0].to_i
 
-request_body = {
-    'appId'=> pospal_appid,
-    'startTime'=> s_time,
-    'endTime'=> e_time
-}
-
-uri = URI('https://area24-win.pospal.cn:443/pospal-api2/openapi/v1/orderOpenApi/queryOrderPages')
-res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
-  req = Net::HTTP::Post.new(uri)
-  req['User-Agent']= 'openApi'
-  req['Content-Type']= 'application/json; charset=utf-8'
-  req['accept-encoding']= 'gzip,deflate'
-  req['time-stamp']= Time.now.getutc
-  req['data-signature']= Digest::MD5.hexdigest(pospal_appkey + request_body.to_json)
-  req.body = request_body.to_json
-  http.request(req)
+if day_count == 0
+   the_day = Date.today.next_day
+   forders = get_orders_by_shipdate the_day
+else
+   the_day = Date.today
+   day_count.times do 
+        forders += get_orders_by_shipdate the_day
+        the_day = the_day.prev_day
+   end
 end
 
-#ap res.body
-
-orders = JSON.parse(res.body)['data']['result']
-lines = ['[Z]','[C]','[G]','[Q]','[P]','[K]','[T]']
+#Z: 自提 C: 承诺达 G:广州 Q:祈福弃用 P:番禺自送 K：快递 T:团购 X:问题单
+#目前使用Z G P K T X
+lines = ['[Z]','[G]','[P]','[K]', '[T]', '[X]']
 routes = {}
-cnd_addrs = {}
-lines.each do  |line|
-  routes[line] = {}
+line_data = {}
+lines.each do |line| 
+        line_data[line] = {}
+        routes[line] = {} 
 end
 
-#puts routes['Z']
-#puts routes['C']
+amt = 0.0
+good_orders = 0
+forders.each do |forder|
+    order = forder[:order]
 
-#col_names=['发货人姓名(必填)','发货人电话(必填)','发件人地址(必填)','收件人姓名(必填)','收件人电话(必填)','收件人地址(必填)','品名(必填)  付款方式(默认寄付)  内件数量   货物价值（选填）','备注（选填）','物流编号（选填）','代收费用（选填）']
-index = -1
-orders.each do |order|
-    index +=1 
-    next if order['state'] == 3
-    fat_addr = order['contactAddress'].gsub(" ","")
-    slim_addr=fat_addr.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
-    fat_name = order['contactName'].gsub(" ","")
-    slim_name = fat_name.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
-    odrmk = order['orderRemark'] ? order['orderRemark'].gsub('配送','') : ''
+    info =  " #{forder[:addr]} [  ]LFCR"
+    info += "  #{forder[:mark]}#{forder[:name]} #{forder[:tel]} #{forder[:comment]}LFCR"
+    info += "  :::#{forder[:date_time]} #{forder[:number]} #{forder[:amt]}\n" # " :::" 用于生成派线表时作为分割识别
 
-    content = "orders[#{index}] #{order['orderDateTime']} ##{order['orderNo']} #{slim_addr} #{order['contactName']}  #{order['contactTel']}\n"
+    line = forder[:line]
+    if routes[line].has_key? forder[:addr]
+        info = "*" + routes[line][forder[:addr]]
+    end
+    routes[line].store(forder[:addr],info) #using addr to merge orders
 
-    #mark orders late then 9:00am with *
-    order_time = Time.parse order['orderDateTime']
-    batch_time = Time.parse today.strftime('%Y-%m-%d') + ' 09:00:00' 
-    new_round_time = Time.parse today.strftime('%Y-%m-%d') + ' 15:00:01' 
-    batch_mark =  order_time > batch_time && order_time < new_round_time ? '# ' : '  '
+    csv=[ '丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201', 
+          forder[:name],forder[:tel],forder[:addr], '生鲜','寄付',sprintf('%d',forder[:amt]/10),"1000",forder[:comment],forder[:date]+'-'+forder[:number]
+    ]
+    line_data[line].store(forder[:number],csv) #if want to avoid duplicate use contactTel
 
-    addr = "#{slim_addr} [  ]\n#{batch_mark} #{order['contactName']}  #{order['contactTel']} | #{odrmk}\n"
-    addr_body = "#{slim_addr}"
-    if order['state']!= 4
-      order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
-      pay_method={'Cash'=>'现金','CustomerBalance'=>'余额','Wxpay'=>'微信','Alipay'=>'支付宝'}[order['payMethod']]
-      delivery_type={0=>'自营',1=>'自助',2=>'自提',3=>'预约',4=>'三方'}[order['deliveryType']]
-      pay_online={0=>'未用',1=>'通过'}[order['payOnLine']]
-      opay_completed={0=>'还未',1=>'已经'}[order['isOnlinePaymentCompleted']]
-      content += "异常警告>>> 状态#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}\n"
-      addr += " >>#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}\n"
+    if line!='[X]'
+        amt += order['totalAmount']
+        good_orders +=1
     end
 
-    #准备派线单数据
-    line = decide_route order 
-    addr = "** " + addr if routes[line].has_key? addr_body
-    routes[line].store(addr_body,addr)
-
-    #准备快递数据
-    if line == '[C]' || line == '[K]' 
-      orderRemark = '不能当面交付请电话联系,谢谢 ' + order['orderRemark'].gsub('配送','')
-        ship_info=['丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201',slim_name,order['contactTel'],slim_addr,'生鲜','寄付',"1","999",orderRemark,order['orderNo']]
-        #ap ship_info
-        cnd_addrs.store(order['contactTel'],ship_info)
-    end
-    puts content
 end
-puts "Total: " + s_time + "--" + e_time + " >>" + " #{orders.count}"
 
-#生成派线单文件
+merged_orders = 0
 lines.each do  |line|
+  rday =Date.today.strftime('%Y-%m-%d')
+  rtime=Time.now.strftime("%H%M%S")
   rdex = 1
-  content = "\n\n\n>>>>>>>>>>  #{brief_title} #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
-  routes[line].sort_by{|_key, addr| _key}.to_h.each { |body, addr|
-    content += "#{rdex} " + addr
+  show_content =  "\n>>> Route #{line} <<<\n"
+  print_content = "\n\n\n>>>>>>>>>>  路线交付表 #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
+  routes[line].sort_by{|_key, value| value}.to_h.each { |tel, info|
+    merged_orders += 1
+    s_info = info.gsub('LFCRLFCR','LFCR').gsub('LFCR',' ').gsub('[  ]','').gsub(':::','  ').gsub('  ',' ').gsub('  ',' ').gsub('  ',' ')
+    show_content += "#{sprintf('%02d',rdex)} " + s_info
+    p_info = info.gsub('LFCR',"\n").split("  :::")[0]
+    print_content += "#{sprintf('%02d',rdex)} " + p_info
     rdex +=1
   }
-  fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"
   if routes[line].size!= 0 
+    puts show_content
+    fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"
     File.open(fn_name,"w:UTF-8") do |f|
-        f.write content
+        f.write print_content
     end
   end 
+  if line_data[line].size!=0
+    save_line_excel line[1], line_data[line]
+  end
 end
 
-
-def toExcel line_items
-
-    #设置表格的编码为utf-8
-    Spreadsheet.client_encoding="utf-8"
-    #创建表格对象
-    book=Spreadsheet::Workbook.new
-    #创建工作表
-    sheet1=book.create_worksheet :name => "sheet1"
-    col_names=['发货人姓名(必填)','发货人电话(必填)','发件人地址(必填)','收件人姓名(必填)','收件人电话(必填)','收件人地址(必填)','品名(必填)','付款方式(默认寄付)','内件数量','货物价值（选填）','备注（选填）','物流编号（选填）','代收费用（选填）']
-
-    col_index=0
-    col_names.each do |cname|
-        sheet1.row(0)[col_index]=cname
-        col_index += 1
-    end
-
-    line_index = 0
-    line_items.each do |key, item_cells|
-            col_index=0
-            item_cells.each do |cell|
-                sheet1.row(line_index+1)[col_index]=cell
-                col_index += 1
-            end
-            line_index += 1
-    end
-    rday =Date.today.strftime('%Y-%m-%d')
-    rtime=Time.now.strftime("%H%M%S")
-    fn_name = ".\\incoming\\" + rday + "-CND-" + rtime + ".xls"
-    book.write fn_name
-end
-
-toExcel cnd_addrs
+puts "------------------------------------"
+puts "Total: " + " >>" + " #{merged_orders} of #{forders.count} RMB#{amt}"

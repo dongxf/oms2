@@ -75,20 +75,11 @@ lines.each do  |line|
     merged_orders += 1
     s_info = info.gsub('LFCRLFCR','LFCR').gsub('LFCR',' ').gsub('[  ]','').gsub(':::','  ').gsub('  ',' ').gsub('  ',' ').gsub('  ',' ')
     show_content += "#{sprintf('%02d',rdex)} " + s_info
-    p_info = info.gsub('LFCR',"\n").split("  :::")[0]
-    print_content += "#{sprintf('%02d',rdex)} " + p_info
     rdex +=1
   }
   if routes[line].size!= 0 
     puts show_content
-    fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"
-    File.open(fn_name,"w:UTF-8") do |f|
-        f.write print_content
-    end
   end 
-  if line_data[line].size!=0
-    save_line_excel line[1], line_data[line]
-  end
 end
 
 puts "------------------------------------"
