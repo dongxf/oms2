@@ -38,29 +38,26 @@ lines.each do |line|
 end
 
 amt = 0.0
-good_orders = 0
 forders.each do |forder|
     order = forder[:order]
 
-    info =  " #{forder[:addr]} [  ]LFCR"
-    info += "  #{forder[:mark]}#{forder[:name]} #{forder[:tel]} #{forder[:comment]}LFCR"
+    info =  " #{forder[:addr]} [  ]LFCR  #{forder[:mark]}#{forder[:name]} #{forder[:tel]} #{forder[:comment]}LFCR"
     info += "  :::#{forder[:date_time]} #{forder[:number]} #{forder[:amt]}\n" # " :::" 用于生成派线表时作为分割识别
 
     line = forder[:line]
-    if routes[line].has_key? forder[:addr]
-        info = "*" + routes[line][forder[:addr]]
+    if line != '[X]'
+        #merge non-X line orders summary when has same addr
+        info = "*" + routes[line][forder[:addr]] if routes[line].has_key? forder[:addr]
+        routes[line].store(forder[:addr],info)
+        amt += order['totalAmount']
+    else
+        routes[line].store(forder[:number],info)
     end
-    routes[line].store(forder[:addr],info) #using addr to merge orders
 
     csv=[ '丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201', 
           forder[:name],forder[:tel],forder[:addr], '生鲜','寄付',sprintf('%d',forder[:amt]/10),"1000",forder[:comment],forder[:date]+'-'+forder[:number]
     ]
     line_data[line].store(forder[:number],csv) #if want to avoid duplicate use contactTel
-
-    if line!='[X]'
-        amt += order['totalAmount']
-        good_orders +=1
-    end
 
 end
 
@@ -70,26 +67,31 @@ lines.each do  |line|
   rtime=Time.now.strftime("%H%M%S")
   rdex = 1
   show_content =  "\n>>> Route #{line} <<<\n"
-  print_content = "\n\n\n>>>>>>>>>>  路线交付表 #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
+  print_content = "\n\n\n>>>>>>>>>>  分线单 #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
   routes[line].sort_by{|_key, value| value}.to_h.each { |tel, info|
     merged_orders += 1
+    #生成显示内容,每条订单一行不包括换行
     s_info = info.gsub('LFCRLFCR','LFCR').gsub('LFCR',' ').gsub('[  ]','').gsub(':::','  ').gsub('  ',' ').gsub('  ',' ').gsub('  ',' ')
     show_content += "#{sprintf('%02d',rdex)} " + s_info
+    #生成打印内容,每条订单占两行,不含日期订单号金额等信息
     p_info = info.gsub('LFCR',"\n").split("  :::")[0]
     print_content += "#{sprintf('%02d',rdex)} " + p_info
     rdex +=1
   }
   if routes[line].size!= 0 
+    #显示订单信息
     puts show_content
+    #生成派线单
     fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"
     File.open(fn_name,"w:UTF-8") do |f|
         f.write print_content
     end
   end 
+  #保存派线单数据
   if line_data[line].size!=0
     save_line_excel line[1], line_data[line]
   end
 end
 
 puts "------------------------------------"
-puts "Total: " + " >>" + " #{merged_orders} of #{forders.count} RMB#{amt}"
+puts "Valid orders: #{merged_orders}/#{forders.count-routes['[X]'].count} RMB#{amt}"

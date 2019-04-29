@@ -38,29 +38,26 @@ lines.each do |line|
 end
 
 amt = 0.0
-good_orders = 0
 forders.each do |forder|
     order = forder[:order]
 
-    info =  " #{forder[:addr]} [  ]LFCR"
-    info += "  #{forder[:mark]}#{forder[:name]} #{forder[:tel]} #{forder[:comment]}LFCR"
+    info =  " #{forder[:addr]} [  ]LFCR  #{forder[:mark]}#{forder[:name]} #{forder[:tel]} #{forder[:comment]}LFCR"
     info += "  :::#{forder[:date_time]} #{forder[:number]} #{forder[:amt]}\n" # " :::" 用于生成派线表时作为分割识别
 
     line = forder[:line]
-    if routes[line].has_key? forder[:addr]
-        info = "*" + routes[line][forder[:addr]]
+    if line != '[X]'
+        #merge non-X line orders summary when has same addr
+        info = "*" + routes[line][forder[:addr]] if routes[line].has_key? forder[:addr]
+        routes[line].store(forder[:addr],info)
+        amt += order['totalAmount']
+    else
+        routes[line].store(forder[:number],info)
     end
-    routes[line].store(forder[:addr],info) #using addr to merge orders
 
     csv=[ '丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201', 
           forder[:name],forder[:tel],forder[:addr], '生鲜','寄付',sprintf('%d',forder[:amt]/10),"1000",forder[:comment],forder[:date]+'-'+forder[:number]
     ]
     line_data[line].store(forder[:number],csv) #if want to avoid duplicate use contactTel
-
-    if line!='[X]'
-        amt += order['totalAmount']
-        good_orders +=1
-    end
 
 end
 
@@ -70,9 +67,9 @@ lines.each do  |line|
   rtime=Time.now.strftime("%H%M%S")
   rdex = 1
   show_content =  "\n>>> Route #{line} <<<\n"
-  print_content = "\n\n\n>>>>>>>>>>  路线交付表 #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
+  print_content = "\n\n\n>>>>>>>>>>  分线单 #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
   routes[line].sort_by{|_key, value| value}.to_h.each { |tel, info|
-    merged_orders += 1
+    merged_orders += 1 if line!= '[X]'
     s_info = info.gsub('LFCRLFCR','LFCR').gsub('LFCR',' ').gsub('[  ]','').gsub(':::','  ').gsub('  ',' ').gsub('  ',' ').gsub('  ',' ')
     show_content += "#{sprintf('%02d',rdex)} " + s_info
     rdex +=1
@@ -83,4 +80,4 @@ lines.each do  |line|
 end
 
 puts "------------------------------------"
-puts "Total: " + " >>" + " #{merged_orders} of #{forders.count} RMB#{amt}"
+puts "Valid orders: #{merged_orders}/#{forders.count-routes['[X]'].count} RMB#{amt}"
