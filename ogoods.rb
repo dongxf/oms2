@@ -98,3 +98,53 @@ begin
 rescue => e
     puts ">>>ERROR: #{e}"
 end
+
+#从ogoodsDB中按照分类目录和商品编号排序，导出所有库存不为零的商品，用于盘点
+Spreadsheet.client_encoding="utf-8"
+book=Spreadsheet::Workbook.new
+sheet1=book.create_worksheet :name => "sheet1"
+col_names= ['名称（必填）','分类（必填）','条码','规格','主单位','库存量（必填）','进货价（必填）','销售价（必填）','批发价','会员价','会员折扣','积分商品','库存上限','库存下限','品牌','供货商','生产日期','保质期','拼音码','货号','称编码','自定义1','自定义2','自定义3','商品状态','商品描述']
+col_index=0
+col_names.each do |cname|
+    sheet1.row(0)[col_index]=cname
+    col_index += 1
+end
+li = 0
+sql1 = 'select * from ogoods.pospal_goods where balance>0 order by catalog desc, code'
+res1 = rds.query(sql1)
+res1.each do |r|
+    next if r['catalog']=='系统保留' || r['catalog']=='补拍运费' || r['catalog']=='增值服务'
+    li += 1
+    sheet1.row(li)[0]=r['name']
+    sheet1.row(li)[1]=r['catalog']
+    sheet1.row(li)[2]=r['code']
+    sheet1.row(li)[3]=r['size']
+    sheet1.row(li)[4]=r['unit']
+    sheet1.row(li)[5]=r['balance']
+    sheet1.row(li)[6]=r['purchase_price']
+    sheet1.row(li)[7]=r['sale_price']
+    sheet1.row(li)[8]=r['bulk_price']
+    sheet1.row(li)[9]=r['member_price']
+    sheet1.row(li)[10]=r['member_discount']
+    sheet1.row(li)[11]=r['points']
+    sheet1.row(li)[12]=r['max_stock']
+    sheet1.row(li)[13]=r['minimal_stock']
+    sheet1.row(li)[14]=r['brand']
+    sheet1.row(li)[15]=r['supplier']
+    sheet1.row(li)[16]=r['manufacture_date']
+    sheet1.row(li)[17]=r['baozhiqi_date']
+    sheet1.row(li)[18]=r['py_code']
+    sheet1.row(li)[19]=r['huo_number']
+    sheet1.row(li)[20]=r['scale_code']
+    sheet1.row(li)[21]=r['producer_memo']
+    sheet1.row(li)[22]=r['security_memo']
+    sheet1.row(li)[23]=r['keep_memo']
+    sheet1.row(li)[24]=r['status']
+    sheet1.row(li)[25]=r['description']
+end
+
+rday =Date.today.strftime('%Y-%m-%d')
+rtime=Time.now.strftime("%H%M%S")
+fn_name = ".\\goods_exported\\" + rday + "-stock-" + rtime + ".xls"
+book.write fn_name
+
