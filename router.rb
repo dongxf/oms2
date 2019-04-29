@@ -100,10 +100,10 @@ def decide_route order
       return '[K]' if address.include? '东莞庄路'
 
       #normal area
-      return '[G]' if address.include? '天河'
-      return '[G]' if address.include? '海珠'
-      return '[G]' if address.include? '越秀'
-      return '[G]' if address.include? '荔湾'
+      return '[G]' if address.include? '天河区'
+      return '[G]' if address.include? '海珠区'
+      return '[G]' if address.include? '越秀区'
+      return '[G]' if address.include? '荔湾区'
     end
 
     return '[K]'

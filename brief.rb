@@ -13,7 +13,7 @@ load 'get_orders.rb'
 
 forders = []
 
-#days count backward from today, if days==0 then use tomrrow as shipdate
+#days count backward from today, defualt is 1, if count==0 then use tomrrow as shipdate
 day_count = ARGV[0].nil? ? 1 : ARGV[0].to_i
 
 if day_count == 0
