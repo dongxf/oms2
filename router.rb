@@ -74,7 +74,7 @@ def decide_route order
     return '[P]' if address.include? '祈福'
     return '[P]' if address.include? '大学城'
     return '[P]' if address.include? '大学小筑'
-    return '[P]' if address.include? '小谷围'
+    return '[P]' if address.include? '谷围新村'
     return '[P]' if address.include? '深井村'
     return '[P]' if address.include? '亚运城'
     return '[P]' if address.include? '前锋村'
