@@ -5,6 +5,7 @@ require 'time'
 require 'spreadsheet'
 
 def get_short_addr order
+    return '番禺大石朝阳东路425号锦绣银湾3街17号' if order['contactTel']=='13711382291' #泳远恭子'
     fat_addr = order['contactAddress'].gsub(" ","")
     fat_addr.gsub!('10座1101，梁幼花，15768099989','10座1101')
     fat_addr.gsub!('侨朕中学（雅居乐旁，地铁员岗站A出口往西100米）','侨朕中学')
@@ -57,6 +58,8 @@ end
 
 def decide_route order
 
+    return '[P]' if order['contactTel']=='13711382291' #泳远恭子'
+
     return '[T]' if order['state'].nil? && order['isOnlinePaymentCompleted']==1
     return '[X]' if order['state'] != 4
 
@@ -71,7 +74,13 @@ def decide_route order
     return '[P]' if address.include? '华南新城'
     return '[P]' if address.include? '雅居乐'
 
-    return '[P]' if address.include? '祈福'
+    return '[P]' if address.include? '丽江花园'
+    return '[P]' if address.include? '洛溪南浦锦绣半岛'
+
+    return '[Q]' if address.include? '祈福'
+    return '[Q]' if address.include? '金山谷'
+    return '[Q]' if address.include? '富豪山庄'
+
     return '[P]' if address.include? '大学城'
     return '[P]' if address.include? '大学小筑'
     return '[P]' if address.include? '谷围新村'
@@ -79,8 +88,6 @@ def decide_route order
     return '[P]' if address.include? '亚运城'
     return '[P]' if address.include? '前锋村'
     return '[P]' if address.include? '西城花园'
-    return '[P]' if address.include? '金山谷'
-    return '[P]' if address.include? '富豪山庄'
     return '[P]' if address.include?('雅居乐') && !address.include?('南城')
     return '[P]' if address.include? '清华坊'
     return '[P]' if address.include?('南奥') || address.include?('南国奥')

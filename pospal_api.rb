@@ -41,6 +41,7 @@ def pospal_api api_name, request_body
     http.request(req)
   end
 
+  #puts "Status: #{res.body['status']}" if res && res.body
   return JSON.parse(res.body) if !res.nil?
 
 end
