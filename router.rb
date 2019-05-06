@@ -73,8 +73,10 @@ def decide_route order
     return '[P]' if address.include? '红郡'
     return '[P]' if address.include? '华南新城'
     return '[P]' if address.include? '雅居乐'
+    return '[P]' if address.include? '侨联中学'
 
     return '[P]' if address.include? '丽江花园'
+    return '[P]' if address.include? '百事佳花园'
     return '[P]' if address.include? '洛溪南浦锦绣半岛'
 
     return '[Q]' if address.include? '祈福'
