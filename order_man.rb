@@ -43,7 +43,11 @@ forders.each do |forder|
       delivery_type={0=>'自营',1=>'自助',2=>'自提',3=>'预约',4=>'三方'}[order['deliveryType']]
       pay_online={0=>'未用',1=>'通过'}[order['payOnLine']]
       opay_completed={0=>'还未',1=>'已经'}[order['isOnlinePaymentCompleted']]
-      content += "> 状态#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}\n"
+      if order['isOnlinePaymentCompleted']==1 && order['state'].nil?
+        #团购订单不增加备注
+      else
+        content += "> 状态#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}\n"
+      end
     end
 
     fat_addr = order['contactAddress'].gsub(" ","")
@@ -64,7 +68,11 @@ forders.each do |forder|
     content += "#{line_mark} [   ]                                _____ of  1  2  ____\n"
 
     if order['state']!= 4 && order['state']!= 3
-      content += ">>>>>>>>>警告：非常规状态，需单独处理<<<<<<<<<\n"
+      if order['isOnlinePaymentCompleted']==1 && order['state'].nil?
+        content += ">>>>>>>>> 团购订单 <<<<<<<<<\n"
+      else
+        content += ">>>>>>>>> 警告：非常规状态，需单独处理 <<<<<<<<<\n"
+      end
     else
       content += "-----------------------------------------------------------------\n"
     end

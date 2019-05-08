@@ -26,7 +26,7 @@ Get-ChildItem -Path c:\fc3.0\orders\incoming -Filter *-line-*.pdf | ForEach-Obje
 }
 
 #check for express data, if existed, mail to opalus460b
-Get-ChildItem -Path c:\fc3.0\orders\incoming -Filter *-CND-*.xls | ForEach-Object {
+Get-ChildItem -Path c:\fc3.0\orders\incoming -Filter *.xls | ForEach-Object {
     $subject = "new express data "+$_.Name
     .\mailsend -smtp smtp.exmail.qq.com -port 465 -ssl -auth -user pcron@foodtrust.cn -pass P123456n  -f pcron@foodtrust.cn -t opalus460b@foodtrust.cn -sub $subject -M "new express data" -attach $_.FullName
     Move-Item -Force -Path $_.FullName -Destination C:\fc3.0\orders\mailed

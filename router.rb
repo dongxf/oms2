@@ -60,8 +60,14 @@ def decide_route order
 
     return '[P]' if order['contactTel']=='13711382291' #泳远恭子'
 
-    return '[T]' if order['state'].nil? && order['isOnlinePaymentCompleted']==1
-    return '[X]' if order['state'] != 4
+    #return '[T]' if order['state'].nil? && order['isOnlinePaymentCompleted']==1
+    #return '[X]' if order['state'] != 4
+
+    if order['state'].nil? && order['isOnlinePaymentCompleted']==1
+      #团购订单
+    else
+      return '[X]' if order['state'] != 4
+    end
 
     address = get_short_addr order
 
