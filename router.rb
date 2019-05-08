@@ -69,13 +69,18 @@ def decide_route order
     return '[Z]' if address.include? '汉溪村'
 
     # if G line worload is too low , otherwise use P line
-    return '[P]' if address.include? '欧泊' 
-    return '[P]' if address.include? '红郡'
-    return '[P]' if address.include? '华南新城'
-    return '[P]' if address.include? '雅居乐'
-    return '[P]' if address.include? '侨联中学'
+    return '[G]' if address.include? '欧泊' 
+    return '[G]' if address.include? '红郡'
+    return '[G]' if address.include? '华南新城'
+    return '[G]' if address.include? '雅居乐'
+    return '[G]' if address.include? '侨联中学'
+    return '[G]' if address.include? '侨朕中学'
+    return '[G]' if address.include? '华南新村'
+    return '[G]' if address.include? '锦绣香江'
+    return '[G]' if address.include?('星河湾') && !address.include?('半岛')
 
     return '[P]' if address.include? '丽江花园'
+    return '[P]' if address.include? '洛浦街道'
     return '[P]' if address.include? '百事佳花园'
     return '[P]' if address.include? '洛溪南浦锦绣半岛'
 
@@ -84,6 +89,7 @@ def decide_route order
     return '[Q]' if address.include? '富豪山庄'
 
     return '[P]' if address.include? '大学城'
+    return '[P]' if address.include? '前龙西路'
     return '[P]' if address.include? '大学小筑'
     return '[P]' if address.include? '谷围新村'
     return '[P]' if address.include? '深井村'
@@ -93,9 +99,7 @@ def decide_route order
     return '[P]' if address.include?('雅居乐') && !address.include?('南城')
     return '[P]' if address.include? '清华坊'
     return '[P]' if address.include?('南奥') || address.include?('南国奥')
-    return '[P]' if address.include? '锦绣香江'
     return '[P]' if address.include? '华南碧桂园'
-    return '[P]' if address.include?('星河湾') && !address.include?('半岛')
 
     if address.include? '广州'
       #Insert any exception here
