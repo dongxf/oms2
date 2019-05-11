@@ -14,6 +14,7 @@ forders = []
 
 #days count backward from today, defualt is 1, if count==0 then use tomrrow as shipdate
 day_count = ARGV[0].nil? ? 1 : ARGV[0].to_i
+day_count = 2 if Date.today.wday==0 && ARGV[0].nil? #if Sunday
 
 if day_count == 0
    the_day = Date.today.next_day
