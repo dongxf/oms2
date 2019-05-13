@@ -32,12 +32,6 @@ forders.each do |forder|
     order = forder[:order]
     next if order['state'] == 3 #skip canceled order print
 
-    #add header twice
-    content  = "                                   每一天,更安心的选择\n"
-
-    # remove '104' from the tail
-    content += "##{forder[:number]} #{order['orderDateTime']}\n"
-
     if order['state']!= 4
       order_state={0=>'初创建',1=>'已同步',2=>'已发货',3=>'已取消',4=>'已完成'}[order['state']]
       pay_method={'Cash'=>'现金','CustomerBalance'=>'余额','Wxpay'=>'微信','Alipay'=>'支付宝'}[order['payMethod']]
@@ -46,6 +40,7 @@ forders.each do |forder|
       opay_completed={0=>'还未',1=>'已经'}[order['isOnlinePaymentCompleted']]
       if order['isOnlinePaymentCompleted']==1 && order['state'].nil?
         #团购订单不增加备注
+        content = ""
       else
         content += "> 状态#{order_state.nil? ? '未知' : order_state} #{pay_method}支付 #{pay_online}网付 #{opay_completed}完成 #{delivery_type}\n"
       end
@@ -56,17 +51,27 @@ forders.each do |forder|
     line_mark = decide_route order
     odrmk = order['orderRemark'] ? order['orderRemark'].gsub('配送','') : ''
 
+    #add header twice
+    content  = "#{line_mark} [   ]                  每一天,更安心的选择   " + "_____ of  1  2  ____\n"
+
+    # remove '104' from the tail
+    content += "##{forder[:number]} #{order['orderDateTime']}\n"
+
+
     content += "#{slim_addr}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
-    content += "> #{odrmk}\n"
-    content += "#{line_mark} [   ]                                _____ of  1  2  ____\n"
+    if odrmk != ''
+      content += "> #{odrmk}   -----\n"
+    else
+      content += "-----------------------------------------------------------------\n"
+    end
 
-    content += "-----------------------------------------------------------------\n"
-    content +=  order['orderNo'] + "-" + order['customerNumber'] + "\n"
+    content +=  forder[:number] + "-" + order['customerNumber'] + "       _____ of  1  2  ____\n"
     content += "#{order['contactAddress'].strip}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
-    content += "> #{odrmk}\n"
-    content += "#{line_mark} [   ]                                _____ of  1  2  ____\n"
+    if odrmk != ''
+      content += "> #{odrmk}   ------\n"
+    end
 
     if order['state']!= 4 && order['state']!= 3
       if order['isOnlinePaymentCompleted']==1 && order['state'].nil?
