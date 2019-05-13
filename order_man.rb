@@ -99,9 +99,8 @@ forders.each do |forder|
 
     #add footer
     content += "--------------------------------------------------------------------\n"
-    content += "若因欠收或品控问题缺货，24小时内原路退款，请留意查收\n"
-    content += "售后不满意无障碍退换，请联系小蜜18998382701微信同号\n"
-    content += "                 foodtrust.cn 买有机，到丰巢\n"
+    content += "缺货24小时内原路退款，售后请致电小蜜18998382701微信同号\n"
+    content += "　　　　　　　　foodtrust.cn 买有机，到丰巢\n"
 
     order_short_number = order['orderNo'][0..order['orderNo'].length-4]
     customer_number = order['contactTel']
