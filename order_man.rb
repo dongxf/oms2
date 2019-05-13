@@ -53,21 +53,21 @@ forders.each do |forder|
 
     #add header twice
     #全角空格字符 (　) (_) (﹏)
-     content  = "﹏ of 2 ﹏　　　　　　每一天,更安心的选择　　　　　　　﹏ #{line_mark}\n"
+    content ="#{line_mark}　　　　　　　　　每一天,更安心的选择　　　　﹏ of 2 ﹏\n"
 
     # remove '104' from the tail
-     content  += "　　　　　　　　　#{forder[:number]} #{order['orderDateTime']}\n"
+    content  += "#{forder[:number]}　　#{order['orderDateTime']}\n"
 
     content += "#{slim_addr}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
     if odrmk != ''
       content += "> #{odrmk}   -----\n"
     else
-      content += "--------------------------------------------------------------------\n"
+      content  += "　　　　-　　　　　-　　　　　-　　　　　-　　　　-　　　　\n"
     end
 
-     content  += "﹏ of 2 ﹏　　　　　　#{forder[:number]}-#{order['customerNumber']}\n"
-    #content +=  "____ of  1  2 ____      " + forder[:number] + "-" + order['customerNumber'] + "\n"
+    content += "#{forder[:number]}　　#{order['customerNumber']}　　　　　﹏ of 2 ﹏\n"
+
     content += "#{order['contactAddress'].strip}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
     if odrmk != ''
