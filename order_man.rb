@@ -52,21 +52,22 @@ forders.each do |forder|
     odrmk = order['orderRemark'] ? order['orderRemark'].gsub('配送','') : ''
 
     #add header twice
-    content  = "#{line_mark} [   ]                  每一天,更安心的选择   " + "_____ of  1  2  ____\n"
+    #全角空格字符 (　) (_) (﹏)
+     content  = "﹏ of 2 ﹏　　　　　　每一天,更安心的选择　　　　　　　﹏ #{line_mark}\n"
 
     # remove '104' from the tail
-    content += "##{forder[:number]} #{order['orderDateTime']}\n"
-
+     content  += "　　　　　　　　　#{forder[:number]} #{order['orderDateTime']}\n"
 
     content += "#{slim_addr}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
     if odrmk != ''
       content += "> #{odrmk}   -----\n"
     else
-      content += "-----------------------------------------------------------------\n"
+      content += "--------------------------------------------------------------------\n"
     end
 
-    content +=  forder[:number] + "-" + order['customerNumber'] + "       _____ of  1  2  ____\n"
+     content  += "﹏ of 2 ﹏　　　　　　#{forder[:number]}-#{order['customerNumber']}\n"
+    #content +=  "____ of  1  2 ____      " + forder[:number] + "-" + order['customerNumber'] + "\n"
     content += "#{order['contactAddress'].strip}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
     if odrmk != ''
@@ -80,7 +81,7 @@ forders.each do |forder|
         content += ">>>>>>>>> 警告：非常规状态，需单独处理 <<<<<<<<<\n"
       end
     else
-      content += "-----------------------------------------------------------------\n"
+      content += "--------------------------------------------------------------------\n"
     end
     content += " 数量     商品名及规格\n"
     items = order['items']
@@ -97,7 +98,7 @@ forders.each do |forder|
     content += "\n"
 
     #add footer
-    content += "-----------------------------------------------------------------\n"
+    content += "--------------------------------------------------------------------\n"
     content += "若因欠收或品控问题缺货，24小时内原路退款，请留意查收\n"
     content += "售后不满意无障碍退换，请联系小蜜18998382701微信同号\n"
     content += "                 foodtrust.cn 买有机，到丰巢\n"

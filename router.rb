@@ -65,6 +65,7 @@ def decide_route order
 
     if order['state'].nil? && order['isOnlinePaymentCompleted']==1
       #团购订单
+      return '[T]'
     else
       return '[X]' if order['state'] != 4
     end
