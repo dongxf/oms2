@@ -67,7 +67,7 @@ lines.each do  |line|
   rtime=Time.now.strftime("%H%M%S")
   rdex = 1
   show_content =  "\n>>> Route #{line} <<<\n"
-  print_content = "\n\n\n>>>>>>>>>>  分线单 #{line} <<<<<<<<<<\n #{Time.now.to_s}\n\n"
+  print_content = ">>> 分线单 #{line}  #{Time.now.to_s} <<<\n"
   routes[line].sort_by{|_key, value| value}.to_h.each { |tel, info|
     merged_orders += 1
     #生成显示内容,每条订单一行不包括换行
