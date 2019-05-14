@@ -51,7 +51,7 @@ def get_noti order
     pay_online={0=>'未用',1=>'通过'}[order['payOnLine']]
     opay_completed={0=>'未',1=>'已'}[order['isOnlinePaymentCompleted']]
 
-    return "| 团购单" if opay_completed=='已' && order_state=='未定义'
+    return "| 团购或待确认" if opay_completed=='已' && order_state=='未定义'
     return "> #{order_state} #{delivery_type}#{pay_method}支付#{pay_online}网付#{opay_completed}完成"
 
 end
@@ -64,7 +64,7 @@ def decide_route order
     #return '[X]' if order['state'] != 4
 
     if order['state'].nil? && order['isOnlinePaymentCompleted']==1
-      #团购订单
+      #团购或待确认订单
       return '[T]'
     else
       return '[X]' if order['state'] != 4

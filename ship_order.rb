@@ -8,32 +8,29 @@ require 'date'
 require 'awesome_print'
 
 #please set POSPAL_APPID and APPKEY in .bashrc
-pospal_appid=ENV['POSPAL_APPID']
-pospal_appkey=ENV['POSPAL_APPKEY']
+def set_order_by_number action, number
+        pospal_appid=ENV['POSPAL_APPID']
+        pospal_appkey=ENV['POSPAL_APPKEY']
+        request_body = {
+            'appId'=> pospal_appid,
+            #'orderNo'=> '19032703082989286104'
+            'orderNo'=> number+'104'
+        }
 
-#s_time = '2019-03-25 20:00:00'
-#e_time = '2019-03-26 19:59:59'
+        #if action=:ship
+        uri = URI('https://area24-win.pospal.cn:443/pospal-api2/openapi/v1/orderOpenApi/shipOrder') if action==:ship
+        uri = URI('https://area24-win.pospal.cn:443/pospal-api2/openapi/v1/orderOpenApi/completeOrder') if action==:complete
 
-today = Date.today
-yesterday = Date.today.prev_day
-s_time = yesterday.strftime('%Y-%m-%d') + ' 19:00:00'
-e_time = today.strftime('%Y-%m-%d') + ' 18:00:00'
-
-request_body = {
-    'appId'=> pospal_appid,
-    'orderNo'=> '19032703082989286104'
-}
-
-uri = URI('https://area24-win.pospal.cn:443/pospal-api2/openapi/v1/orderOpenApi/shipOrder')
-res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
-  req = Net::HTTP::Post.new(uri)
-  req['User-Agent']= 'openApi'
-  req['Content-Type']= 'application/json; charset=utf-8'
-  req['accept-encoding']= 'gzip,deflate'
-  req['time-stamp']= Time.now.getutc
-  req['data-signature']= Digest::MD5.hexdigest(pospal_appkey + request_body.to_json)
-  req.body = request_body.to_json
-  http.request(req)
+        res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
+          req = Net::HTTP::Post.new(uri)
+          req['User-Agent']= 'openApi'
+          req['Content-Type']= 'application/json; charset=utf-8'
+          req['accept-encoding']= 'gzip,deflate'
+          req['time-stamp']= Time.now.getutc
+          req['data-signature']= Digest::MD5.hexdigest(pospal_appkey + request_body.to_json)
+          req.body = request_body.to_json
+          http.request(req)
+        end
+        ap JSON.parse(res.body)
 end
 
-ap JSON.parse(res.body)
