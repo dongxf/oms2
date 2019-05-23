@@ -2,10 +2,11 @@
 $homeDir = "d:\dongxf\work\oms2"
 #$homeDir = "c:\fc3.0\orders"
 #Set-Location $homeDir
-Set-Location "c:\fc3.0\orders"
+Set-Location "c:\FC3.0\orders"
 
-$goodsFiles = "c:\fc3.0\orders\auto_import\商品资料.xls", "c:\fc3.0\orders\auto_import\商品资料 .xls", "c:\fc3.0\orders\auto_import\商品资料　.xls", "c:\fc3.0\orders\auto_import\posapl_goods.xls"
+$goodsFiles = "c:\FC3.0\orders\auto_import\商品资料.xls", "c:\FC3.0\orders\auto_import\商品资料 .xls", "c:\FC3.0\orders\auto_import\商品资料　.xls", "c:\FC3.0\orders\auto_import\pospal_goods.xls"
 foreach ( $targetFileName in $goodsFiles ) {
+        Write-Host "looking for " $targetFileName
         if ( Test-Path $targetFileName ) {
             ruby import_pospal_goods.rb $targetFileName
             #Remove-Item -Force -Path $targetFileName
@@ -21,12 +22,13 @@ foreach ( $targetFileName in $goodsFiles ) {
 
 $fansFiles = "c:\fc3.0\orders\auto_import\wechat_fans.xls"
 foreach ( $targetFileName in $fansFiles ) {
+        Write-Host "looking for " $targetFileName
         if ( Test-Path $targetFileName ) {
             ruby import_wechat_fans.rb $targetFileName
             #Remove-Item -Force -Path $targetFileName
             $today=Get-Date -Format FileDateTime
             $fileBackup="c:\fc3.0\orders\auto_import\imported\wechat_fans-"+$today+".xls"
-            Write-Host $fileBackup
+            Write-Host "moving file to "+$fileBackup
             Move-Item -Force -Path $targetFileName -Destination $fileBackup
         }Else{
             Write-Host "no fans to sync"

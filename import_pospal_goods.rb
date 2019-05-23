@@ -54,7 +54,7 @@ begin
         line_idx += 1
         next if line_idx == 1
         code = row[2]
-        descrp = row[25]
+        descrp = row[26]
         descrp = '' if descrp.nil?  #to prevent bugs caused by nil != nil when compring database record with excel data
         #will remove all links in description here
 
@@ -62,31 +62,31 @@ begin
             puts "insert #{row[2]} #{row[0]}"
             sqlu = "insert into ogoods.pospal_goods( 
                         name,catalog,code,size,unit,
-                        balance,purchase_price,sale_price,bulk_price,member_price,
+                        balance,purchase_price,sale_price,gross_profit,bulk_price,member_price,
                         member_discount, points, max_stock,minimal_stock,
                         brand,supplier,manufacture_date,baozhiqi_date,py_code,huo_number,
                         producer_memo,security_memo,keep_memo,scale_code,
                         status,description
                     ) values( 
                         '#{row[0]}','#{row[1]}','#{row[2]}','#{row[3]}','#{row[4]}',
-                        #{row[5]},#{row[6]},#{row[7]},#{row[8]},#{row[9]},
-                        '#{row[10]}','#{row[11]}','#{row[12]}','#{row[13]}',
-                        '#{row[14]}','#{row[15]}','#{row[16]}','#{row[17]}','#{row[18]}','#{row[19]}',
-                        '#{row[20]}','#{row[21]}','#{row[22]}','#{row[23]}',
-                        '#{row[24]}','#{descrp}'
+                        #{row[5]},#{row[6]},#{row[7]},'#{row[8]}',#{row[9]},#{row[10]},
+                        '#{row[11]}','#{row[12]}','#{row[13]}','#{row[14]}',
+                        '#{row[15]}','#{row[16]}','#{row[17]}','#{row[18]}','#{row[19]}','#{row[20]}',
+                        '#{row[21]}','#{row[22]}','#{row[23]}','#{row[24]}',
+                        '#{row[25]}','#{descrp}'
                     );"
             resu = rds.query(sqlu)
         else
            #sqlu = "update psi.t_inventory_detail set balance_count=#{sprintf('%.8f', b_count)}, balance_money=#{sprintf('%.8f', b_money)}, balance_price=#{sprintf('%.8f', b_price)}, out_money=#{sprintf('%.8f', out_money)}, out_price=#{sprintf('%.3f', out_price)}, fixed='fixed' where id='#{inv_detail_id}'"
            if overwrite_mode || oNames[code]!= row[0] || oPrices[code]!= row[7] || oDescription[code]!= descrp
-                puts "update #{row[2]} #{row[0]}"
+                #puts "update #{row[2]} #{row[0]}"
                 sqlu = "update ogoods.pospal_goods set
                     name='#{row[0]}',catalog='#{row[1]}',code='#{row[2]}',size='#{row[3]}',unit='#{row[4]}',
-                    balance=#{row[5]},purchase_price=#{row[6]},sale_price=#{row[7]},bulk_price=#{row[8]},member_price=#{row[9]},
-                    member_discount='#{row[10]}',points='#{row[11]}',max_stock='#{row[12]}',minimal_stock='#{row[13]}',
-                    brand='#{row[14]}',supplier='#{row[15]}',manufacture_date='#{row[16]}',baozhiqi_date='#{row[17]}',py_code='#{row[18]}',huo_number='#{row[19]}',
-                    producer_memo='#{row[20]}',security_memo='#{row[21]}',keep_memo='#{row[22]}',scale_code='#{row[23]}',
-                    status='#{row[24]}',description='#{descrp}'
+                    balance=#{row[5]},purchase_price=#{row[6]},sale_price=#{row[7]},gross_profit='#{row[8]}',bulk_price=#{row[9]},member_price=#{row[10]},
+                    member_discount='#{row[11]}',points='#{row[12]}',max_stock='#{row[13]}',minimal_stock='#{row[14]}',brand='#{row[15]}'
+                    ,supplier='#{row[16]}',manufacture_date='#{row[17]}',baozhiqi_date='#{row[18]}',py_code='#{row[19]}',huo_number='#{row[20]}',
+                    producer_memo='#{row[21]}',security_memo='#{row[22]}',keep_memo='#{row[23]}',scale_code='#{row[24]}',
+                    status='#{row[25]}',description='#{descrp}'
                     where code = '#{row[2]}'
                 "
                 resu = rds.query(sqlu)
