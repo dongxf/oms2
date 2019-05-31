@@ -52,14 +52,14 @@ def update_orderdb forder
              order_id,state,pay_method,pay_online,online_paid,
              amount,delivery_type,customer_id,shipping_fee,zone_code,
              remark,order_time,name,addr,tel,line,
-             print_times,ship_refunded,
+             print_times,ship_refunded,point_awarded,
              raw_data,plain_text
             ) VALUES 
             (
              '#{forder[:number]}',#{state},'#{pay_method}',#{pay_online},#{online_paid},
              #{amount},#{delivery_type},'#{order['customerNumber']}',#{shipping_fee},'#{zone_code}',
              '#{order['orderRemark']}','#{order['orderDateTime']}','#{forder[:name]}','#{forder[:addr]}','#{forder[:tel]}','#{forder[:line]}',
-             0,0.0,
+             0,0.0,0.0,
              '#{escaped_order_json}','#{escaped_plain_text}'
             )
             ON DUPLICATE KEY

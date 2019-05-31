@@ -6,6 +6,7 @@ require 'time'
 load 'get_orders.rb'
 
 def should_refund order
+
         return false if order[:shipping_fee] <= 0 #没有收过运费
         return false if order[:ship_refunded] > 0 #已经退回过
         return true if order[:zone_code] =='ZB' && order[:amount]>=88
@@ -47,29 +48,29 @@ oorders.each do |order|
 
     #符合退款条件的省内订单周边小区或省外退回10元运费
     if should_refund order
-            puts '>>>>'
             now = Time.now.strftime('%Y-%m-%d %H:%M:%S')
-            puts "refund #{order_id}"
+            puts "refund shipping fee to #{order_id} #{order[:name]} #{order[:addr]}"
+            fee = order[:shipping_fee]
             req = { 
-                    'customerUid' => order[:customer_id],
-                    'balanceIncrement' => order[:shipping_fee],
+                    'customerUid' => 965193016323785568, #order[:customer_id], #965193016323785568 
+                    'balanceIncrement' => fee,
                     'pointIncrement' => 0,
                     'dataChangeTime' => now
             }
             pospal_api :updateBiPi, req
-            comment = order[:comment] + " | shipfee refunded at #{now}"
+            comment = order[:comment] + " | #{fee} shipfee refunded at #{now}"
             sqlu = "update ogoods.pospal_orders set comment='#{comment}', ship_refunded=10  where order_id = '#{order_id}'"
             resu = rds.query(sqlu)
 
             #省外奖励积分
-            if order[:zone_code]=='SW'
+            if order[:zone_code]=='SW' && order[:amount] >= 198 && order[:point_awarded] != 0
                     now = Time.now.strftime('%Y-%m-%d %H:%M:%S')
-                    puts "award #{order_id}"
-                    puts "refund #{order_id}"
-                    point = 1000 if order[:amount] >= 198
+                    puts "award points to #{order_id} #{order[:name]} #{order[:addr]}"
+
+                    point = 1000
                     point = 2000 if order[:amount] >= 298
                     req = { 
-                            'customerUid' => order[:customer_id],
+                            'customerUid' => 965193016323785568, #order[:customer_id], #965193016323785568 
                             'balanceIncrement' => 0,
                             'pointIncrement' => point,
                             'dataChangeTime' => Time.now.strftime('%Y-%m-%d %H:%M:%S')

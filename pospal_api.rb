@@ -19,7 +19,9 @@ def pospal_api api_name, request_body
     :shipOrder => 'orderOpenApi/shipOrder',
     :getCategoryPages => 'productOpenApi/queryProductCategoryPages',
     :queryOrderPages => 'orderOpenApi/queryOrderPages',
-    :updateBiPi => 'customerOpenApi/updateBalancePointByIncrement'
+    :updateBiPi => 'customerOpenApi/updateBalancePointByIncrement',
+    :queryCustomerPages => 'customerOpenApi/queryCustomerPages',
+    :queryCustomerUid => 'customerOpenApi/queryByNumber'
   }
 
   #please set POSPAL_APPID and APPKEY in .bashrc
@@ -27,7 +29,6 @@ def pospal_api api_name, request_body
   pospal_appkey=ENV['POSPAL_APPKEY']
   base_url= 'https://area24-win.pospal.cn:443/pospal-api2/openapi/v1/'
 
-  
   request_body.store('appId', pospal_appid)
 
   uri = URI(base_url+api_urls[api_name])
