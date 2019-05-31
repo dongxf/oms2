@@ -88,6 +88,7 @@ def get_ogoods_orders_within s_time, e_time
         sqlu = "select * from ogoods.pospal_orders where order_time > '#{s_time}' and order_time < '#{e_time}'"
         resu = rds.query(sqlu)
         resu.each do |r|
+            comment = r['comment'].nil? ? '' : r['comment']
             oorders += [{
                     :order_id => r['order_id'],
                     :state => r['state'],
@@ -105,7 +106,7 @@ def get_ogoods_orders_within s_time, e_time
                     :tel => r['tel'],
                     :line => r['line'],
                     :zone_code => r['zone_code'],
-                    :comment => r['comment'],
+                    :comment => comment,
                     :print_times => r['print_times'],
                     :plain_text => r['plain_text'],
                     :raw_data => r['raw_data'],
