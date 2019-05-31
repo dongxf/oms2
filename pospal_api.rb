@@ -18,7 +18,8 @@ def pospal_api api_name, request_body
   api_urls={
     :shipOrder => 'orderOpenApi/shipOrder',
     :getCategoryPages => 'productOpenApi/queryProductCategoryPages',
-    :queryOrderPages => 'orderOpenApi/queryOrderPages'
+    :queryOrderPages => 'orderOpenApi/queryOrderPages',
+    :updateBiPi => 'customerOpenApi/updateBalancePointByIncrement'
   }
 
   #please set POSPAL_APPID and APPKEY in .bashrc

@@ -1,6 +1,7 @@
 ﻿#encoding: utf-8
 #this file shows all orders
 
+require 'mysql2'
 require 'digest/md5'
 require 'net/http'
 require 'json'
@@ -45,6 +46,7 @@ def get_orders_within s_time, e_time
                     :line => decide_route(order),
                     :mark => get_batch_mark(order),
                     :number => get_short_no(order),
+                    :zone_code => get_zone_code(order),
                     :short_number => get_short_no(order)[12..16],
                     :date_time => order['orderDateTime'],
                     :short_time => order['orderDateTime'][5..20],
@@ -60,4 +62,56 @@ def get_orders_within s_time, e_time
 
         end
         return forders
+end
+
+def get_ogoods_orders_by_shipdate ship_day
+        yesterday = ship_day.prev_day
+        s_time = yesterday.strftime('%Y-%m-%d') + ' 15:00:01'
+        e_time = ship_day.strftime('%Y-%m-%d') + ' 15:00:00'
+        return get_ogoods_orders_within s_time, e_time
+end
+
+def get_ogoods_orders_by_day someday
+        s_time = someday.strftime('%Y-%m-%d') + ' 00:00:00'
+        e_time = someday.strftime('%Y-%m-%d') + ' 23:59:59'
+        return get_ogoods_orders_within s_time, e_time
+end
+
+# pospal only support to query orders within 24 hours
+def get_ogoods_orders_within s_time, e_time
+
+        oorders=[]
+
+        puts "retrieving ogoods orders between #{s_time} and  #{e_time}\n"
+
+        rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
+        sqlu = "select * from ogoods.pospal_orders where order_time > '#{s_time}' and order_time < '#{e_time}'"
+        resu = rds.query(sqlu)
+        resu.each do |r|
+            oorders += [{
+                    :order_id => r['order_id'],
+                    :state => r['state'],
+                    :pay_method => r['pay_method'],
+                    :pay_online => r['pay_online'],
+                    :online_paid => r['online_paid'],
+                    :amount => r['amount'],
+                    :delivery_type => r['delivery_type'],
+                    :customer_id => r['customer_id'],
+                    :shipping_fee => r['shipping_fee'],
+                    :remark => r['remark'],
+                    :order_time => r['order_time'],
+                    :name => r['name'],
+                    :addr => r['addr'],
+                    :tel => r['tel'],
+                    :line => r['line'],
+                    :zone_code => r['zone_code'],
+                    :comment => r['comment'],
+                    :print_times => r['print_times'],
+                    :plain_text => r['plain_text'],
+                    :raw_data => r['raw_data'],
+                    :ship_refunded => r['ship_refunded']
+            }]
+
+        end
+        return oorders
 end

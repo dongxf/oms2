@@ -40,6 +40,7 @@ def update_orderdb forder
     pay_method = order['payMethod'].nil? ? '' : order['payMethod']
     pay_online = order['payOnLine'].nil? ? -1 : order['payOnLine']
     shipping_fee = order['shippingFee'].nil? ? 0.0 : order['shippingFee']
+    zone_code = forder[:zone_code]
     online_paid = order['isOnlinePaymentCompleted'].nil? ? 0 : order['isOnlinePaymentCompleted']
     amount = order['totalAmount'].nil? ? 0.0 : order['totalAmount']
     delivery_type = order['deliveryType'].nil? ? -1 : order['deliveryType']
@@ -49,21 +50,21 @@ def update_orderdb forder
     sqlu = "INSERT INTO ogoods.pospal_orders
             (
              order_id,state,pay_method,pay_online,online_paid,
-             amount,delivery_type,customer_id,shipping_fee,
+             amount,delivery_type,customer_id,shipping_fee,zone_code,
              remark,order_time,name,addr,tel,line,
              print_times,ship_refunded,
              raw_data,plain_text
             ) VALUES 
             (
              '#{forder[:number]}',#{state},'#{pay_method}',#{pay_online},#{online_paid},
-             #{amount},#{delivery_type},'#{order['customerNumber']}',#{shipping_fee},
+             #{amount},#{delivery_type},'#{order['customerNumber']}',#{shipping_fee},'#{zone_code}',
              '#{order['orderRemark']}','#{order['orderDateTime']}','#{forder[:name]}','#{forder[:addr]}','#{forder[:tel]}','#{forder[:line]}',
              0,0.0,
              '#{escaped_order_json}','#{escaped_plain_text}'
             )
             ON DUPLICATE KEY
             UPDATE state=#{state}, pay_method='#{pay_method}', pay_online=#{pay_online}, online_paid=#{online_paid},
-            shipping_fee=#{shipping_fee}, delivery_type=#{delivery_type}, line='#{forder[:line]}',
+            shipping_fee=#{shipping_fee}, delivery_type=#{delivery_type}, line='#{forder[:line]}',zone_code='#{zone_code}',
             raw_data='#{escaped_order_json}',plain_text='#{escaped_plain_text}'
            "
      resu = rds.query(sqlu)

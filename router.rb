@@ -238,3 +238,31 @@ def get_plain_text order
     return content
 
 end
+
+def get_zone_code order
+
+  addr = get_short_addr order
+
+  #到店自提
+  return 'ZT' if addr.include? '到店自提'
+
+  #附近小区
+  if addr.include? '番禺'
+        return 'GD' if addr.include? '星河湾半岛' #例外,区分于星河湾
+        near_zones=[ '华碧','华南碧桂园', '欧泊', '红郡' , '华南新城' , '雅居乐', '侨联中学' , '华南新村' , '锦绣香江' , '星河湾' , '祈福' , '金山谷' , '富豪山庄' ,'南奥','南国奥','汉溪村']
+        near_zones.each do |zone|
+            return 'ZB' if addr.include? zone
+        end
+  end
+
+  #广东省内
+  gd_cities = ['番禺','东莞','广州','花都','从化','增城','中山','深圳','惠州','江门','珠海','汕头','佛山','湛江','河源',
+               '肇庆','潮州','清远','韶关','揭阳','阳江','云浮','茂名','梅州','汕尾']
+  gd_cities.each do |city|
+          return 'GD' if addr.include? city
+  end
+
+  #广东省外
+  return 'SW'
+
+end
