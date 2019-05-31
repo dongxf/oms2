@@ -1,1 +1,0 @@
-        escaped_nick_name = row[2].gsub("'","''") #用于SQL语句中的转义

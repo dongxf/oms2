@@ -54,6 +54,7 @@ def get_orders_within s_time, e_time
                     :amt => order['totalAmount'],
                     :comment => get_noti(order) + get_short_remark(order),
                     :date => get_short_date(order),
+                    :plain_text => get_plain_text(order),
                     :order => order
             }]
 
