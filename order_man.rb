@@ -2,6 +2,8 @@
 #This ruby file will get new orders from pospal and save them to text file
 #those text file will be printed to pdf printer and send to printer by powershell scripts
 
+require 'mysql2'
+require 'yaml'
 require 'digest/md5'
 require 'net/http'
 require 'json'
@@ -27,9 +29,46 @@ else
    end
 end
 
+def update_orderdb forder
+
+    order = forder[:order]
+
+    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
+
+    #convert nil values to zero or ''
+    state = order['state'].nil? ? -1 : order['state']
+    pay_method = order['payMethod'].nil? ? '' : order['payMethod']
+    pay_online = order['payOnLine'].nil? ? -1 : order['payOnLine']
+    shipping_fee = order['shippingFee'].nil? ? 0.0 : order['shippingFee']
+    amount = order['totalAmount'].nil? ? 0.0 : order['totalAmount']
+    delivery_type = order['deliveryType'].nil? ? -1 : order['deliveryType']
+    escaped_order_json = order.to_json.gsub("'","''") #用于SQL语句中的转义
+
+    sqlu = "INSERT INTO ogoods.pospal_orders
+            (
+             order_id,state,pay_method,pay_online,
+             amount,delivery_type,customer_id,shipping_fee,
+             remark,order_time,name,addr,tel,line,
+             raw_data
+            ) VALUES 
+            (
+             '#{forder[:number]}',#{state},'#{pay_method}',#{pay_online},
+             #{amount},#{delivery_type},'#{order['customerNumber']}',#{shipping_fee},
+             '#{order['orderRemark']}','#{order['orderDateTime']}','#{forder[:name]}','#{forder[:addr]}','#{forder[:tel]}','#{forder[:line]}',
+             '#{escaped_order_json}'
+            )
+            ON DUPLICATE KEY
+            UPDATE state=#{state}, pay_method='#{pay_method}', pay_online=#{pay_online}, shipping_fee=#{shipping_fee}, delivery_type=#{delivery_type}, line='#{forder[:line]}',raw_data='#{escaped_order_json}'
+           "
+     puts sqlu
+     resu = rds.query(sqlu)
+end
+
 forders.each do |forder|
 
     order = forder[:order]
+    update_orderdb forder
+
     next if order['state'] == 3 #skip canceled order print
 
     if order['state']!= 4
