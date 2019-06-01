@@ -77,7 +77,6 @@ forders.each do |forder|
 
     next if order['state'] == 3 #skip canceled order print
 
-
     rday =Date.today.strftime('%Y-%m-%d')
     rtime=Time.now.strftime("%H%M%S")
     fn_name = ".\\incoming\\" + rday + "-order-" + forder[:number] + "-c" + order['customerNumber'] + ".txt"
