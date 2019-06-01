@@ -14,8 +14,8 @@ load 'pospal_api.rb'
 
 def get_orders_by_shipdate ship_day
         yesterday = ship_day.prev_day
-        s_time = yesterday.strftime('%Y-%m-%d') + ' 15:00:01'
-        e_time = ship_day.strftime('%Y-%m-%d') + ' 15:00:00'
+        s_time = yesterday.strftime('%Y-%m-%d') + ' 14:00:01'
+        e_time = ship_day.strftime('%Y-%m-%d') + ' 14:00:00'
         return get_orders_within s_time, e_time
 end
 
@@ -66,8 +66,8 @@ end
 
 def get_ogoods_orders_by_shipdate ship_day
         yesterday = ship_day.prev_day
-        s_time = yesterday.strftime('%Y-%m-%d') + ' 15:00:01'
-        e_time = ship_day.strftime('%Y-%m-%d') + ' 15:00:00'
+        s_time = yesterday.strftime('%Y-%m-%d') + ' 14:00:01'
+        e_time = ship_day.strftime('%Y-%m-%d') + ' 14:00:00'
         return get_ogoods_orders_within s_time, e_time
 end
 
@@ -85,7 +85,7 @@ def get_ogoods_orders_within s_time, e_time
         puts "retrieving ogoods orders between #{s_time} and  #{e_time}\n"
 
         rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
-        sqlu = "select * from ogoods.pospal_orders where order_time > '#{s_time}' and order_time < '#{e_time}'"
+        sqlu = "select * from ogoods.pospal_orders where order_time >= '#{s_time}' and order_time <= '#{e_time}'"
         resu = rds.query(sqlu)
         resu.each do |r|
             comment = r['comment'].nil? ? '' : r['comment']
