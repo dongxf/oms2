@@ -110,7 +110,8 @@ def get_ogoods_orders_within s_time, e_time
                     :print_times => r['print_times'],
                     :plain_text => r['plain_text'],
                     :raw_data => r['raw_data'],
-                    :ship_refunded => r['ship_refunded']
+                    :ship_refunded => r['ship_refunded'],
+                    :point_awarded => r['point_awarded']
             }]
 
         end
