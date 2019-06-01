@@ -60,7 +60,8 @@ begin
                 puts "update #{row[2]} #{row[0]} #{wNickNames[openid]}"
                 sqlu = "update ogoods.wechat_fans set
                     openid='#{row[0]}',avatar='#{row[1]}',nick_name='#{escaped_nick_name}',gender='#{row[3]}',location='#{row[4]}', 
-                    subscription_time='#{row[5]}'
+                    subscription_time='#{row[5]}',
+                    subscrib_status = 'yes' 
                     where openid = '#{row[0]}'
                 "
                 resu = rds.query(sqlu)
