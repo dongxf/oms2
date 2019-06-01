@@ -4,6 +4,7 @@ require 'date'
 require 'time'
 
 load 'get_orders.rb'
+load 'user_api.rb'
 
 def should_refund order
 
@@ -51,8 +52,10 @@ oorders.each do |order|
             now = Time.now.strftime('%Y-%m-%d %H:%M:%S')
             puts "refund shipping fee to #{order_id} #{order[:name]} #{order[:addr]}"
             fee = order[:shipping_fee]
+            uid = get_uid_by_number order[:customer_id]
+
             req = { 
-                    'customerUid' => 965193016323785568, #order[:customer_id], #965193016323785568 
+                    'customerUid' => uid, #order[:customer_id], #965193016323785568 
                     'balanceIncrement' => fee,
                     'pointIncrement' => 0,
                     'dataChangeTime' => now
@@ -70,7 +73,7 @@ oorders.each do |order|
                     point = 1000
                     point = 2000 if order[:amount] >= 298
                     req = { 
-                            'customerUid' => 965193016323785568, #order[:customer_id], #965193016323785568 
+                            'customerUid' => uid, #order[:customer_id], #965193016323785568 
                             'balanceIncrement' => 0,
                             'pointIncrement' => point,
                             'dataChangeTime' => Time.now.strftime('%Y-%m-%d %H:%M:%S')
