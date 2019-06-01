@@ -14,8 +14,21 @@ require 'awesome_print'
 # res = post_to_posal :shipOder, req
 # puts res.body
 
+def access_remained
+   today = Date.today.strftime("%Y-%m-%d")
+   req = { 'beginDate' => today, 'endDate' => today }
+   res = pospal_api :queryAccessLimit, req
+
+   #acced = res['data'][0]['haveAcessTimes'] #Be attention this dirt words!
+   return ( res['data'][0]['limitTimes'] - res['data'][0]['haveAcessTimes'] ) if res['data']
+   puts "Status: #{res.body['status']}" if res
+   return 0
+end
+
 def pospal_api api_name, request_body 
   api_urls={
+    :queryAccessTimes => 'openApiLimitAccess/queryAccessTimes',
+    :queryAccessLimit => 'openApiLimitAccess/queryDailyAccessTimesLog',
     :shipOrder => 'orderOpenApi/shipOrder',
     :getCategoryPages => 'productOpenApi/queryProductCategoryPages',
     :queryOrderPages => 'orderOpenApi/queryOrderPages',
