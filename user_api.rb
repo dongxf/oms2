@@ -2,6 +2,7 @@
 
 # 1) This file provide basic functions to dealing with users
 
+require 'date'
 require 'mysql2'
 require 'json'
 load 'pospal_api.rb'
@@ -31,7 +32,8 @@ def get_all_pospal_users
 
         end while recs.size == page_size
 
-        fn = ".\\auto_import\\pusers.json"
+        rtime = Time.now.strftime('%Y-%m-%d-%H%M%S')
+        fn = ".\\auto_import\\pusers-" + rtime + ".json"
         File.open(fn,"w:UTF-8") { |f| f.write pusers.to_json }
         return pusers
 
