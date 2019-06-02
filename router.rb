@@ -76,15 +76,15 @@ def decide_route order
     return '[Z]' if address.include? '汉溪村'
 
     # if G line worload is too low , otherwise use P line
-    return '[G]' if address.include? '欧泊' 
-    return '[G]' if address.include? '红郡'
-    return '[G]' if address.include? '华南新城'
-    return '[G]' if address.include? '雅居乐'
-    return '[G]' if address.include? '侨联中学'
-    return '[G]' if address.include? '侨朕中学'
-    return '[G]' if address.include? '华南新村'
-    return '[G]' if address.include? '锦绣香江'
-    return '[G]' if address.include?('星河湾') && !address.include?('半岛')
+    return '[P]' if address.include? '欧泊' 
+    return '[P]' if address.include? '红郡'
+    return '[P]' if address.include? '华南新城'
+    return '[P]' if address.include? '雅居乐'
+    return '[P]' if address.include? '侨联中学'
+    return '[P]' if address.include? '侨朕中学'
+    return '[P]' if address.include? '华南新村'
+    return '[P]' if address.include? '锦绣香江'
+    return '[P]' if address.include?('星河湾') && !address.include?('半岛')
 
     return '[P]' if address.include? '丽江花园'
     return '[P]' if address.include? '洛浦街道'
