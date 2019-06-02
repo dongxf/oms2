@@ -14,10 +14,19 @@ load 'get_orders.rb'
 
 forders = []
 
-#days count backward from today, defualt is 1, if count==0 then use tomrrow as shipdate
-day_count = ARGV[0].nil? ? 1 : ARGV[0].to_i
-day_count = 2 if Date.today.wday==0 && ARGV[0].nil? #if Sunday
+silence_mode = false #silence mode will not generate order file
+day_count = 1
+if ARGV[1] == '-s' || ARGV[0] == '-s'
+    day_count = ARGV[0].to_i if ARGV[0] != '-s'
+    silence_mode = true
+else
+    day_count = ARGV[0].to_i if !ARGV[0].nil?
+end
 
+#let cron tab do weekday judegment
+#day_count = 2 if Date.today.wday==0 && ARGV[0].nil? #if Sunday
+
+#0 打印明天发货的
 if day_count == 0
    the_day = Date.today.next_day
    forders = get_orders_by_shipdate the_day
@@ -77,10 +86,12 @@ forders.each do |forder|
 
     next if order['state'] == 3 #skip canceled order print
 
-    rday =Date.today.strftime('%Y-%m-%d')
-    rtime=Time.now.strftime("%H%M%S")
-    fn_name = ".\\incoming\\" + rday + "-order-" + forder[:number] + "-c" + order['customerNumber'] + ".txt"
-    File.open(fn_name,"w:UTF-8") do |f|
-        f.write forder[:plain_text]
+    if !silence_mode
+            rday =Date.today.strftime('%Y-%m-%d')
+            rtime=Time.now.strftime("%H%M%S")
+            fn_name = ".\\incoming\\" + rday + "-order-" + forder[:number] + "-c" + order['customerNumber'] + ".txt"
+            File.open(fn_name,"w:UTF-8") do |f|
+                f.write forder[:plain_text]
+            end
     end
 end
