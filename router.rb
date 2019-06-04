@@ -211,7 +211,7 @@ def get_plain_text order
       if order['isOnlinePaymentCompleted']==1 && order['state'].nil?
         content += ">>>>>>>>> 团购订单 <<<<<<<<<\n"
       else
-        content += ">>>>>>>>> 警告：非常规状态，需单独处理 <<<<<<<<<\n"
+        content += ">>>>>>>>> 警告：非常态，单独处理 s#{order['state']} p#{order['isOnLinePaymentCompleted']}<<<<<<<<<\n"
       end
     else
       content += "--------------------------------------------------------------------\n"
