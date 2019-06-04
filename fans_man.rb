@@ -7,11 +7,39 @@
 3) 读sub_data.xls更新no标志(用金数据导出订阅设置，另存为XLS)
 4) 将所有空的名字和空头像设一个默认值
 5）将所有可推送列表写为push_list.xls
+6) 如果是-e,只负责导出即可: export_only
 =end
 
 require 'mysql2'
 require 'awesome_print'
 require 'spreadsheet'
+
+def step5
+    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
+    puts "step5: generate push_list.xls..."
+    Spreadsheet.client_encoding="utf-8"
+    book=Spreadsheet::Workbook.new
+    #创建工作表
+    sheet1=book.create_worksheet :name => "sheet1"
+    line_idx=0
+    sheet1.row(line_idx)[0]='openid'
+    sqlu="select openid from ogoods.wechat_fans where subscrib_status='yes'"
+    res = rds.query sqlu
+    res.each do |r|
+        line_idx += 1
+        sheet1.row(line_idx)[0]=r['openid']
+    end
+    fn_name =".\\auto_import\\push_list.xls"
+    book.write fn_name
+    puts "done. #{line_idx}"
+end
+
+export_only = false
+if ARGV[1] == '-e' || ARGV[0] == '-e'
+    export_only = true
+    step5
+    exit
+end
 
 #ATTENTION: wechat_fans table muse be coded in UTF8MB4 to save emojii chars
 rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
@@ -74,22 +102,7 @@ begin
     rds.query sqlu
     puts "done."
 
-    puts "step5: generate push_list.xls..."
-    Spreadsheet.client_encoding="utf-8"
-    book=Spreadsheet::Workbook.new
-    #创建工作表
-    sheet1=book.create_worksheet :name => "sheet1"
-    line_idx=0
-    sheet1.row(line_idx)[0]='openid'
-    sqlu="select openid from ogoods.wechat_fans where subscrib_status='yes'"
-    res = rds.query sqlu
-    res.each do |r|
-        line_idx += 1
-        sheet1.row(line_idx)[0]=r['openid']
-    end
-    fn_name =".\\auto_import\\push_list.xls"
-    book.write fn_name
-    puts "done. #{line_idx}"
+    step5
 
 rescue => e
     puts ">>>ERROR: #{e}"
