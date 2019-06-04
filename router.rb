@@ -158,8 +158,6 @@ def save_line_excel line_name, line_items
     rtime=Time.now.strftime("%H%M%S")
     fn_name = ".\\incoming\\" + rday + "-summary-" + line_name + '-' + rtime + ".xls"
     book.write fn_name
-    fn_name = ".\\incoming\\" + rday + "-CND-" + rtime + ".xls"
-    book.write fn_name if line_name == 'K'
 end
 
 def get_plain_text order

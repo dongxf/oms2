@@ -14,7 +14,14 @@ load 'get_orders.rb'
 forders = []
 
 #days count backward from today, defualt is 1, if count==0 then use tomrrow as shipdate
-day_count = ARGV[0].nil? ? 1 : ARGV[0].to_i
+day_count = 1
+silence_mode = false
+if ARGV[0] == '-s' || ARGV[1] == '-s'
+    day_count = ARGV[0].to_i if ARGV[0] != '-s'
+    silence_mode = true 
+else
+    day_count = ARGV[0].nil? ? 1 : ARGV[0].to_i
+end
 
 if day_count == 0
    the_day = Date.today.next_day
@@ -40,7 +47,7 @@ amt = 0.0
 forders.each do |forder|
     order = forder[:order]
 
-    info =  " #{forder[:addr]} [  ]LFCR  #{forder[:mark]}#{forder[:name]} #{forder[:tel]} #{forder[:comment]}LFCR"
+    info =  " #{forder[:addr]} [#{forder[:short_number]}]LFCR  #{forder[:mark]}#{forder[:name]} #{forder[:tel]} #{forder[:comment]}LFCR"
     info += "  :::#{forder[:date_time]} #{forder[:number]} #{forder[:amt]}\n" # " :::" 用于生成派线表时作为分割识别
 
     line = forder[:line]
@@ -68,7 +75,7 @@ lines.each do  |line|
   show_content =  "\n>>> Route #{line} <<<\n"
   print_content = ">>> 分线单 #{line}  #{Time.now.to_s} <<<\n"
   routes[line].sort_by{|_key, value| value}.to_h.each { |tel, info|
-    merged_orders += 1
+    merged_orders += 1 if line!= '[X]'
     #生成显示内容,每条订单一行不包括换行
     s_info = info.gsub('LFCRLFCR','LFCR').gsub('LFCR',' ').gsub('[  ]','').gsub(':::','  ').gsub('  ',' ').gsub('  ',' ').gsub('  ',' ')
     show_content += "#{sprintf('%02d',rdex)} " + s_info
@@ -81,15 +88,19 @@ lines.each do  |line|
     #显示订单信息
     puts show_content
     #生成派线单
-    fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"
-    File.open(fn_name,"w:UTF-8") do |f|
-        f.write print_content
+    if !silence_mode
+
+        fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"
+        File.open(fn_name,"w:UTF-8") { |f| f.write print_content }
+
+        save_line_excel line[1], line_data[line] #line[1] means 'P','G','Q' etc
     end
   end 
+ 
   #保存派线单数据
-  if line_data[line].size!=0
-    save_line_excel line[1], line_data[line]
-  end
+  #if line_data[line].size!=0
+  #  save_line_excel line[1], line_data[line] #line[1] means 'P','G','Q' etc
+  #end
 end
 
 puts "------------------------------------"
