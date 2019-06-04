@@ -8,6 +8,7 @@ load 'user_api.rb'
 
 def should_refund order
 
+        return false if order[:online_paid]!= 1
         refunded_fee = 0
         refunded_fee = order[:ship_refunded] if order[:ship_refunded] #解决nil的问题
         return false if order[:shipping_fee] <= 0 #没有收过运费
@@ -19,6 +20,7 @@ end
 
 def should_award order
 
+    return false if order[:online_paid]!= 1
     return false if order[:zone_code] != 'SW'
     return false if order[:amount] < 198
     point_awarded = 0
