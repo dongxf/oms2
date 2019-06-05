@@ -72,9 +72,10 @@ begin
                 )values(
                     '#{row[0]}','#{row[1]}','#{escaped_nick_name}','#{row[3]}','#{row[4]}', '#{row[5]}', 'yes' 
                 )on duplicate key update subscrib_status = 'yes'"
+        print "updating wechat fans #{line_idx}\r"
         resu = rds.query(sqlu)
     end
-    puts "done. #{line_idx}"
+    p "done. #{line_idx}"
 
 
     puts "step 3: set unscribed according to sub_data..."
@@ -91,6 +92,7 @@ begin
         if subscrib_status == 'no'
             sqlu = "update ogoods.wechat_fans set subscrib_status='#{subscrib_status}' where openid = '#{openid}'"
             resu = rds.query(sqlu)
+            print "updating wechat fans #{line_idx}\r"
         end
     end
     puts "done. #{line_idx}"
