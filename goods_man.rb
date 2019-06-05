@@ -19,32 +19,28 @@ ARGV.each { |arg| args+=arg }
 xls_file=args if args!='' && args!='-f'
 if args=='-f'
     overwrite_mode=true 
-    puts 'force mode actived'
 end
 
-# get current name and price list from ogoods db
-sql1 = 'select * from ogoods.pospal_goods'
-res1 = rds.query(sql1)
-res1.each do |tgr|
-    code = tgr['code']
-    name = tgr['name']
-    sale_price = tgr['sale_price']
-    description = tgr['description']
-    oNames.store(code,name)
-    oPrices.store(code,sale_price)
-    oDescription.store(code,description)
+if overwrite_mode
+        sqlu = 'delete from ogoods.pospal_goods where 1=1'
+        rds.query(sqlu)
+        puts "overwrite mode: #{sqlu}"
+else
+        # get current name and price list from ogoods db
+        sql1 = 'select * from ogoods.pospal_goods'
+        res1 = rds.query(sql1)
+        res1.each do |tgr|
+            code = tgr['code']
+            name = tgr['name']
+            sale_price = tgr['sale_price']
+            description = tgr['description']
+            oNames.store(code,name)
+            oPrices.store(code,sale_price)
+            oDescription.store(code,description)
+        end
+        puts "goods before synced: #{oNames.size}"
 end
-#puts "goods before synced: #{oNames.size}"
 
-
-=begin
-if existed new excel data
-    read it line by line
-        for each line
-            if code not existed in ogoods db hash then insert
-            if code existed but name and sale_price changed, update it
-    rename the file
-=end
 Spreadsheet.client_encoding='UTF-8'
 begin
     book = Spreadsheet.open xls_file
@@ -59,7 +55,7 @@ begin
         #will remove all links in description here
 
         if oNames[code].nil?
-            puts "insert #{row[2]} #{row[0]}"
+            print "insert #{row[2]} #{row[0]}\r"
             sqlu = "insert into ogoods.pospal_goods( 
                         name,catalog,code,size,unit,
                         balance,purchase_price,sale_price,gross_profit,bulk_price,member_price,
@@ -77,9 +73,8 @@ begin
                     );"
             resu = rds.query(sqlu)
         else
-           #sqlu = "update psi.t_inventory_detail set balance_count=#{sprintf('%.8f', b_count)}, balance_money=#{sprintf('%.8f', b_money)}, balance_price=#{sprintf('%.8f', b_price)}, out_money=#{sprintf('%.8f', out_money)}, out_price=#{sprintf('%.3f', out_price)}, fixed='fixed' where id='#{inv_detail_id}'"
-           if overwrite_mode || oNames[code]!= row[0] || oPrices[code]!= row[7] || oDescription[code]!= descrp
-                #puts "update #{row[2]} #{row[0]}"
+           if oNames[code]!= row[0] || oPrices[code]!= row[7] || oDescription[code]!= descrp
+                print "update #{row[2]} #{row[0]}\r"
                 sqlu = "update ogoods.pospal_goods set
                     name='#{row[0]}',catalog='#{row[1]}',code='#{row[2]}',size='#{row[3]}',unit='#{row[4]}',
                     balance=#{row[5]},purchase_price=#{row[6]},sale_price=#{row[7]},gross_profit='#{row[8]}',bulk_price=#{row[9]},member_price=#{row[10]},
@@ -90,10 +85,12 @@ begin
                     where code = '#{row[2]}'
                 "
                 resu = rds.query(sqlu)
+           else
+                print "skip #{row[2]} #{row[0]}\r"
            end
         end
     end
-    #puts "total record in data file: #{line_idx}"
+    puts "\ndone. #{line_idx}"
 rescue => e
     puts ">>>ERROR: #{e}"
 end

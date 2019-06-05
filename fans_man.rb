@@ -8,6 +8,7 @@
 4) 将所有空的名字和空头像设一个默认值
 5）将所有可推送列表写为push_list.xls
 6) 如果是-e,只负责导出即可: export_only
+7) 如果是-i,只负责导入取消订阅数据: unsub.txt
 =end
 
 require 'mysql2'
@@ -34,12 +35,30 @@ def step5
     puts "done. #{line_idx}"
 end
 
+def import_unsub_data
+    openids = IO.readlines(".\\auto_import\\unsub.txt")
+    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
+    puts "import unsub.txt..."
+    openids.each do |openid|
+            oid=openid.gsub('"','').gsub("\n","")
+            sqlu = "update ogoods.wechat_fans set subscrib_status='no' where openid='#{oid}'"
+            res = rds.query(sqlu)
+            p sqlu
+    end
+    puts "done."
+end
+
 export_only = false
 if ARGV[1] == '-e' || ARGV[0] == '-e'
-    export_only = true
     step5
     exit
 end
+
+if ARGV[1] == '-i' || ARGV[0] == '-i'
+    import_unsub_data
+    exit
+end
+
 
 #ATTENTION: wechat_fans table muse be coded in UTF8MB4 to save emojii chars
 rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
