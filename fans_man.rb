@@ -35,6 +35,28 @@ def step5
     puts "done. #{line_idx}"
 end
 
+def step3
+    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
+    puts "step 3: set unscribed according to sub_data..."
+    xls_file=".\\auto_import\\sub_data.xls"
+    Spreadsheet.client_encoding='UTF-8'
+    book = Spreadsheet.open xls_file
+    sheet1 = book.worksheet 0
+    line_idx = 0
+    sheet1.each do |row|
+        line_idx += 1
+        next if line_idx == 1
+        openid = row[9]
+        subscrib_status = row[1]=='不需要' ? 'no':'yes'
+        if subscrib_status == 'no'
+            sqlu = "update ogoods.wechat_fans set subscrib_status='#{subscrib_status}' where openid = '#{openid}'"
+            resu = rds.query(sqlu)
+            print "updating wechat fans #{line_idx}\r"
+        end
+    end
+    puts "done. #{line_idx}"
+end
+
 def import_unsub_data
     openids = IO.readlines(".\\auto_import\\unsub.txt")
     rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
@@ -55,7 +77,8 @@ if ARGV[1] == '-e' || ARGV[0] == '-e'
 end
 
 if ARGV[1] == '-i' || ARGV[0] == '-i'
-    import_unsub_data
+    import_unsub_data #update unfollowed fans
+    step3 #update unsubscribed fans
     exit
 end
 
@@ -96,25 +119,7 @@ begin
     end
     p "done. #{line_idx}"
 
-
-    puts "step 3: set unscribed according to sub_data..."
-    xls_file=".\\auto_import\\sub_data.xls"
-    Spreadsheet.client_encoding='UTF-8'
-    book = Spreadsheet.open xls_file
-    sheet1 = book.worksheet 0
-    line_idx = 0
-    sheet1.each do |row|
-        line_idx += 1
-        next if line_idx == 1
-        openid = row[9]
-        subscrib_status = row[1]=='不需要' ? 'no':'yes'
-        if subscrib_status == 'no'
-            sqlu = "update ogoods.wechat_fans set subscrib_status='#{subscrib_status}' where openid = '#{openid}'"
-            resu = rds.query(sqlu)
-            print "updating wechat fans #{line_idx}\r"
-        end
-    end
-    puts "done. #{line_idx}"
+    step3
 
     puts "step4: update null name or null avatar"
     sqlu = " update ogoods.wechat_fans set nick_name='somebody' where nick_name is null or nick_name = ''"

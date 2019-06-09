@@ -85,6 +85,7 @@ forders.each do |forder|
     update_orderdb forder
 
     next if order['state'] == 3 #skip canceled order print
+    next if order['state'].nil? && order['isOnLinePaymentCompleted'].nil? #skip print unfished order
 
     if !silence_mode
             rday =Date.today.strftime('%Y-%m-%d')
