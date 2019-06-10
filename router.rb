@@ -247,7 +247,7 @@ def get_zone_code order
   #附近小区
   if addr.include? '番禺'
         return 'GD' if addr.include? '星河湾半岛' #例外,区分于星河湾
-        near_zones=[ '华碧','华南碧桂园', '欧泊', '红郡' , '华南新城' , '雅居乐', '侨联中学' , '华南新村' , '锦绣香江' , '星河湾' , '祈福' , '金山谷' , '富豪山庄' ,'南奥','南国奥','汉溪村']
+        near_zones=[ '华碧','华南碧桂园', '欧泊', '红郡' , '华南新城' , '雅居乐', '侨联中学' , '侨朕中学','华南新村' , '锦绣香江' , '星河湾' , '祈福' , '金山谷' , '富豪山庄' ,'南奥','南国奥','汉溪村']
         near_zones.each do |zone|
             return 'ZB' if addr.include? zone
         end
