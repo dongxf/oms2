@@ -25,6 +25,38 @@ def get_orders_by_day someday
         return get_orders_within s_time, e_time
 end
 
+# get orders in pospal format, time duration must be within 24hours
+def get_pospal_orders_within s_time, e_time
+
+        porders=[]
+        page_count = 0
+        req={'postBackParameter'=>{}, 'startTime'=> s_time, 'endTime'=> e_time }
+
+        begin
+                page_count += 1 # to control loop times
+                puts "calling pospal api in #{page_count} time"
+
+                res=pospal_api(:queryOrderPages,req)
+                recs = res['data']['result']
+                recs.each do |rec|
+                    porders += [rec]
+                end
+                actual_size = recs.size
+                page_size = res['data']['pageSize']
+                req = {'postBackParameter' => res['data']['postBackParameter'], 'startTime'=> s_time, 'endTime'=> e_time }
+                #ap res
+
+                break if page_count >= 50 #used for saving api call times in coding pharse
+
+        end while recs.size == page_size
+
+        rtime = Time.now.strftime('%Y%m%d%H%M%S')
+        fn = ".\\auto_import\\porders-" + s_time.gsub('-','').gsub(':','').gsub(' ','') + '-' + e_time.gsub('-','').gsub(':','').gsub(' ','') + '_' + rtime + ".json"
+        File.open(fn,"w:UTF-8") { |f| f.write porders.to_json }
+        return porders
+
+end 
+
 # pospal only support to query orders within 24 hours
 def get_orders_within s_time, e_time
 
@@ -32,9 +64,7 @@ def get_orders_within s_time, e_time
 
         puts "retrieving orders between #{s_time} and  #{e_time}\n"
 
-        req = { 'startTime'=> s_time, 'endTime'=> e_time }
-        res=pospal_api(:queryOrderPages,req)
-        orders = res['data']['result']
+        orders = get_pospal_orders_within s_time, e_time
 
         orders.each do |order|
             slim_addr=get_short_addr order
