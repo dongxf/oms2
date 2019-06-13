@@ -85,12 +85,14 @@ forders.each do |forder|
     update_orderdb forder
 
     next if order['state'] == 3 #skip canceled order print
-    next if order['state'].nil? && order['isOnLinePaymentCompleted'].nil? #skip print unfished order
+    # next if order['state'].nil? && order['isOnLinePaymentCompleted'].nil? #skip print unfished order
+    next if order['state']=='[X]'
+    next if forder[:first_item].include?('产地直发') && forder[:line]==['T']
 
     if !silence_mode
             rday =Date.today.strftime('%Y-%m-%d')
             rtime=Time.now.strftime("%H%M%S")
-            fn_name = ".\\incoming\\" + rday + "-order-" + forder[:number] + "-c" + order['customerNumber'] + ".txt"
+            fn_name = ".\\incoming\\" + rday + "-order-" + forder[:line][1] + '-' + forder[:number] + "-c" + order['customerNumber'] + ".txt"
             File.open(fn_name,"w:UTF-8") do |f|
                 f.write forder[:plain_text]
             end

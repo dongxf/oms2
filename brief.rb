@@ -46,11 +46,14 @@ end
 amt = 0.0
 forders.each do |forder|
     order = forder[:order]
+    line = forder[:line]
 
-    info =  " #{forder[:addr]} [#{forder[:short_number]}]LFCR  #{forder[:mark]}#{forder[:name]} #{forder[:tel]} #{forder[:comment]}LFCR"
+    comment = forder[:comment]
+    comment = "#{forder[:first_item]} #{forder[:comment]}"  if line == '[T]'
+
+    info =  " #{forder[:addr]} [#{forder[:short_number]}]LFCR  #{forder[:mark]}#{forder[:name]} #{forder[:tel]} #{comment}LFCR"
     info += "  :::#{forder[:date_time]} #{forder[:number]} #{forder[:amt]}\n" # " :::" 用于生成派线表时作为分割识别
 
-    line = forder[:line]
     if line != '[X]'
         #merge non-X line orders summary when has same addr
         info = "*" + routes[line][forder[:addr]] if routes[line].has_key? forder[:addr]
@@ -61,7 +64,7 @@ forders.each do |forder|
     end
 
     csv=[ '丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201', 
-          forder[:name],forder[:tel],forder[:addr], '生鲜','寄付',sprintf('%d',forder[:amt]/10),"1000",forder[:comment],forder[:date]+'-'+forder[:number]
+          forder[:name],forder[:tel],forder[:addr], '生鲜','寄付',sprintf('%d',forder[:amt]/10),"1000",comment,forder[:date]+'-'+forder[:number]
     ]
     line_data[line].store(forder[:number],csv) #if want to avoid duplicate use contactTel
 

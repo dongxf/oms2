@@ -72,6 +72,8 @@ def get_orders_within s_time, e_time
             odrmk = "#{get_noti order} #{get_short_remark order}"
             batch_mark =  get_batch_mark order
             short_no = get_short_no order
+            first_item = ''
+            first_item = order['items'][0]['productName'] if !order['items'].nil? && !order['items'].empty?
             forders += [{
                     :line => decide_route(order),
                     :mark => get_batch_mark(order),
@@ -87,6 +89,7 @@ def get_orders_within s_time, e_time
                     :comment => get_noti(order) + get_short_remark(order),
                     :date => get_short_date(order),
                     :plain_text => get_plain_text(order),
+                    :first_item => first_item,
                     :order => order
             }]
 
