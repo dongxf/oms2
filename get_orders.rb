@@ -72,6 +72,8 @@ def get_orders_within s_time, e_time
             odrmk = "#{get_noti order} #{get_short_remark order}"
             batch_mark =  get_batch_mark order
             short_no = get_short_no order
+            items_count = 0
+            items_count = order['items'].size if !order['items'].nil?
             first_item = ''
             first_item = order['items'][0]['productName'] if !order['items'].nil? && !order['items'].empty?
             forders += [{
@@ -90,6 +92,7 @@ def get_orders_within s_time, e_time
                     :date => get_short_date(order),
                     :plain_text => get_plain_text(order),
                     :first_item => first_item,
+                    :items_count => items_count,
                     :order => order
             }]
 

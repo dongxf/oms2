@@ -64,7 +64,7 @@ forders.each do |forder|
     end
 
     csv=[ '丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201', 
-          forder[:name],forder[:tel],forder[:addr], '生鲜','寄付',sprintf('%d',forder[:amt]/10),"1000",comment,forder[:date]+'-'+forder[:number]
+          forder[:name],forder[:tel],forder[:addr], '生鲜','寄付',sprintf('%d',forder[:items_count]),"1000",comment,forder[:date]+'-'+forder[:number]
     ]
     line_data[line].store(forder[:number],csv) #if want to avoid duplicate use contactTel
 
