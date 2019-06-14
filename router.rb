@@ -51,7 +51,7 @@ def get_noti order
     pay_online={0=>'未用',1=>'通过'}[order['payOnLine']]
     opay_completed={0=>'未',1=>'已'}[order['isOnlinePaymentCompleted']]
 
-    return "| 团购+" if opay_completed=='已' && order_state=='未定义'
+    return " TT" if opay_completed=='已' && order_state=='未定义' #团购或问题单,通常是银豹收银端漏确认的订单
     return "> #{order_state} #{delivery_type}#{pay_method}支付#{pay_online}网付#{opay_completed}完成"
 
 end
@@ -99,6 +99,7 @@ def decide_route order
     return '[P]' if address.include? '前龙西路'
     return '[P]' if address.include? '大学小筑'
     return '[P]' if address.include? '谷围新村'
+    return '[P]' if address.include? '小谷围街道'
     return '[P]' if address.include? '深井村'
     return '[P]' if address.include? '亚运城'
     return '[P]' if address.include? '前锋村'
@@ -199,7 +200,7 @@ def get_plain_text order
 
     content += "#{get_short_no order}　　#{order['customerNumber']}　　　　　﹏ of 2 ﹏\n"
 
-    content += "#{order['contactAddress'].strip}\n"
+    content += "#{slim_addr}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
     if odrmk != ''
       content += "> #{odrmk}   ------\n"
