@@ -79,6 +79,7 @@ end
 if ARGV[1] == '-i' || ARGV[0] == '-i'
     import_unsub_data #update unfollowed fans
     step3 #update unsubscribed fans
+    step5
     exit
 end
 
