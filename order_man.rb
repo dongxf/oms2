@@ -92,7 +92,8 @@ forders.each do |forder|
     if !silence_mode
             rday =Date.today.strftime('%Y-%m-%d')
             rtime=Time.now.strftime("%H%M%S")
-            fn_name = ".\\incoming\\" + rday + "-order-" + forder[:line][1] + '-' + forder[:number] + "-c" + order['customerNumber'] + ".txt"
+            oday = forder[:odate]
+            fn_name = ".\\incoming\\" + oday + "-order-" + forder[:line][1] + '-' + forder[:number] + "-c" + order['customerNumber'] + ".txt"
             File.open(fn_name,"w:UTF-8") do |f|
                 f.write forder[:plain_text]
             end
