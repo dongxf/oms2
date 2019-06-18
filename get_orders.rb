@@ -73,7 +73,11 @@ def get_orders_within s_time, e_time
             batch_mark =  get_batch_mark order
             short_no = get_short_no order
             items_count = 0
-            items_count = order['items'].size if !order['items'].nil?
+            if !order['items'].nil?
+                    order['items'].each do |itm|
+                            items_count += itm['productQuantity'].to_i
+                    end
+            end
             first_item = ''
             first_item = order['items'][0]['productName'] if !order['items'].nil? && !order['items'].empty?
             forders += [{
