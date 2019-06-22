@@ -61,6 +61,9 @@ def update_orderdb forder
              order_id,state,pay_method,pay_online,online_paid,
              amount,delivery_type,customer_id,shipping_fee,zone_code,
              remark,order_time,name,addr,tel,line,
+             mark,number,short_number,date_time,short_time,
+             odate,date,
+             first_item,items_count,
              print_times,ship_refunded,point_awarded,
              raw_data,plain_text
             ) VALUES 
@@ -68,12 +71,19 @@ def update_orderdb forder
              '#{forder[:number]}',#{state},'#{pay_method}',#{pay_online},#{online_paid},
              #{amount},#{delivery_type},'#{order['customerNumber']}',#{shipping_fee},'#{zone_code}',
              '#{order['orderRemark']}','#{order['orderDateTime']}','#{forder[:name]}','#{forder[:addr]}','#{forder[:tel]}','#{forder[:line]}',
+             '#{forder[:mark]}', '#{forder[:number]}', '#{forder[:short_number]}', '#{forder[:date_time]}', '#{forder[:short_time]}', 
+             '#{forder[:odate]}', '#{forder[:date]}', 
+             '#{forder[:first_item]}', #{forder[:items_count]},
              0,0.0,0.0,
              '#{escaped_order_json}','#{escaped_plain_text}'
             )
             ON DUPLICATE KEY
             UPDATE state=#{state}, pay_method='#{pay_method}', pay_online=#{pay_online}, online_paid=#{online_paid},
-            shipping_fee=#{shipping_fee}, delivery_type=#{delivery_type}, line='#{forder[:line]}',zone_code='#{zone_code}',
+            delivery_type=#{delivery_type}, shipping_fee=#{shipping_fee}, zone_code='#{zone_code}',
+            line='#{forder[:line]}',
+            mark='#{forder[:mark]}',number='#{forder[:number]}',short_number='#{forder[:short_number]}',date_time='#{forder[:date_time]}',short_time='#{forder[:short_time]}',
+            odate='#{forder[:odate]}',date='#{forder[:date]}', 
+            first_item='#{forder[:first_item]}',items_count=#{forder[:items_count]},
             raw_data='#{escaped_order_json}',plain_text='#{escaped_plain_text}'
            "
      resu = rds.query(sqlu)

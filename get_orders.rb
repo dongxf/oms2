@@ -152,7 +152,16 @@ def get_ogoods_orders_within s_time, e_time
                     :plain_text => r['plain_text'],
                     :raw_data => r['raw_data'],
                     :ship_refunded => r['ship_refunded'],
-                    :point_awarded => r['point_awarded']
+                    :point_awarded => r['point_awarded'],
+                    :mark => r['mark'],
+                    :number => r['number'],
+                    :short_number => r['short_number'],
+                    :date_time => r['date_time'],
+                    :short_time => r['short_time'],
+                    :odate => r['odate'],
+                    :date => r['date'],
+                    :first_item => r['first_item'],
+                    :items_count => r['items_count']
             }]
 
         end

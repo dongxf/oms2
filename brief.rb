@@ -11,7 +11,7 @@ require 'awesome_print'
 load 'router.rb'
 load 'get_orders.rb'
 
-forders = []
+oorders = []
 
 #days count backward from today, defualt is 1, if count==0 then use tomrrow as shipdate
 day_count = 1
@@ -25,11 +25,11 @@ end
 
 if day_count == 0
    the_day = Date.today.next_day
-   forders = get_orders_by_shipdate the_day
+   oorders = get_ogoods_orders_by_shipdate the_day
 else
    the_day = Date.today
    day_count.times do 
-        forders += get_orders_by_shipdate the_day
+        oorders += get_ogoods_orders_by_shipdate the_day
         the_day = the_day.prev_day
    end
 end
@@ -44,29 +44,30 @@ lines.each do |line|
 end
 
 amt = 0.0
-forders.each do |forder|
-    order = forder[:order]
-    line = forder[:line]
+oorders.each do |oorder|
+    order = JSON.parse(oorder[:raw_data])
 
-    comment = forder[:comment]
-    comment = "#{forder[:first_item]} #{forder[:comment]}"  if line == '[T]'
+    line = oorder[:line]
+    comment = oorder[:comment]
+    comment = "#{oorder[:first_item]} #{oorder[:comment]}"  if line == '[T]'
+    odate = order['orderDateTime'][0..9]
 
-    info =  " #{forder[:addr]} [#{forder[:short_number]}]LFCR  #{forder[:mark]}#{forder[:name]} #{forder[:tel]} #{comment}LFCR"
-    info += "  :::#{forder[:date_time]} #{forder[:number]} #{forder[:amt]}\n" # " :::" 用于生成派线表时作为分割识别
+    info =  " #{oorder[:addr]} [#{oorder[:short_number]}]LFCR  #{oorder[:mark]}#{oorder[:name]} #{oorder[:tel]} #{comment}LFCR"
+    info += "  :::#{oorder[:date_time]} #{oorder[:number]} #{sprintf("%.2f",oorder[:amount])}\n" # " :::" 用于生成派线表时作为分割识别
 
     if line != '[X]'
         #merge non-X line orders summary when has same addr
-        info = "*" + routes[line][forder[:addr]] if routes[line].has_key? forder[:addr]
-        routes[line].store(forder[:addr],info)
-        amt += order['totalAmount']
+        info = "*" + routes[line][oorder[:addr]] if routes[line].has_key? oorder[:addr]
+        routes[line].store(oorder[:addr],info)
+        amt += oorder[:amount]
     else
-        routes[line].store(forder[:number],info)
+        routes[line].store(oorder[:order_id],info)
     end
 
     csv=[ '丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201', 
-          forder[:name],forder[:tel],forder[:addr], '生鲜','寄付',sprintf('%d',forder[:items_count]),"1000",comment,forder[:date]+'-'+forder[:number]
+          oorder[:name],oorder[:tel],oorder[:addr], '生鲜','寄付',sprintf('%d',oorder[:items_count]),"1000",comment,odate+'-'+oorder[:order_id]
     ]
-    line_data[line].store(forder[:number],csv) #if want to avoid duplicate use contactTel
+    line_data[line].store(oorder[:number],csv) #if want to avoid duplicate use tel, otherwise using oorder[:number]
 
 end
 
@@ -107,4 +108,4 @@ lines.each do  |line|
 end
 
 puts "------------------------------------"
-puts "Valid orders: #{merged_orders}/#{forders.count-routes['[X]'].count} RMB#{amt}"
+puts "Valid orders: #{merged_orders}/#{oorders.count-routes['[X]'].count} RMB#{sprintf("%.2f",amt)}"
