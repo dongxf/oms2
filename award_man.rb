@@ -18,7 +18,7 @@ def award_point_to uid, point
     pospal_api :updateBiPi, req
 end
 
-connect = PG::connect(host:'rdsagent.foodtrust.cn',user:"postgres",password:'F34639279t',dbname:"commento",port:"1403")
+connect = PG::connect(host:'rdsagent.foodtrust.cn',user:"postgres",password:'',dbname:"commento",port:"1403")
 results = connect.exec("select * from comments")
 
 results.each{|result| p result["commenterhex"] }
