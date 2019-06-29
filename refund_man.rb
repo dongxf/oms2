@@ -5,6 +5,7 @@ require 'time'
 
 load 'get_orders.rb'
 load 'user_api.rb'
+load 'wechat_api.rb'
 
 def should_refund order
 
@@ -15,6 +16,7 @@ def should_refund order
         return false if refunded_fee > 0 #已经退回过
         return true if order[:zone_code] =='ZB' && order[:amount] >=98 #shipping_fee is included in order amount
         return true if order[:zone_code] =='SW' #省外都是到付，只要收了就应该退回去
+        return true if order[:line] == '[T]' #对团购订单退款，未拼团成功的订单也在这个表上
         return false
 end
 
@@ -27,6 +29,28 @@ def should_award order
     point_awarded = order[:point_awarded] if order[:point_awarded] #解决nil的问题
     return false if point_awarded > 0
     return true
+end
+
+def send_balance_notice openids
+    notice = {
+        touser: 'owHN1t0ETyOD1p_J324Gcb9twHuk',
+        template_id:  'JJq04n18SSmcNItaCwcLDmNqFJoGCIk5nvOWPm3KvJg',
+        url:  'https://shop.foodtrust.cn/m/accountv4',  
+        data:  {
+            first:  { value:  "您的账户余额有变动，详情如下", color:  '#173177' },
+            keyword1:  { value:   "会员账户余额", color:  '#173177' },
+            keyword2:  { value:  '系统每日批处理', color:  '#ff0000' },
+            keyword3:  { value:  "团购订单或特点区域运费返回\n运费退回规则：\n *所有已提交的团购订单（无论是否拼成）\n *特定小区大于88元的日常订单\n *广东省外快递改为到付(满2298另有积分奖励)", color:  '#173177' },
+            keyword4:  { value:  '+10.00', color:  '#0000ff' },
+            keyword5:  { value:  '点击详情查看最新余额', color:  '#0000ff' },
+            remark:  { value: "FOODTRUST® 丰巢有机\n每一天更安心的选择", color:  '#88b04b' },
+        }
+    }
+    wat = wechat_access_token
+    openids.each do |openid|
+        notice.store(:touser,openid) #注意，如果是'touser' 就不工作了
+        wechat_api :sendTemplateMessage, wat, notice
+    end
 end
 
 def update_zc order
@@ -63,9 +87,11 @@ oorders.each do |order|
 
     order_id = order[:order_id]
     uid = get_uid_by_number order[:customer_id]
+    openid = get_openid_by_number order[:customer_id]
     now = Time.now.strftime('%Y-%m-%d-%H:%M:%S')
 
     #符合退款条件的省内订单周边小区或省外退回10元运费
+    #符合退款条件的团购订单
     if should_refund order
            puts "refund shipping_fee to cid##{order[:customer_id]} for oid##{order_id} at addr: #{order[:addr]}"
            fee = order[:shipping_fee]
@@ -79,6 +105,7 @@ oorders.each do |order|
            flist += "#{order[:order_time]}    Y#{sprintf('%.2f',order[:amount])}\n"
            flist += "  C##{order[:customer_id]} O##{order_id}\n"
            flist += "  #{order[:addr]}\n  #{order[:name]} #{order[:tel]}\n"
+           send_balance_notice [ openid ]
     end
 
     #省外奖励积分

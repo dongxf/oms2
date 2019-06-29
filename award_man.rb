@@ -74,5 +74,5 @@ end
     'owHN1t6e-heZydDZDAaOx-1VZpFk'  #有凤来仪
     'owHN1t-k_JVJBzvI-iqFzl8miUJw', #霞女士
 =end
-openids =  [ 'owHN1t-k_JVJBzvI-iqFzl8miUJw' ]
+openids = [ 'owHN1t0ETyOD1p_J324Gcb9twHuk' ]
 send_points_notice openids

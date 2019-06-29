@@ -94,6 +94,14 @@ def get_uid_by_number number
         return get_uid_by_number_in_pospal number
 end
 
+def get_openid_by_number number
+        rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
+        sqlu = "select * from ogoods.pospal_users where number='#{number}'"
+        res = rds.query(sqlu)
+        return res.first['openid'] if res.first
+        return nil
+end
+
 ##get_all_pospal_users will generate an json file under .\\auto_import\\, such as puser-20190601123011.json
 #pusers = get_all_pospal_users
 #pusers=JSON.parse IO.readlines(".\\auto_import\\pusers.json")[0]
