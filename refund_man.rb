@@ -40,7 +40,7 @@ def send_balance_notice openids
             first:  { value:  "您的账户余额有变动，详情如下", color:  '#173177' },
             keyword1:  { value:   "会员账户余额", color:  '#173177' },
             keyword2:  { value:  '系统每日批处理', color:  '#ff0000' },
-            keyword3:  { value:  "团购订单或特点区域运费返回\n运费退回规则：\n *所有已提交的团购订单（无论是否拼成）\n *特定小区大于88元的日常订单\n *广东省外快递改为到付(满2298另有积分奖励)", color:  '#173177' },
+            keyword3:  { value:  "团购订单或特定区域运费返回\n运费退回规则：\n *所有已提交的团购订单（无论是否拼成）\n *特定小区大于88元的日常订单\n *广东省外快递改为到付(满298另有积分奖励)", color:  '#173177' },
             keyword4:  { value:  '+10.00', color:  '#0000ff' },
             keyword5:  { value:  '点击详情查看最新余额', color:  '#0000ff' },
             remark:  { value: "FOODTRUST® 丰巢有机\n每一天更安心的选择", color:  '#88b04b' },
