@@ -22,7 +22,7 @@ require 'mysql2'
 require 'awesome_print'
 
 def ms_test
-    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
+    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1402', :password => ENV['PSI_PASSWORD'])
     sql = 'select * from ogoods.wechat_fans'
     res = rds.query(sql)
     res.each { |r| p r['nick_name'] }
@@ -37,7 +37,7 @@ end
 
 def create_qualified_reviewers_table
 
-        rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
+        rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1402', :password => ENV['PSI_PASSWORD'])
 
         sql = 'DROP TABLE IF EXISTS ogoods.qualified_reviewers;'
         res = rds.query(sql)
@@ -59,6 +59,9 @@ def create_qualified_reviewers_table
 
 end
 
+=begin
+          
+=end
 def update_qualified_reviwers customerList
 
 end
@@ -68,7 +71,7 @@ end
 def gen_customer_list_by_product_entity_id productId, goodsCode
 
     list = []
-    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
+    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1402', :password => ENV['PSI_PASSWORD'])
 
     sql = "select o.customer_id as customer_id, o.phone as phone, o.increment_id as order_no, o.created_at as created_at 
     from foodtrust.sales_flat_order_item as oitem
@@ -85,6 +88,7 @@ end
 
 #to generate an Hash with includ customer information hash
 def extend_customer_list list
+    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1402', :password => ENV['PSI_PASSWORD'])
     extendedList = []
     list.each do |customer|
             customer_entity_id = customer[:customer_id]
@@ -98,7 +102,6 @@ def extend_customer_list list
                 on la.entity_id = at.entity_id and la.attribute_id = 5
                 where at.attribute_id= 318 and at.entity_id = #{customer_entity_id}"
 
-            rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
             res = rds.query(sql)
             existed = customer
             res.each do |r|
