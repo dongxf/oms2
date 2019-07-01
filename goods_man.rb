@@ -41,6 +41,16 @@ else
         puts "goods before synced: #{oNames.size}"
 end
 
+#to let description can be line changed when using by cloud label printing
+def breakLines text
+    result = ''
+    for i in 0..text.size
+            result += text[i..i]
+            result += '<br>' if i%20 == 0 && i!= 0
+    end
+    return result
+end
+
 Spreadsheet.client_encoding='UTF-8'
 begin
     book = Spreadsheet.open xls_file
@@ -52,6 +62,7 @@ begin
         code = row[2]
         descrp = row[26]
         descrp = '' if descrp.nil?  #to prevent bugs caused by nil != nil when compring database record with excel data
+        descrp = breakLines descrp
         #will remove all links in description here
 
         if oNames[code].nil?
