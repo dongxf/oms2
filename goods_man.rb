@@ -42,13 +42,26 @@ else
 end
 
 #to let description can be line changed when using by cloud label printing
+#line break when: 1. double blank used in Cornel; 2. there's 18 chars in line
 def breakLines text
     result = ''
-    for i in 0..text.size
-            result += text[i..i]
-            result += '<br>' if i%18 == 0 && i!= 0
+    line_index=0
+    char_index=0
+    while char_index < text.size
+            line_index += 1
+            if (char_index<text.size-1) && (text[char_index..char_index+1]) == '  '
+                result += '<br>'
+                char_index += 1
+                line_index = 0
+            else
+                result += text[char_index] if text[char_index]
+            end
+            if line_index == 18
+                line_index = 0
+                result += '<br>'
+            end
+            char_index += 1
     end
-    result.gsub!('  ','<br>')
     return result
 end
 
