@@ -46,8 +46,9 @@ def breakLines text
     result = ''
     for i in 0..text.size
             result += text[i..i]
-            result += '<br>' if i%20 == 0 && i!= 0
+            result += '<br>' if i%18 == 0 && i!= 0
     end
+    result.gsub!('  ','<br>')
     return result
 end
 
