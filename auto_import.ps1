@@ -1,36 +1,17 @@
 ﻿Set-Executionpolicy remotesigned
-$homeDir = "d:\dongxf\work\oms2"
-#$homeDir = "c:\fc3.0\orders"
-#Set-Location $homeDir
-Set-Location "c:\FC3.0\orders"
 
-$goodsFiles = "c:\FC3.0\orders\auto_import\商品资料.xls", "c:\FC3.0\orders\auto_import\商品资料 .xls", "c:\FC3.0\orders\auto_import\商品资料　.xls", "c:\FC3.0\orders\auto_import\pospal_goods.xls"
-foreach ( $targetFileName in $goodsFiles ) {
-        Write-Host "looking for " $targetFileName
-        if ( Test-Path $targetFileName ) {
-            ruby import_pospal_goods.rb $targetFileName
-            #Remove-Item -Force -Path $targetFileName
-            $today=Get-Date -Format FileDateTime
-            $fileBackup="c:\fc3.0\orders\auto_import\imported\pospal_goods-"+$today+".xls"
-            Write-Host "moving file to "+$fileBackup
-            Move-Item -Force -Path $targetFileName -Destination $fileBackup
-        }Else{
-            Write-Host "no goods to sync"
-        }
-}
+#$homeDir = "d:\dongxf\work\oms2"
+$homeDir = "c:\FC3.0\orders"
 
+Set-Location $homeDir
 
-$fansFiles = "c:\fc3.0\orders\auto_import\wechat_fans.xls"
-foreach ( $targetFileName in $fansFiles ) {
-        Write-Host "looking for " $targetFileName
-        if ( Test-Path $targetFileName ) {
-            ruby import_wechat_fans.rb $targetFileName
-            #Remove-Item -Force -Path $targetFileName
-            $today=Get-Date -Format FileDateTime
-            $fileBackup="c:\fc3.0\orders\auto_import\imported\wechat_fans-"+$today+".xls"
-            Write-Host "moving file to "+$fileBackup
-            Move-Item -Force -Path $targetFileName -Destination $fileBackup
-        }Else{
-            Write-Host "no fans to sync"
-        }
+#向云标签数据库中导入由银豹系统导出的商品数据资料，导入后将其移动到备份目录
+$fileNames = "商品资料","pospal_goods"
+foreach ( $targetName in $fileNames ) {
+    Get-ChildItem -Path $homeDir"\auto_import\" -Filter *$targetName*.xls* | ForEach-Object {
+            $today=Get-Date -Format "yyyyMMdd-HHmm"
+            $backup = $homeDir+"\auto_import\goods\"+$today+"-"+$_.Name
+            ruby goods_man.rb $_.FullName
+            Move-Item -Force -Path $_.FullName -Destination $backup
+    }
 }

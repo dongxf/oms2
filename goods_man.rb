@@ -5,7 +5,8 @@
 
 require 'mysql2'
 require 'awesome_print'
-require 'spreadsheet'
+require 'spreadsheet' #用于写xls文件
+require 'simple-spreadsheet' #用于读取xlsx文件，spreadsheet gem读xlsx会报签名错误
 
 rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 oNames = {};
@@ -65,22 +66,21 @@ def breakLines text
     return result
 end
 
-Spreadsheet.client_encoding='UTF-8'
 begin
-    book = Spreadsheet.open xls_file
-    sheet1 = book.worksheet 0
+    s = SimpleSpreadsheet::Workbook.read xls_file
+    s.selected_sheet = s.sheets.first
     line_idx = 0
-    sheet1.each do |row|
+    s.first_row.upto(s.last_row) do |line|
         line_idx += 1
         next if line_idx == 1
-        code = row[2]
-        descrp = row[26]
+        code = s.cell(line,3)
+        descrp = s.cell(line,27)
         descrp = '' if descrp.nil?  #to prevent bugs caused by nil != nil when compring database record with excel data
         descrp = breakLines descrp
         #will remove all links in description here
 
         if oNames[code].nil?
-            print "insert #{row[2]} #{row[0]}\r"
+            print "insert #{s.cell(line,3)} #{s.cell(line,1)}\r"
             sqlu = "insert into ogoods.pospal_goods( 
                         name,catalog,code,size,unit,
                         balance,purchase_price,sale_price,gross_profit,bulk_price,member_price,
@@ -89,29 +89,29 @@ begin
                         producer_memo,security_memo,keep_memo,scale_code,
                         status,description
                     ) values( 
-                        '#{row[0]}','#{row[1]}','#{row[2]}','#{row[3]}','#{row[4]}',
-                        #{row[5]},#{row[6]},#{row[7]},'#{row[8]}',#{row[9]},#{row[10]},
-                        '#{row[11]}','#{row[12]}','#{row[13]}','#{row[14]}',
-                        '#{row[15]}','#{row[16]}','#{row[17]}','#{row[18]}','#{row[19]}','#{row[20]}',
-                        '#{row[21]}','#{row[22]}','#{row[23]}','#{row[24]}',
-                        '#{row[25]}','#{descrp}'
+                        '#{s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
+                        #{s.cell(line,6)},#{s.cell(line,7)},#{s.cell(line,8)},'#{s.cell(line,9)}',#{s.cell(line,10)},#{s.cell(line,11)},
+                        '#{s.cell(line,12)}','#{s.cell(line,13)}','#{s.cell(line,14)}','#{s.cell(line,15)}',
+                        '#{s.cell(line,16)}','#{s.cell(line,17)}','#{s.cell(line,18)}','#{s.cell(line,19)}','#{s.cell(line,20)}','#{s.cell(line,21)}',
+                        '#{s.cell(line,22)}','#{s.cell(line,23)}','#{s.cell(line,24)}','#{s.cell(line,25)}',
+                        '#{s.cell(line,26)}','#{descrp}'
                     );"
             resu = rds.query(sqlu)
         else
-           if oNames[code]!= row[0] || oPrices[code]!= row[7] || oDescription[code]!= descrp
-                print "update #{row[2]} #{row[0]}\r"
+            if oNames[code]!= s.cell(line,2) || oPrices[code]!= s.cell(line,9) || oDescription[code]!= descrp
+                print "update #{s.cell(line,3)} #{s.cell(line,1)}\r"
                 sqlu = "update ogoods.pospal_goods set
-                    name='#{row[0]}',catalog='#{row[1]}',code='#{row[2]}',size='#{row[3]}',unit='#{row[4]}',
-                    balance=#{row[5]},purchase_price=#{row[6]},sale_price=#{row[7]},gross_profit='#{row[8]}',bulk_price=#{row[9]},member_price=#{row[10]},
-                    member_discount='#{row[11]}',points='#{row[12]}',max_stock='#{row[13]}',minimal_stock='#{row[14]}',brand='#{row[15]}'
-                    ,supplier='#{row[16]}',manufacture_date='#{row[17]}',baozhiqi_date='#{row[18]}',py_code='#{row[19]}',huo_number='#{row[20]}',
-                    producer_memo='#{row[21]}',security_memo='#{row[22]}',keep_memo='#{row[23]}',scale_code='#{row[24]}',
-                    status='#{row[25]}',description='#{descrp}'
-                    where code = '#{row[2]}'
+                    name='#{s.cell(line,1)}',catalog='#{s.cell(line,2)}',code='#{s.cell(line,3)}',size='#{s.cell(line,4)}',unit='#{s.cell(line,5)}',
+                    balance=#{s.cell(line,6)},purchase_price=#{s.cell(line,7)},sale_price=#{s.cell(line,8)},gross_profit='#{s.cell(line,9)}',bulk_price=#{s.cell(line,10)},member_price=#{s.cell(line,11)},
+                    member_discount='#{s.cell(line,12)}',points='#{s.cell(line,13)}',max_stock='#{s.cell(line,14)}',minimal_stock='#{s.cell(line,15)}',brand='#{s.cell(line,16)}'
+                    ,supplier='#{s.cell(line,17)}',manufacture_date='#{s.cell(line,18)}',baozhiqi_date='#{s.cell(line,19)}',py_code='#{s.cell(line,20)}',huo_number='#{s.cell(line,21)}',
+                    producer_memo='#{s.cell(line,22)}',security_memo='#{s.cell(line,23)}',keep_memo='#{s.cell(line,24)}',scale_code='#{s.cell(line,25)}',
+                    status='#{s.cell(line,26)}',description='#{descrp}'
+                    where code = '#{s.cell(line,3)}'
                 "
                 resu = rds.query(sqlu)
            else
-                print "skip #{row[2]} #{row[0]}\r"
+                print "skip #{s.cell(line,3)} #{s.cell(line,1)}\r"
            end
         end
     end
@@ -119,6 +119,8 @@ begin
 rescue => e
     puts ">>>ERROR: #{e}"
 end
+
+return
 
 #从ogoodsDB中按照分类目录和商品编号排序，导出所有库存不为零的商品，用于盘点
 Spreadsheet.client_encoding="utf-8"
@@ -166,6 +168,5 @@ end
 
 rday =Date.today.strftime('%Y-%m-%d')
 rtime=Time.now.strftime("%H%M%S")
-fn_name = ".\\auto_import\\" + rday + "-stock-" + rtime + ".xls"
+fn_name = ".\\auto_import\\stock\\" + rday + "-stock-" + rtime + ".xls"
 book.write fn_name
-

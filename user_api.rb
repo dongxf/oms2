@@ -33,7 +33,7 @@ def get_all_pospal_users
         end while recs.size == page_size
 
         rtime = Time.now.strftime('%Y-%m-%d-%H%M%S')
-        fn = ".\\auto_import\\pusers-" + rtime + ".json"
+        fn = ".\\auto_import\\pusers\\pusers-" + rtime + ".json"
         File.open(fn,"w:UTF-8") { |f| f.write pusers.to_json }
         return pusers
 

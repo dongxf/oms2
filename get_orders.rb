@@ -51,7 +51,7 @@ def get_pospal_orders_within s_time, e_time
         end while recs.size == page_size
 
         rtime = Time.now.strftime('%Y%m%d%H%M%S')
-        fn = ".\\auto_import\\porders-" + s_time.gsub('-','').gsub(':','').gsub(' ','') + '-' + e_time.gsub('-','').gsub(':','').gsub(' ','') + '_' + rtime + ".json"
+        fn = ".\\auto_import\\porders\\porders-" + s_time.gsub('-','').gsub(':','').gsub(' ','') + '-' + e_time.gsub('-','').gsub(':','').gsub(' ','') + '_' + rtime + ".json"
         File.open(fn,"w:UTF-8") { |f| f.write porders.to_json }
         return porders
 
