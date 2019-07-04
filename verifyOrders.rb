@@ -22,11 +22,14 @@ def get_order_data_by cond
     p sql
     res = rds.query(sql)
     res.each do |r|
-            next if r['state'] == 3
-            raw_data = r['raw_data']
-            order = JSON.parse(raw_data)
-            order.store('line',r['line'])
-            orders += [ order ]
+        next if r['state'] == 3
+        raw_data = r['raw_data']
+        order = JSON.parse(raw_data)
+        order.store('line',r['line'])
+        order.store('odate',r['odate'])
+        order.store('date',r['date'])
+        order.store('number',r['number'])
+        orders += [ order ]
     end
     return orders
 end
@@ -55,12 +58,9 @@ def is_qualified_code code
 end
 
 def verify_order order
-        #ap order
-        customer_discount = get_current_customer_discount_by_order(order) #to read from database
         text =  "\n\n-------------------------------------------------\n"
-        current_discount = customer_discount * 0.01
         text += "order ##{order['orderNo']} on #{order['orderDateTime']} STATE:#{order['state']}\n"
-        text += "客户编号：" + order['customerNumber']+"     当前折扣: " + pfloat(current_discount) + "\n\n"
+        text += "客户编号：" + order['customerNumber']+"\n\n"
         items = order['items']
         shipping_fee = 0.0
         shipping_fee = order['shippingFee'] if order['shippingFee']
@@ -69,6 +69,7 @@ def verify_order order
         total_no_discount_price = 0.0
         total_discount_list_price = 0.0
         has_question_item = false
+        total_question_price = 0.0
         tlp_cd = 0.0 #所有用了客户折扣的折扣前价格合计
         tsp_uncd = 0.0   #所有没有用客户折扣的商品实际销售价格合计
         text += "  零售价  促销价  折扣   执行价   数量   小计  商品名称\n"
@@ -95,9 +96,10 @@ def verify_order order
                 code = item['productBarcode']
                 if  ( !ipi && !icd && !is_qualified_code(code) && order['line']!='[T]' ) then
                     text += ">#{line}"
+                    total_question_price += esp*pq
+                    has_question_item = true
                 else
                     text += " #{line}"
-                    has_question_item = true
                 end
         end
         amount = order['totalAmount'] #实付
@@ -113,9 +115,25 @@ def verify_order order
         disc = ( amount + points/100 - total_no_discount_price - shipping_fee ) / total_discount_list_price
         text += "                                  折扣 #{pfloat(disc)}\n"
         text += "---------------------------------#{has_question_item ? 'FOUND' : 'GOOD'}\n"
-        puts text
+        #puts text
+
+        order.store('points_used',points)
+        order.store('discount',disc)
+        order.store('rebate_base',total_question_price)
+        order.store('statement',text)
+
+        odate = order['orderDateTime'][0..10]
+        fn_name = ".\\incoming\\" + ( has_question_item ? 'TORB-' : 'GOOD-' ) + odate + "-order-" + order['line'][1] + '-' + order['orderNo'] + "-c" + order['customerNumber'] + ".txt"
+        File.open(fn_name,"w:UTF-8") { |f| f.write text }
+        return order
 end
 
 orders = []
 orders = get_order_data_by ARGV[0]
-orders.each { |order| verify_order order }
+rebate_base = 0.0
+orders.each do |order|
+    result = verify_order order
+    rebate_base += result['rebate_base']
+    puts result['statement'] if result['rebate_base']>0.0
+end
+puts "total rebate base: #{rebate_base}"

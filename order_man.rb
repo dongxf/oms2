@@ -100,8 +100,6 @@ forders.each do |forder|
     next if forder[:first_item].include?('产地直发') && forder[:line]==['T']
 
     if !silence_mode
-            rday =Date.today.strftime('%Y-%m-%d')
-            rtime=Time.now.strftime("%H%M%S")
             oday = forder[:odate]
             fn_name = ".\\incoming\\" + oday + "-order-" + forder[:line][1] + '-' + forder[:number] + "-c" + order['customerNumber'] + ".txt"
             File.open(fn_name,"w:UTF-8") do |f|
