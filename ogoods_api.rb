@@ -20,5 +20,3 @@ def get_uid_by_number number
 
     #uid 不存在，需要从pospal单独取，并更新至数据库
 end
-
-p get_uid_by_number_in_ogoods '136000600440'
