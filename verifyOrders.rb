@@ -15,7 +15,7 @@ end
 
 def get_customer_current_discount rds, order
     customer_id = order['customerNumber']
-    sql = 'select * from ogoods.pospal_users'
+    sql = "select * from ogoods.pospal_users where number='#{order['customerNumber']}'"
     res = rds.query(sql)
     return res.first['discount'] if res.first
     return 100
@@ -142,13 +142,15 @@ total_rebate = 0.0
 orders.each do |order|
     result = verify_order order
     next if result['rebate_base']==0.0
+    puts result['statement']
     to_rebate = result['rebate_base'] * (100-result['customer_discount'])/100
     total_rebate += to_rebate
-    puts ">>>rebate_base: #{result['rebate_base']} to_rebate: #{to_rebate} order_amount: #{result['totalAmount']} customer_discount: #{result['customer_discount']}\n" 
+    puts "cid: #{result['customerNumber']} +#{to_rebate} @#{result['customer_discount']} ##{result['orderNo']} #{result['contactName']}\n" 
     if order['has_question_item']
             odate = order['orderDateTime'][0..10]
             fn_name = ".\\incoming\\TORB" + odate + "-order-" + order['line'][1] + '-' + order['orderNo'] + "-c" + order['customerNumber'] + ".txt"
             File.open(fn_name,"w:UTF-8") { |f| f.write order['statement'] }
     end
 end
-puts "to_rebate total: #{total_rebate}"
+
+puts ">>total: #{total_rebate}"
