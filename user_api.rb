@@ -39,19 +39,34 @@ def get_all_pospal_users
 
 end 
 
+#manually update discount for existed recs
+def update_discount
+    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
+    sql = 'select * from ogoods.pospal_users'
+    res = rds.query sql
+    res.each do |r|
+        next if r['discount']
+        uid = r['uid']
+        user = JSON.parse(r['raw_data'])
+        discount = user['discount']
+        sqlu = "update ogoods.pospal_users set discount=#{discount} where uid=#{uid}" 
+        p sqlu
+        rds.query sqlu
+    end
+end
+
 def update_userdb pusers
 
         rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
         ucount=0
         pusers.each do |user|
             openid=''
-            if user['weixinOpenIds']
-                openid=user['weixinOpenIds'][0]['openId']
-            end
+            openid=user['weixinOpenIds'][0]['openId'] if user['weixinOpenIds']
             raw_data=user.to_json.gsub("'","''") 
             number=user['number']
             uname=user['name'].gsub("'","''")
             phone=user['phone'].gsub("'","''")
+            discount=user['discount']
 
             p "updating user[#{ucount}] number #{number}..."
             ucount += 1
@@ -59,10 +74,10 @@ def update_userdb pusers
             #next if ucount<832 #to debug question rec_no 833 debug only 
 
             sqlu = "INSERT INTO ogoods.pospal_users
-                    ( uid,number,name,openid,phone,raw_data) VALUES 
-                    ( #{user['customerUid']}, '#{number}','#{uname}','#{openid}', '#{phone}', '#{raw_data}')
+                    ( uid,number,name,openid,phone,discount,raw_data) VALUES 
+                    ( #{user['customerUid']}, '#{number}','#{uname}','#{openid}', '#{phone}', #{discount},'#{raw_data}')
                     ON DUPLICATE KEY
-                    UPDATE uid=#{user['customerUid']}, number='#{number}',name='#{uname}', openid='#{openid}', phone='#{phone}', raw_data='#{raw_data}'
+                    UPDATE uid=#{user['customerUid']}, number='#{number}',name='#{uname}', openid='#{openid}', phone='#{phone}', discount=#{discount}, raw_data='#{raw_data}'
                    "
             resu = rds.query(sqlu)
         end
