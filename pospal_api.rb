@@ -29,6 +29,7 @@ def pospal_api api_name, request_body
   api_urls={
     :queryAccessTimes => 'openApiLimitAccess/queryAccessTimes',
     :queryAccessLimit => 'openApiLimitAccess/queryDailyAccessTimesLog',
+    :completeOrder => 'orderOpenApi/completeOrder',
     :shipOrder => 'orderOpenApi/shipOrder',
     :getCategoryPages => 'productOpenApi/queryProductCategoryPages',
     :queryOrderPages => 'orderOpenApi/queryOrderPages',
