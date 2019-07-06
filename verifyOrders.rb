@@ -13,6 +13,9 @@ if !ARGV[0]
         return
 end
 
+@debug_mode=false
+@debug_mode=true if ARGV[1]=='--debug'
+
 def get_customer_current_discount rds, order
     customer_id = order['customerNumber']
     sql = "select * from ogoods.pospal_users where number='#{order['customerNumber']}'"
@@ -31,7 +34,7 @@ def get_order_data_by cond
     sql = "select * from ogoods.pospal_orders" if cond == 'all'
     res = rds.query(sql)
     res.each do |r|
-        next if r['state'] == 3
+        next if ( !@debug_mode && r['state'] == 3 ) #非debug模式并不处理取消的订单 
         raw_data = r['raw_data']
         order = JSON.parse(raw_data)
         order.store('line',r['line'])
@@ -71,7 +74,7 @@ def verify_order order
             return order
         end
 
-        text =  "\n\n-------------------------------------------------\n"
+        text =  "\n-------------------------------------------------\n"
         text += "order ##{order['orderNo']} on #{order['orderDateTime']} STATE:#{order['state']}\n"
         text += "客户编号：" + order['customerNumber']+"\n\n"
         items = order['items']
@@ -105,7 +108,6 @@ def verify_order order
                 total_item_price += esp * pq
                 total_no_discount_price += esp * pq if !icd
                 total_discount_list_price += psp * pq if icd
-                has_question_item = true if !ipi && !icd
                 code = item['productBarcode']
                 if  ( !ipi && !icd && !is_qualified_code(code) && order['line']!='[T]' && !is_secondary_promotion(item['productUid'], items) ) then
                     text += ">#{line}"
@@ -116,17 +118,14 @@ def verify_order order
                 end
         end
         amount = order['totalAmount'] #实付
-        text += "                        折前商品总标价 #{pfloat(total_list_price)}\n"
-        text += "                        不打折商品标价 #{pfloat(total_no_discount_price)}\n"
-        text += "                        应打折商品标价 #{pfloat(total_discount_list_price)}\n"
-        text += "                        打折后商品总价 #{pfloat(total_item_price)}\n"
+        text += "                                  总计 #{pfloat(total_item_price)}\n"
         text += "                                  运费 #{pfloat(shipping_fee)}\n"
         due = total_item_price + shipping_fee       #应付
-        text += "                                  应付 #{pfloat(due)}\n"
         text += "                                  实付 #{pfloat(amount)}\n"
         #积分倒算 (折前商品总价+运费-用户实际支付)*100 #因为信息中并没有用户实际支付，无法计算出来，除非提供按照折扣的估算
         #折扣倒算 (应付总价-未打折商品总价-运费)/打折商品折前总价
-        text += "---------------------------------#{has_question_item ? 'FOUND' : 'GOOD'}\n"
+        text += "折扣前总标价 #{pfloat(total_list_price)}  不打折总标价 #{pfloat(total_no_discount_price)}  应打折总标价 #{pfloat(total_discount_list_price)} 折后总价 #{pfloat(total_item_price)}\n"
+        text += "-------------------------------  #{has_question_item ? 'FOUND' : 'GOOD'}\n"
         #puts text
 
         order.store('rebate_base',total_question_price)
@@ -141,8 +140,8 @@ orders = get_order_data_by ARGV[0]
 total_rebate = 0.0
 orders.each do |order|
     result = verify_order order
+    puts result['statement'] if @debug_mode
     next if result['rebate_base']==0.0
-    puts result['statement']
     to_rebate = result['rebate_base'] * (100-result['customer_discount'])/100
     total_rebate += to_rebate
     puts "cid: #{result['customerNumber']} +#{to_rebate} @#{result['customer_discount']} ##{result['orderNo']} #{result['contactName']}\n" 

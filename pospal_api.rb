@@ -32,6 +32,7 @@ def pospal_api api_name, request_body
     :shipOrder => 'orderOpenApi/shipOrder',
     :getCategoryPages => 'productOpenApi/queryProductCategoryPages',
     :queryOrderPages => 'orderOpenApi/queryOrderPages',
+    :queryTicketPages => 'ticketOpenApi/queryTicketPages',
     :updateBiPi => 'customerOpenApi/updateBalancePointByIncrement',
     :queryCustomerPages => 'customerOpenApi/queryCustomerPages',
     :queryCustomerUid => 'customerOpenApi/queryByNumber'

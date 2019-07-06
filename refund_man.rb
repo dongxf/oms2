@@ -102,7 +102,7 @@ oorders.each do |order|
            sqlu = "update ogoods.pospal_orders set comment='#{comment}', ship_refunded=10  where order_id = '#{order_id}'"
            resu = rds.query(sqlu)
            count += 1
-           flist += "#{order[:order_time]}    Y#{sprintf('%.2f',order[:amount])}\n"
+           flist += "#{order[:order_time]}    Y#{sprintf('%.2f',order[:amount])} #{order[:line]}\n"
            flist += "  C##{order[:customer_id]} O##{order_id}\n"
            flist += "  #{order[:addr]}\n  #{order[:name]} #{order[:tel]}\n"
            send_balance_notice [ openid ]
@@ -120,7 +120,7 @@ oorders.each do |order|
            sqlu = "update ogoods.pospal_orders set comment='#{comment}', point_awarded=#{point}  where order_id = '#{order_id}'"
            resu = rds.query(sqlu)
            count += 1
-           plist += "#{order[:order_time]}    P#{point}\n"
+           plist += "#{order[:order_time]}    P#{point} #{order[:line]}\n"
            plist += "  C##{order[:customer_id]} O##{order_id}\n"
            plist += "  #{order[:addr]}\n  #{order[:name]} #{order[:tel]}\n"
     end

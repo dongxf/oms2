@@ -56,6 +56,38 @@ def get_pospal_orders_within s_time, e_time
         return porders
 
 end 
+#
+# get tickets form pospal,  time duration must be within 24hours
+def get_pospal_tickets_within s_time, e_time
+
+        tickets=[]
+        page_count = 0
+        req={'postBackParameter'=>{}, 'startTime'=> s_time, 'endTime'=> e_time }
+
+        begin
+                page_count += 1 # to control loop times
+                puts "calling pospal api in #{page_count} time"
+
+                res=pospal_api(:queryTicketPages,req)
+                recs = res['data']['result']
+                recs.each do |rec|
+                    tickets += [rec]
+                end
+                actual_size = recs.size
+                page_size = res['data']['pageSize']
+                req = {'postBackParameter' => res['data']['postBackParameter'], 'startTime'=> s_time, 'endTime'=> e_time }
+                #ap res
+
+                break if page_count >= 50 #used for saving api call times in coding pharse
+
+        end while recs.size == page_size
+
+        rtime = Time.now.strftime('%Y%m%d%H%M%S')
+        fn = ".\\auto_import\\tickets\\tickets-" + s_time.gsub('-','').gsub(':','').gsub(' ','') + '-' + e_time.gsub('-','').gsub(':','').gsub(' ','') + '_' + rtime + ".json"
+        File.open(fn,"w:UTF-8") { |f| f.write tickets.to_json }
+        return tickets
+
+end 
 
 # pospal only support to query orders within 24 hours
 def get_orders_within s_time, e_time
