@@ -14,9 +14,9 @@ day = Date.today
 130.times do
     stime = day.strftime('%Y-%m-%d') + " 00:00:00"
     etime = day.strftime('%Y-%m-%d') + " 23:59:59"
-    break_day = Date.parse('2019-06-06')
+    #break_day = Date.parse('2019-06-06')
     day = day.prev_day
-    next if day >= break_day
+    #next if day >= break_day
     puts "retrieving tickets during #{stime} - #{etime}"
     tickets = get_pospal_tickets_within stime, etime #this function already save json file
 end
