@@ -65,10 +65,10 @@ def update_zc order
     resu = rds.query(sqlu)
 end
 
-#days count forward from day, defualt count is 1
+#days count backward from day, defualt count is 1
 p 'usage: ruby refund_man.rb start_day duration #eg: ruby refund_man.rb 2019-07-01 1'
 day = Date.today
-count = 1
+count = 2
 day = Date.parse(ARGV[0]) if ARGV[0]
 count = ARGV[1].to_i if ARGV[1]
 
@@ -77,9 +77,8 @@ oorders = []
 count.times do
     stime = day.strftime('%Y-%m-%d') + " 00:00:00"
     etime = day.strftime('%Y-%m-%d') + " 23:59:59"
-    puts "retrieving ogoods orders during #{stime} - #{etime}"
     oorders = get_ogoods_orders_within stime, etime
-    day = day.next_day
+    day = day.prev_day
 end
 
 rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
