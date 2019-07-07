@@ -65,8 +65,8 @@ def update_zc order
     resu = rds.query(sqlu)
 end
 
-#days count backward from day, defualt count is 1
-p 'usage: ruby refund_man.rb start_day duration #eg: ruby refund_man.rb 2019-07-01 1'
+p 'usage: ruby refund_man.rb [start_date backward_total_days]'
+p 'eg: ruby refund_man.rb 2019-07-01 3'
 day = Date.today
 count = 2
 day = Date.parse(ARGV[0]) if ARGV[0]
