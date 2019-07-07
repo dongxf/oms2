@@ -18,10 +18,8 @@ def access_remained
    today = Date.today.strftime("%Y-%m-%d")
    req = { 'beginDate' => today, 'endDate' => today }
    res = pospal_api :queryAccessLimit, req
-
-   #acced = res['data'][0]['haveAcessTimes'] #Be attention this dirt words!
-   return ( res['data'][0]['limitTimes'] - res['data'][0]['haveAcessTimes'] ) if res['data']
-   puts "Status: #{res.body['status']}" if res
+   ap res
+   return ( res['data'][0]['limitTimes'] - res['data'][0]['haveAcessTimes'] ) if res['data'] #be attention to typo of AcessTimes
    return 0
 end
 
