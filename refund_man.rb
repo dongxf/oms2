@@ -7,28 +7,32 @@ load 'get_orders.rb'
 load 'user_api.rb'
 load 'wechat_api.rb'
 
-def should_refund order
-
-        return false if order[:online_paid]!= 1
+def get_balance_to_refund order
+        return 0 if order[:online_paid]!= 1
         refunded_fee = 0
         refunded_fee = order[:ship_refunded] if order[:ship_refunded] #解决nil的问题
-        return false if order[:shipping_fee] <= 0 #没有收过运费
-        return false if refunded_fee > 0 #已经退回过
-        return true if order[:zone_code] =='ZB' && order[:amount] >=98 #shipping_fee is included in order amount
-        return true if order[:zone_code] =='SW' #省外都是到付，只要收了就应该退回去
-        return true if order[:line] == '[T]' #对团购订单退款，未拼团成功的订单也在这个表上
-        return false
+        return 0 if order[:shipping_fee] <= 0 #没有收过运费
+        return 0 if refunded_fee > 0 #已经退回过
+        return order[:shipping_fee] if order[:zone_code] =='ZB' && order[:amount] >=98 #shipping_fee is included in order amount
+        return order[:shipping_fee] if order[:zone_code] =='SW' #省外都是到付，只要收了就应该退回去
+        return order[:shipping_fee] if order[:line] == '[T]' #对团购订单退款，未拼团成功的订单也在这个表上
+        return 0
 end
 
-def should_award order
+def get_points_to_award order
+    return 0 if order[:online_paid]!= 1
+    return 0 if order[:zone_code] != 'SW'
+    return 0 if order[:amount] < 198
+    points_awarded = 0
+    points_awarded = order[:point_awarded] if order[:point_awarded] #解决nil的问题
+    return 0 if points_awarded > 0
+    points = 1000 #满198赠送10元
+    points = 2000 if order[:amount] >= 298 #满298赠送20元
+    return points
+end
 
-    return false if order[:online_paid]!= 1
-    return false if order[:zone_code] != 'SW'
-    return false if order[:amount] < 198
-    point_awarded = 0
-    point_awarded = order[:point_awarded] if order[:point_awarded] #解决nil的问题
-    return false if point_awarded > 0
-    return true
+def get_points_to_rebate order
+    return 0
 end
 
 def send_balance_notice openids
@@ -61,26 +65,28 @@ def update_zc order
     resu = rds.query(sqlu)
 end
 
+#days count forward from day, defualt count is 1
+p 'usage: ruby refund_man.rb start_day duration #eg: ruby refund_man.rb 2019-07-01 1'
+day = Date.today
+count = 1
+day = Date.parse(ARGV[0]) if ARGV[0]
+count = ARGV[1].to_i if ARGV[1]
+
 oorders = []
 
-#days count backward from today, defualt is 1, if count==0 then use tomrrow as shipdate
-day_count = ARGV[0].nil? ? 1 : ARGV[0].to_i
-
-if day_count == 0
-   the_day = Date.today.next_day
-   oorders = get_ogoods_orders_by_shipdate the_day
-else
-   the_day = Date.today
-   day_count.times do 
-        oorders += get_ogoods_orders_by_shipdate the_day
-        the_day = the_day.prev_day
-   end
+count.times do
+    stime = day.strftime('%Y-%m-%d') + " 00:00:00"
+    etime = day.strftime('%Y-%m-%d') + " 23:59:59"
+    puts "retrieving ogoods orders during #{stime} - #{etime}"
+    oorders = get_ogoods_orders_within stime, etime
+    day = day.next_day
 end
 
 rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 
 flist="" #运费返回表
 plist="" #积分奖励表
+rlist="" #折扣返回
 count = 0
 
 oorders.each do |order|
@@ -89,42 +95,64 @@ oorders.each do |order|
     uid = get_uid_by_number order[:customer_id]
     openid = get_openid_by_number order[:customer_id]
     now = Time.now.strftime('%Y-%m-%d-%H:%M:%S')
+    balance_inc = 0
+    point_inc = 0
 
     #符合退款条件的省内订单周边小区或省外退回10元运费
     #符合退款条件的团购订单
-    if should_refund order
+    refund_balance = get_balance_to_refund order
+    if refund_balance > 0
            puts "refund shipping_fee to cid##{order[:customer_id]} for oid##{order_id} at addr: #{order[:addr]}"
-           fee = order[:shipping_fee]
 
-           req = { 'customerUid' => uid, 'balanceIncrement' => 10.00, 'pointIncrement' => 0, 'dataChangeTime' => now }
-           pospal_api :updateBiPi, req
-           comment = order[:comment] + " | #{sprintf('%.2f',fee)} shipfee refunded at #{now}"
-           sqlu = "update ogoods.pospal_orders set comment='#{comment}', ship_refunded=10  where order_id = '#{order_id}'"
+           balance_inc += refund_balance
+
+           comment = order[:comment] + " | #{sprintf('%.2f',refund_balance)} shipfee refunded at #{now}"
+           sqlu = "update ogoods.pospal_orders set comment='#{comment}', ship_refunded=#{refund_balance}  where order_id = '#{order_id}'"
            resu = rds.query(sqlu)
            count += 1
-           flist += "#{order[:order_time]}    Y#{sprintf('%.2f',order[:amount])} #{order[:line]}\n"
+           flist += "#{order[:order_time]}    Y#{sprintf('%.2f',order[:amount])}-#{refund_balance} #{order[:line]}\n"
            flist += "  C##{order[:customer_id]} O##{order_id}\n"
            flist += "  #{order[:addr]}\n  #{order[:name]} #{order[:tel]}\n"
            send_balance_notice [ openid ]
     end
 
     #省外奖励积分
-    if should_award order
+    award_points = get_points_to_award order
+    if award_points > 0
            puts "award points to cid##{order[:customer_id]} for oid# #{order_id} at addr: #{order[:addr]}"
 
-           point = 1000
-           point = 2000 if order[:amount] >= 298
-           req = { 'customerUid' => uid, 'balanceIncrement' => 0, 'pointIncrement' => point, 'dataChangeTime' => Time.now.strftime('%Y-%m-%d %H:%M:%S') }
-           pospal_api :updateBiPi, req
-           comment = order[:comment] + " | #{point} points awarded at #{now}"
-           sqlu = "update ogoods.pospal_orders set comment='#{comment}', point_awarded=#{point}  where order_id = '#{order_id}'"
+           point_inc += award_point
+
+           comment = order[:comment] + " | #{award_point} points awarded at #{now}"
+           sqlu = "update ogoods.pospal_orders set comment='#{comment}', point_awarded=#{award_point}  where order_id = '#{order_id}'"
            resu = rds.query(sqlu)
            count += 1
-           plist += "#{order[:order_time]}    P#{point} #{order[:line]}\n"
+           plist += "#{order[:order_time]}    P#{award_points} #{order[:line]}\n"
            plist += "  C##{order[:customer_id]} O##{order_id}\n"
            plist += "  #{order[:addr]}\n  #{order[:name]} #{order[:tel]}\n"
     end
 
+    # 折扣计算遗漏的部分
+    rebate_points = get_points_to_rebate order
+    if rebate_points > 0
+        puts "rebate points to cid##{order[:customer_id]} for oid# #{order_id} at addr: #{order[:addr]}"
+
+        point_inc += rebate_points
+
+        comment = order[:comment] + " | #{rebate_points} points rebated at #{now}"
+        sqlu = "update ogoods.pospal_orders set comment='#{comment}', point_rebated=#{rebate_points}  where order_id = '#{order_id}'"
+        resu = rds.query(sqlu)
+        count += 1
+        rlist += "#{order[:order_time]}    R#{rebate_points} #{order[:line]}\n"
+        rlist += "  C##{order[:customer_id]} O##{order_id}\n"
+        rlist += "  #{order[:addr]}\n  #{order[:name]} #{order[:tel]}\n"
+    end
+
+    if refund_balance > 0 || award_points > 0 || rebate_points > 0
+           puts "update customer uid #{uid} with balanceIncrement=#{balance_inc}, pointIncrement=#{point_inc}..."
+           req = { 'customerUid' => uid, 'balanceIncrement' => balance_inc, 'pointIncrement' => point_inc, 'dataChangeTime' => now }
+           pospal_api :updateBiPi, req
+    end
 end
 
 if count > 0
@@ -133,6 +161,8 @@ if count > 0
         text += flist
         text += "\n--奖励积分\n"
         text += plist
+        text += "\n--折扣补漏\n"
+        text += rlist
         rtime = Time.now.strftime('%Y-%m-%d-%H%M%S')
         fn = ".\\incoming\\refund-order-" + rtime + ".txt"
         File.open(fn,"w:UTF-8") { |f| f.write text }
