@@ -32,17 +32,6 @@ def import_json_data
     puts "total tickets readed: #{total}"
 end
 
-<<<<<<< HEAD
-day = Date.today
-130.times do
-    stime = day.strftime('%Y-%m-%d') + " 00:00:00"
-    etime = day.strftime('%Y-%m-%d') + " 23:59:59"
-    #break_day = Date.parse('2019-06-06')
-    day = day.prev_day
-    #next if day >= break_day
-    puts "retrieving tickets during #{stime} - #{etime}"
-    tickets = get_pospal_tickets_within stime, etime #this function already save json file
-=======
 =begin
     Usage: to retrieve tickets since give date, last n days
     eg:    retrieve_json_data_since Date.today 1
@@ -56,7 +45,6 @@ def retrieve_json_data_since day, count
         tickets = get_pospal_tickets_within stime, etime #this function already save json file
         day = day.next_day
     end
->>>>>>> eaf1133a7b66e50032ea911913db345b68de4e1e
 end
 
 import_json_data
