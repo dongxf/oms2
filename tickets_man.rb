@@ -1,10 +1,18 @@
 #encoding: utf-8
 
-#This file is used to pre-processed tickets read under access time limited
+#This file is used to processed tickets data from pospal
 
 require 'find'
 require 'awesome_print'
 load    'get_orders.rb'
+
+def update_ticket_information rds, ticket
+end
+
+def update_tickets_in_ogoods tickets
+    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
+    tickets.each { |ticket| update_ticket_information rds, ticket }
+end
 
 =begin
     Usage: to import all json data under certain direcoties
@@ -14,17 +22,18 @@ load    'get_orders.rb'
 def import_json_data
     total = 0 
     Find.find('.//auto_import//tickets') do |fn|
-            if (fn.include? '.json') && !(fn.include? 'old') #要排除old为名的子目录或文件
+        if (fn.include? '.json') && !(fn.include? 'old') #要排除old为名的子目录或文件
             tickets = JSON.parse IO.readlines(fn)[0]
+            update_tickets_in_ogoods tickets
             total += tickets.size
             puts "#{sprintf('%2d',tickets.size)} tickets in #{fn}"
         end
     end
-    puts "total: #{total}"
+    puts "total tickets readed: #{total}"
 end
 
 =begin
-    Usage: to retrieve tickets since
+    Usage: to retrieve tickets since give date, last n days
     eg:    retrieve_json_data_since Date.today 1
     eg:    retrieve_json_data_since Date.parse('2019-03-01'), 31
 =end
@@ -38,5 +47,4 @@ def retrieve_json_data_since day, count
     end
 end
 
-#retrieve_json_data_since Date.parse('2019-03-01'), 130
 import_json_data
