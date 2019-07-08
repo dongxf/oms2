@@ -11,3 +11,5 @@ load 'user_api.rb'
 #pusers=JSON.parse IO.readlines(".\\auto_import\\pusers.json")[0]
 pusers = get_all_pospal_users
 update_userdb pusers
+update_openid_in_orders
+update_uid_in_orders

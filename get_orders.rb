@@ -11,6 +11,7 @@ require 'awesome_print'
 
 load 'router.rb'
 load 'pospal_api.rb'
+load 'user_api.rb' #to use get_openid_by_number
 
 def get_orders_by_shipdate ship_day
         yesterday = ship_day.prev_day
@@ -171,6 +172,8 @@ def get_ogoods_orders_within s_time, e_time
                     :amount => r['amount'],
                     :delivery_type => r['delivery_type'],
                     :customer_id => r['customer_id'],
+                    :uid => r['uid'], #uid有可能为空，需要user_man.rb定时同步过来。不要急于直接从pospal_user查询，因为新用户还是需要同步后才有
+                    :openid => r['openid'], #openid有可能为空，需要user_man.rb定时同步过来。不要急于直接从pospal_user查询，因为新用户还是需要同步后才有
                     :shipping_fee => r['shipping_fee'],
                     :remark => r['remark'],
                     :order_time => r['order_time'],
