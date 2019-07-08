@@ -55,17 +55,9 @@ def update_discount
     end
 end
 
-def update_openid_in_orders
+def update_userinfo_in_orders
     rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
-    sqlu = "UPDATE ogoods.pospal_orders o, ogoods.pospal_users u SET o.openid = u.openid WHERE o.customer_id = u.number"
-    #加上 (o.openid is NULL or o.openid = '') and 查询效率都差不多
-    p sqlu
-    resu = rds.query(sqlu)
-end
-
-def update_uid_in_orders
-    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
-    sqlu = "UPDATE ogoods.pospal_orders o, ogoods.pospal_users u SET o.uid = u.uid WHERE o.customer_id = u.number"
+    sqlu = "UPDATE ogoods.pospal_orders o, ogoods.pospal_users u SET o.uid = u.uid, o.openid = u.openid WHERE o.customer_id = u.number"
     p sqlu
     resu = rds.query(sqlu)
 end
