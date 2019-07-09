@@ -151,27 +151,87 @@ def verify_order order
     order.store('has_question_item',has_question_item)
     order.store('order_discount',order_discount)
 
+    order.store('order_details',text)
+
+    return order
+end
+
+def patch_order order
+
+    text =  "\n-----------------------------------------------------------\n"
+    text += "order ##{order['orderNo']} on #{order['orderDateTime']} STATE:#{order['state']}\n"
+    text += "客户编号：" + order['customerNumber']+"\n\n"
+    items = order['items']
+    points_used = 0.0
+    points_used = order['points_used'] if order['points_used']
+    shipping_fee = 0.0
+    shipping_fee = order['shippingFee'] if order['shippingFee']
+    order_discount = 1
+    order_discount = order['order_discount'] if order['order_discount']
+    total_item_price = 0.0
+    text += "  零售价  促销价  折扣   执行价   数量   小计  商品名称\n"
+    amount = order['totalAmount'] #实付
+    questioned_items = 0
+    items.each do |item|
+        psp = item['productSellPrice']
+        esp = item['eshopSellPrice'] #实际执行价格,通常是把积分扣掉的吧
+        icd = item['isCustomerDiscount'] ? item['isCustomerDiscount'] : false #is customer discount
+        ipi = item["promotionRuleUid"] ? true : false #is promotion item
+        pq = item['productQuantity']
+        pn = item['productName']
+        item_actual_price = esp
+        item_actual_price = esp if ipi
+        item_actual_price = psp * order_discount if icd
+        item_subtotal = item_actual_price * pq
+        line =  "#{pfloat psp}"                                             #零售价
+        line += " #{ipi ? pfloat(esp) : '       '}"                         #促销价
+        line += " #{!ipi&&icd ? '*'+sprintf('%0.2f',order_discount) : '     ' }"  #折扣
+        line += " #{pfloat(esp)}" if ipi                                    #执行价格
+        line += " #{pfloat(item_actual_price)}" if !ipi                     #执行价格
+        line += " #{pfloat(pq)}"                                            #数量
+        line += " #{pfloat(item_subtotal)}"                                 #小计
+        line += " #{pn}\n"                                                  #商品名称
+        total_item_price += item_subtotal
+        code = item['productBarcode']
+        if  ( !ipi && !icd && !is_qualified_code(code) && order['line']!='[T]' && !is_secondary_promotion(item['productUid'], items) ) then
+            text += ">#{line}"
+            questioned_items += 1
+        else
+            text += " #{line}"
+        end
+    end
+    text += "                                  总计 #{pfloat(total_item_price)}\n"
+    text += "                                  运费 #{pfloat(shipping_fee)}\n"
+    text += "                              积分抵扣 #{pfloat(points_used/100)}\n"
+    due = total_item_price + shipping_fee       #应付
+    text += "                                  实付 #{pfloat(amount)}\n"
+    text += "                              本单折扣 #{pfloat(order_discount)}\n"
+    if questioned_items > 0
+        text += "- FOUND #{questioned_items} questioned items\n"
+        text += "  price to rebate : #{order['rebate_base']}\n"
+        text += "  order discount  : #{pfloat(order['order_discount'])}\n"
+        text += "  points to rebate: #{pfloat(order['need_rebate']*100)}\n"
+    else
+        text += "- GOOD\n"
+    end
+
     order.store('statement',text)
+
+    puts text
 
     return order
 end
 
 orders = []
 orders = get_order_data_by ARGV[0]
-total_rebate = 0.0
+total_need_rebate = 0.0
 rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 
 orders.each do |order|
     extended_order = verify_order order
     next if extended_order['need_rebate']==0.0
-    puts extended_order['statement'] if @debug_mode
-    need_rebate = extended_order['need_rebate']
-    total_rebate += need_rebate
-    puts "cid: #{extended_order['customerNumber']} need_rebate: #{sprintf('%.2f',need_rebate)} ##{extended_order['orderNo']} #{extended_order['contactName']}\n" 
-    if order['has_question_item']
-        sqlu="update ogoods.pospal_orders set need_rebate=#{sprintf('%.2f',order['need_rebate'])} where order_id='#{extended_order['orderNo']}'"
-        rds.query(sqlu)
-    end
+    patch_order order
+    total_need_rebate += extended_order['need_rebate']
 end
 
-puts ">>total: #{pfloat(total_rebate)}"
+puts "total need_rebate in points: #{sprintf('%.2f',total_need_rebate*100)}"
