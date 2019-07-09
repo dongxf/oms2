@@ -202,3 +202,53 @@ def get_ogoods_orders_within s_time, e_time
         end
         return oorders
 end
+
+#rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
+def update_order_by_json rds, jorder
+
+    order = jorder[:order]
+
+    #convert nil values to zero or ''
+    state = order['state'].nil? ? -1 : order['state']
+    pay_method = order['payMethod'].nil? ? '' : order['payMethod']
+    pay_online = order['payOnLine'].nil? ? -1 : order['payOnLine']
+    shipping_fee = order['shippingFee'].nil? ? 0.0 : order['shippingFee']
+    zone_code = jorder[:zone_code]
+    online_paid = order['isOnlinePaymentCompleted'].nil? ? 0 : order['isOnlinePaymentCompleted']
+    amount = order['totalAmount'].nil? ? 0.0 : order['totalAmount']
+    delivery_type = order['deliveryType'].nil? ? -1 : order['deliveryType']
+    escaped_order_json = order.to_json.gsub("'","''") #用于SQL语句中的转义
+    escaped_plain_text = jorder[:plain_text].gsub("'","''")
+
+    sqlu = "INSERT INTO ogoods.pospal_orders
+            (
+             order_id,state,pay_method,pay_online,online_paid,
+             amount,delivery_type,customer_id,shipping_fee,zone_code,
+             remark,order_time,name,addr,tel,line,
+             mark,number,short_number,date_time,short_time,
+             odate,date,
+             first_item,items_count,
+             print_times,ship_refunded,point_awarded,
+             raw_data,plain_text
+            ) VALUES (
+             '#{jorder[:number]}',#{state},'#{pay_method}',#{pay_online},#{online_paid},
+              #{amount},#{delivery_type},'#{order['customerNumber']}',#{shipping_fee},'#{zone_code}',
+             '#{order['orderRemark']}','#{order['orderDateTime']}','#{jorder[:name]}','#{jorder[:addr]}','#{jorder[:tel]}','#{jorder[:line]}',
+             '#{jorder[:mark]}', '#{jorder[:number]}', '#{jorder[:short_number]}', '#{jorder[:date_time]}', '#{jorder[:short_time]}', 
+             '#{jorder[:odate]}', '#{jorder[:date]}', 
+             '#{jorder[:first_item]}', #{jorder[:items_count]},
+             0,0.0,0.0,
+             '#{escaped_order_json}','#{escaped_plain_text}'
+            )
+            ON DUPLICATE KEY
+            UPDATE state=#{state}, pay_method='#{pay_method}', pay_online=#{pay_online}, online_paid=#{online_paid},
+            delivery_type=#{delivery_type}, shipping_fee=#{shipping_fee}, zone_code='#{zone_code}',
+            line='#{jorder[:line]}',
+            mark='#{jorder[:mark]}',number='#{jorder[:number]}',short_number='#{jorder[:short_number]}',
+            date_time='#{jorder[:date_time]}',short_time='#{jorder[:short_time]}',
+            odate='#{jorder[:odate]}',date='#{jorder[:date]}', 
+            first_item='#{jorder[:first_item]}',items_count=#{jorder[:items_count]},
+            raw_data='#{escaped_order_json}',plain_text='#{escaped_plain_text}'
+    "
+    resu = rds.query(sqlu)
+end
