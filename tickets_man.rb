@@ -22,8 +22,10 @@ def update_ticket_information rds, ticket
 end
 
 def update_tickets_db tickets
+    puts "updating tickets in goods.pospal_tickes..."
     rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
     tickets.each { |ticket| update_ticket_information rds, ticket }
+    puts "done. total tickets: #{tickets.size}"
 end
 
 =begin
@@ -57,15 +59,17 @@ def retrieve_json_data_since day, count
         stime = day.strftime('%Y-%m-%d') + " 00:00:00"
         etime = day.strftime('%Y-%m-%d') + " 23:59:59"
         puts "  retrieving tickets during #{stime} - #{etime}"
-        tickets += get_pospal_tickets_within(stime, etime)
+        tcks = get_pospal_tickets_within(stime, etime)
+        tickets += tcks
         day = day.prev_day
+        puts "  done. total tickets: #{tcks.size}"
     end
     puts "done. total tickets: #{tickets.size}"
     return tickets
 end
 
-p 'usage: ruby tckets_man.rb [start_date backward_total_days]'
-p 'eg: ruby tickets_man.rb 2019-07-09 2'
+puts 'Usage: ruby tckets_man.rb [start_date backward_total_days]'
+puts 'eg: ruby tickets_man.rb 2019-07-09 2'
 start_day = Date.today
 backward_count = 2
 start_day = Date.parse(ARGV[0]) if ARGV[0]

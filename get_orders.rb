@@ -35,7 +35,7 @@ def get_pospal_orders_within s_time, e_time
 
         begin
                 page_count += 1 # to control loop times
-                puts "calling pospal api in #{page_count} time"
+                #puts "calling pospal api in #{page_count} time"
 
                 res=pospal_api(:queryOrderPages,req)
                 recs = res['data']['result']
@@ -67,7 +67,7 @@ def get_pospal_tickets_within s_time, e_time
 
         begin
                 page_count += 1 # to control loop times
-                puts "calling pospal api in #{page_count} time"
+                #puts "calling pospal api in #{page_count} time"
 
                 res=pospal_api(:queryTicketPages,req)
                 recs = res['data']['result']
