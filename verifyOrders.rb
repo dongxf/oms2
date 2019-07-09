@@ -1,12 +1,21 @@
 ﻿#encoding: utf-8
-#This ruby file is use to find payment and points unmatching issues
+
+=begin
+
+This ruby file is use to:
+1) find payment and points unmatching issues
+2) to generate rebate bonus for those goods missing member discount
+3) to generate order discount 
+3) to generate a order statement for customer
+
+=end
 
 require 'mysql2'
 require 'json'
 require 'awesome_print'
 
 if !ARGV[0]
-    p 'usage: ruby verifyOrders.rb condition'
+    p 'usage: ruby verifyOrders.rb condition [--debug]'
     p 'eg: ruby verifyOrders.rb c=13600060044'
     p 'eg: ruby verifyOrders.rb o=19060918234971452'
     p 'eg: ruby verifyOrders.rb all'
@@ -129,12 +138,20 @@ def verify_order order
     order_discount = (amount+points_used/100-shipping_fee-total_no_discount_price)/total_discount_list_price
     text += "                              本单折扣 #{pfloat(order_discount)}\n"
     text += "折扣前总标价 #{pfloat(total_list_price)}  不打折总标价 #{pfloat(total_no_discount_price)}  应打折总标价 #{pfloat(total_discount_list_price)} 折后总价 #{pfloat(total_item_price)}\n"
-    text += "-------------------------------  #{has_question_item ? 'FOUND' : 'GOOD'}\n"
-    #puts text
+    text += "----------------------------- #{has_question_item ? 'FOUND' : 'GOOD'}\n"
 
-    order.store('rebate_base',total_question_price)
-    order.store('statement',text)
+    order.store('rebate_base',0.0)
+    order.store('need_rebate',0.0)
+    if has_question_item 
+        text += "list_price: #{total_question_price} order_discount: #{pfloat(order_discount)} need_rebate: #{pfloat(total_question_price * (1-order_discount))}\n"
+        order.store('rebate_base',total_question_price)
+        order.store('need_rebate',total_question_price*(1-order_discount))
+    end
+
     order.store('has_question_item',has_question_item)
+    order.store('order_discount',order_discount)
+
+    order.store('statement',text)
 
     return order
 end
@@ -146,15 +163,15 @@ rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :po
 
 orders.each do |order|
     extended_order = verify_order order
-    next if extended_order['rebate_base']==0.0
+    next if extended_order['need_rebate']==0.0
     puts extended_order['statement'] if @debug_mode
-    to_rebate = extended_order['rebate_base'] * (100-extended_order['customer_discount'])/100
-    total_rebate += to_rebate
-    puts "cid: #{extended_order['customerNumber']} +#{sprintf('%.4f',to_rebate)} ##{extended_order['orderNo']} #{extended_order['contactName']}\n" 
+    need_rebate = extended_order['need_rebate']
+    total_rebate += need_rebate
+    puts "cid: #{extended_order['customerNumber']} need_rebate: #{sprintf('%.2f',need_rebate)} ##{extended_order['orderNo']} #{extended_order['contactName']}\n" 
     if order['has_question_item']
-        sqlu="update ogoods.pospal_orders set need_rebate=#{sprintf('%.4f',extended_order['rebate_base'])} where order_id='#{extended_order['orderNo']}'"
+        sqlu="update ogoods.pospal_orders set need_rebate=#{sprintf('%.2f',order['need_rebate'])} where order_id='#{extended_order['orderNo']}'"
         rds.query(sqlu)
     end
 end
 
-puts ">>total: #{total_rebate}"
+puts ">>total: #{pfloat(total_rebate)}"
