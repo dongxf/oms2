@@ -39,11 +39,10 @@ def get_order_data_by cond
     condition = condition.gsub(/o=/,"order_id like '%");
     condition += "%'"
     rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
-    sql = "select * from ogoods.pospal_orders where "+condition
-    sql = "select * from ogoods.pospal_orders" if cond == 'all'
+    sql = "select * from ogoods.pospal_orders where line!='[X]' and "+condition
+    sql = "select * from ogoods.pospal_orders where line!='[X]'" if cond == 'all'
     res = rds.query(sql)
     res.each do |r|
-        next if r['line'] == '[X]' #取消的订单一般就不搞了
         raw_data = r['raw_data']
         order = JSON.parse(raw_data)
         order.store('line',r['line'])
@@ -79,12 +78,8 @@ end
 
 def verify_order order
 
+    puts "verifying order #{order['orderNo']}..."
     customer_discount = order['customer_discount']
-    if customer_discount == 100 || order['line'] == '[T]' || order['line'] == '[X]'#对于百花蜜，团购和团购订单无需核算
-        order.store('rebate_base',0.0)
-        return order
-    end
-
     order.store('rebate_base',0.0)
     order.store('need_rebate',0.0)
 
@@ -160,12 +155,13 @@ def verify_order order
 
     order.store('order_details',text)
 
+    puts "done\n"
     return order
 end
 
 def patch_order rds, order
 
-    return order if order['line'] == '[X]' #do not patch canceled orders
+    puts "patching order #{order['orderNo']}..."
 
     items = order['items']
     points_used = 0.0
@@ -176,8 +172,8 @@ def patch_order rds, order
     order_discount = order['order_discount'] if order['order_discount']
     total_item_price = 0.0
     text =  "\n----------------------------------------------------------\n"
-    text += "order ##{order['orderNo']} on #{order['orderDateTime']} STATE:#{order['state']}\n"
-    text += "客户编号：*****" + order['customerNumber'][6..12]+ "        当期折扣：#{pfloat(order_discount)}         #{order['line']}\n\n"
+    text += "order ##{order['orderNo']} on #{order['orderDateTime']} #{order['line']}\n"
+    text += "客户编号：*****" + order['customerNumber'][6..12]+ "\n\n"
     text += "  零售价  促销价  折扣   执行价   数量   小计  商品名称\n"
     amount = order['totalAmount'] #实付
     questioned_items = 0
@@ -224,13 +220,13 @@ def patch_order rds, order
     end
 
     order.store('statement',text)
-
     sqlu = "UPDATE ogoods.pospal_orders set
                 order_discount=#{sprintf('%.2f',order['order_discount'])}, need_rebate=#{sprintf('%.2f',order['need_rebate'])},
                 statement='#{text.gsub("'","''")}'
             WHERE order_id='#{order['orderNo'][0..16]}'
     "
     rds.query sqlu
+    puts "done\n"
     return order
 end
 
