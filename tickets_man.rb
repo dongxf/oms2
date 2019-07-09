@@ -5,6 +5,9 @@ require 'find'
 require 'awesome_print'
 load    'get_orders.rb'
 
+#puts 'Usage: ruby tckets_man.rb [start_date backward_total_days]'
+#puts 'eg: ruby tickets_man.rb 2019-07-09 2'
+
 def update_tickets_table rds, ticket
     sqlu = "INSERT INTO ogoods.pospal_tickets (
                     ticket_sn, ticket_date, customer_uid, order_number, raw_data
@@ -126,8 +129,6 @@ def points_used_by_ticket ticket
     return 0.0
 end
 
-puts 'Usage: ruby tckets_man.rb [start_date backward_total_days]'
-puts 'eg: ruby tickets_man.rb 2019-07-09 2'
 start_day = Date.today
 backward_count = 2
 start_day = Date.parse(ARGV[0]) if ARGV[0]
