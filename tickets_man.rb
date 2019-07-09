@@ -7,6 +7,19 @@ require 'awesome_print'
 load    'get_orders.rb'
 
 def update_ticket_information rds, ticket
+    sqlu = "INSERT INTO ogoods.pospal_tickets (
+                    ticket_sn, ticket_date, customer_uid, order_number, raw_data
+                ) VALUES (
+                    '#{ticket['sn']}', '#{ticket['datetime']}', #{ticket['customerUid']}, '#{ticket['webOrderNo']}', '#{ticket.to_json.gsub("'","''")}'
+                ) ON DUPLICATE KEY
+                UPDATE 
+                    ticket_sn = '#{ticket['sn']}', 
+                    ticket_date = '#{ticket['datetime']}',
+                    customer_uid = #{ticket['customerUid']}, 
+                    order_number = '#{ticket['webOrderNo']}', 
+                    raw_data = '#{ticket.to_json.gsub("'","''")}'
+    "
+    rds.query sqlu
 end
 
 def update_tickets_in_ogoods tickets
@@ -19,15 +32,15 @@ end
     eg:    retrieve_json_data_since Date.today 1
     eg:    retrieve_json_data_since Date.parse('2019-03-01'), 31
 =end
+
 def import_json_data
     total = 0 
-    Find.find('.//auto_import//tickets') do |fn|
-        if (fn.include? '.json') && !(fn.include? 'old') #要排除old为名的子目录或文件
-            tickets = JSON.parse IO.readlines(fn)[0]
-            update_tickets_in_ogoods tickets
-            total += tickets.size
-            puts "#{sprintf('%2d',tickets.size)} tickets in #{fn}"
-        end
+    Find.find('.//auto_import//tickets') do |fn| #在该目录下不能有子文件夹
+        next if !(fn.include? '.json') #要排除目录自身
+        tickets = JSON.parse IO.readlines(fn)[0]
+        update_tickets_in_ogoods tickets
+        total += tickets.size
+        puts "#{sprintf('%2d',tickets.size)} tickets in #{fn}"
     end
     puts "total tickets readed: #{total}"
 end
@@ -37,6 +50,7 @@ end
     eg:    retrieve_json_data_since Date.today 1
     eg:    retrieve_json_data_since Date.parse('2019-03-01'), 31
 =end
+
 def retrieve_json_data_since day, count
     count.times do
         stime = day.strftime('%Y-%m-%d') + " 00:00:00"

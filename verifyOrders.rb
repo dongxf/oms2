@@ -6,11 +6,11 @@ require 'json'
 require 'awesome_print'
 
 if !ARGV[0]
-        p 'usage: ruby verifyOrders.rb condition'
-        p 'eg: ruby verifyOrders.rb c=13600060044'
-        p 'eg: ruby verifyOrders.rb o=19060918234971452'
-        p 'eg: ruby verifyOrders.rb all'
-        return
+    p 'usage: ruby verifyOrders.rb condition'
+    p 'eg: ruby verifyOrders.rb c=13600060044'
+    p 'eg: ruby verifyOrders.rb o=19060918234971452'
+    p 'eg: ruby verifyOrders.rb all'
+    return
 end
 
 @debug_mode=false
@@ -54,8 +54,8 @@ end
 
 #本来就不应该给折扣的商品，例如运费
 def is_qualified_code code
-        return true  if code.include? '01000'
-        return false
+    return true  if code.include? '01000'
+    return false
 end
 
 #排除那些第二件商品X折的商品，其中的第一件会按照原价计算
@@ -68,87 +68,88 @@ def is_secondary_promotion product_uid, items
 end
 
 def verify_order order
-        customer_discount = order['customer_discount']
-        if customer_discount == 100 #对于百花蜜无需核算
-            order.store('rebate_base',0.0)
-            return order
-        end
-
-        text =  "\n-------------------------------------------------\n"
-        text += "order ##{order['orderNo']} on #{order['orderDateTime']} STATE:#{order['state']}\n"
-        text += "客户编号：" + order['customerNumber']+"\n\n"
-        items = order['items']
-        shipping_fee = 0.0
-        shipping_fee = order['shippingFee'] if order['shippingFee']
-        total_item_price = 0.0
-        total_list_price = 0.0
-        total_no_discount_price = 0.0
-        total_discount_list_price = 0.0
-        has_question_item = false
-        total_question_price = 0.0
-        tlp_cd = 0.0 #所有用了客户折扣的折扣前价格合计
-        tsp_uncd = 0.0   #所有没有用客户折扣的商品实际销售价格合计
-        text += "  零售价  促销价  折扣   执行价   数量   小计  商品名称\n"
-        items.each do |item|
-                psp = item['productSellPrice']
-                esp = item['eshopSellPrice'] #实际执行价格,通常是把积分扣掉的吧
-                icd = item['isCustomerDiscount'] ? item['isCustomerDiscount'] : false #is customer discount
-                discount = icd ? item['customerDiscount']/100 : 1.00
-                pq = item['productQuantity']
-                pn = item['productName']
-                ipi = item["promotionRuleUid"] ? true : false #is promotion item
-                line =  "#{pfloat psp}"                                            #零售价
-                line += " #{ipi ? pfloat(esp) : '       '}"                         #促销价
-                line += " #{!ipi&&icd ? '*'+sprintf('%0.2f',discount) : '     ' }"  #折扣
-                line += " #{pfloat(esp)}"                                           #执行价格
-                line += " #{pfloat(pq)}"                                            #数量
-                line += " #{pfloat(esp * pq)}"                                      #小计
-                line += " #{pn}\n"                                                  #商品名称
-                total_list_price += ipi ?  psp*pq : psp*pq
-                total_item_price += esp * pq
-                total_no_discount_price += esp * pq if !icd
-                total_discount_list_price += psp * pq if icd
-                code = item['productBarcode']
-                if  ( !ipi && !icd && !is_qualified_code(code) && order['line']!='[T]' && !is_secondary_promotion(item['productUid'], items) ) then
-                    text += ">#{line}"
-                    total_question_price += psp*pq
-                    has_question_item = true
-                else
-                    text += " #{line}"
-                end
-        end
-        amount = order['totalAmount'] #实付
-        text += "                                  总计 #{pfloat(total_item_price)}\n"
-        text += "                                  运费 #{pfloat(shipping_fee)}\n"
-        due = total_item_price + shipping_fee       #应付
-        text += "                                  实付 #{pfloat(amount)}\n"
-        #积分倒算 (折前商品总价+运费-用户实际支付)*100 #因为信息中并没有用户实际支付，无法计算出来，除非提供按照折扣的估算
-        #折扣倒算 (应付总价-未打折商品总价-运费)/打折商品折前总价
-        text += "折扣前总标价 #{pfloat(total_list_price)}  不打折总标价 #{pfloat(total_no_discount_price)}  应打折总标价 #{pfloat(total_discount_list_price)} 折后总价 #{pfloat(total_item_price)}\n"
-        text += "-------------------------------  #{has_question_item ? 'FOUND' : 'GOOD'}\n"
-        #puts text
-
-        order.store('rebate_base',total_question_price)
-        order.store('statement',text)
-        order.store('has_question_item',has_question_item)
-
+    customer_discount = order['customer_discount']
+    if customer_discount == 100 #对于百花蜜无需核算
+        order.store('rebate_base',0.0)
         return order
+    end
+
+    text =  "\n-------------------------------------------------\n"
+    text += "order ##{order['orderNo']} on #{order['orderDateTime']} STATE:#{order['state']}\n"
+    text += "客户编号：" + order['customerNumber']+"\n\n"
+    items = order['items']
+    shipping_fee = 0.0
+    shipping_fee = order['shippingFee'] if order['shippingFee']
+    total_item_price = 0.0
+    total_list_price = 0.0
+    total_no_discount_price = 0.0
+    total_discount_list_price = 0.0
+    has_question_item = false
+    total_question_price = 0.0
+    tlp_cd = 0.0 #所有用了客户折扣的折扣前价格合计
+    tsp_uncd = 0.0   #所有没有用客户折扣的商品实际销售价格合计
+    text += "  零售价  促销价  折扣   执行价   数量   小计  商品名称\n"
+    items.each do |item|
+        psp = item['productSellPrice']
+        esp = item['eshopSellPrice'] #实际执行价格,通常是把积分扣掉的吧
+        icd = item['isCustomerDiscount'] ? item['isCustomerDiscount'] : false #is customer discount
+        discount = icd ? item['customerDiscount']/100 : 1.00
+        pq = item['productQuantity']
+        pn = item['productName']
+        ipi = item["promotionRuleUid"] ? true : false #is promotion item
+        line =  "#{pfloat psp}"                                            #零售价
+        line += " #{ipi ? pfloat(esp) : '       '}"                         #促销价
+        line += " #{!ipi&&icd ? '*'+sprintf('%0.2f',discount) : '     ' }"  #折扣
+        line += " #{pfloat(esp)}"                                           #执行价格
+        line += " #{pfloat(pq)}"                                            #数量
+        line += " #{pfloat(esp * pq)}"                                      #小计
+        line += " #{pn}\n"                                                  #商品名称
+        total_list_price += ipi ?  psp*pq : psp*pq
+        total_item_price += esp * pq
+        total_no_discount_price += esp * pq if !icd
+        total_discount_list_price += psp * pq if icd
+        code = item['productBarcode']
+        if  ( !ipi && !icd && !is_qualified_code(code) && order['line']!='[T]' && !is_secondary_promotion(item['productUid'], items) ) then
+            text += ">#{line}"
+            total_question_price += psp*pq
+            has_question_item = true
+        else
+            text += " #{line}"
+        end
+    end
+    amount = order['totalAmount'] #实付
+    text += "                                  总计 #{pfloat(total_item_price)}\n"
+    text += "                                  运费 #{pfloat(shipping_fee)}\n"
+    due = total_item_price + shipping_fee       #应付
+    text += "                                  实付 #{pfloat(amount)}\n"
+    #积分倒算 (折前商品总价+运费-用户实际支付)*100 #因为信息中并没有用户实际支付，无法计算出来，除非提供按照折扣的估算
+    #折扣倒算 (应付总价-未打折商品总价-运费)/打折商品折前总价
+    text += "折扣前总标价 #{pfloat(total_list_price)}  不打折总标价 #{pfloat(total_no_discount_price)}  应打折总标价 #{pfloat(total_discount_list_price)} 折后总价 #{pfloat(total_item_price)}\n"
+    text += "-------------------------------  #{has_question_item ? 'FOUND' : 'GOOD'}\n"
+    #puts text
+
+    order.store('rebate_base',total_question_price)
+    order.store('statement',text)
+    order.store('has_question_item',has_question_item)
+
+    return order
 end
 
 orders = []
 orders = get_order_data_by ARGV[0]
 total_rebate = 0.0
+rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
+
 orders.each do |order|
-    result = verify_order order
-    puts result['statement'] if @debug_mode
-    next if result['rebate_base']==0.0
-    to_rebate = result['rebate_base'] * (100-result['customer_discount'])/100
+    extended_order = verify_order order
+    puts extended_order['statement'] if @debug_mode
+    next if extended_order['rebate_base']==0.0
+    to_rebate = extended_order['rebate_base'] * (100-extended_order['customer_discount'])/100
     total_rebate += to_rebate
-    puts "cid: #{result['customerNumber']} +#{to_rebate} @#{result['customer_discount']} ##{result['orderNo']} #{result['contactName']}\n" 
+    puts "cid: #{extended_order['customerNumber']} +#{to_rebate} ##{extended_order['orderNo']} #{extended_order['contactName']}\n" 
     if order['has_question_item']
-            odate = order['orderDateTime'][0..10]
-            fn_name = ".\\incoming\\TORB" + odate + "-order-" + order['line'][1] + '-' + order['orderNo'] + "-c" + order['customerNumber'] + ".txt"
-            File.open(fn_name,"w:UTF-8") { |f| f.write order['statement'] }
+        sqlu="update ogoods.pospal_orders set need_rebate=#{sprintf('%.2f',extended_order['rebate_base'])} where order_id='#{extended_order['orderNo']}'"
+        rds.query(sqlu)
     end
 end
 
