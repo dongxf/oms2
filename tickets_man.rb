@@ -5,7 +5,7 @@ require 'find'
 require 'awesome_print'
 load    'get_orders.rb'
 
-def update_ticket_information rds, ticket
+def update_tickets_table rds, ticket
     sqlu = "INSERT INTO ogoods.pospal_tickets (
                     ticket_sn, ticket_date, customer_uid, order_number, raw_data
                 ) VALUES (
@@ -21,10 +21,24 @@ def update_ticket_information rds, ticket
     rds.query sqlu
 end
 
-def update_tickets_db tickets
+def update_orders_with_ticket rds, ticket
+    order_number = ticket['webOrderNo']
+    return if order_number.nil? ||  order_number == ''
+    order_number = order_number[0..16] #remove 104
+    puts "updating points_used in order ##{order_number} by ticket"
+    points = points_used_by_ticket(ticket)
+    return if points <= 0.0
+    sqlu = "update ogoods.pospal_orders set points_used=#{sprintf('%.2f',points)} where order_id = '#{order_number}'"
+    rds.query(sqlu)
+end
+
+def update_tickets_in_db tickets
     puts "updating tickets in goods.pospal_tickes..."
     rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
-    tickets.each { |ticket| update_ticket_information rds, ticket }
+    tickets.each { |ticket| 
+        update_tickets_table rds, ticket 
+        update_orders_with_ticket rds, ticket
+    }
     puts "done. total tickets: #{tickets.size}"
 end
 
@@ -39,7 +53,7 @@ def import_json_data
     Find.find('.//auto_import//tickets') do |fn| #在该目录下不能有子文件夹
         next if !(fn.include? '.json') #要排除目录自身
         tickets = JSON.parse IO.readlines(fn)[0]
-        update_tickets_db tickets
+        update_tickets_in_db tickets
         total += tickets.size
         puts "#{sprintf('%2d',tickets.size)} tickets in #{fn}"
     end
@@ -68,6 +82,50 @@ def retrieve_json_data_since day, count
     return tickets
 end
 
+def get_demo_tickets
+    tickets = []
+    Find.find('.//auto_import//tickets') do |fn| #在该目录下不能有子文件夹
+        next if !(fn.include? '.json') #要排除目录自身
+        tickets += JSON.parse IO.readlines(fn)[0]
+        break
+    end
+    return tickets
+end
+
+def get_all_tickets
+    tickets = []
+    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'], :encoding => 'utf8mb4' )
+    sqlu = "select raw_data from ogoods.pospal_tickets"
+    res = rds.query(sqlu)
+    res.each do |r|
+        ticket = JSON.parse(r['raw_data'])
+        tickets += [ ticket ] if ticket
+    end
+    return tickets
+end
+
+def ticket_payment_details ticket
+    details = {}
+    ticket['payments'].each do |pm|
+        case pm['code']
+        when 'payCode_17'
+            details.store(:weixin, pm['amount'])
+        when 'payCode_10'
+            details.store(:points, pm['amount'])
+        when 'payCode_7'
+            details.store(:balance, pm['amount'])
+        else
+            details.store(pm['code'], pm['amount'])
+        end
+    end
+    return details
+end
+
+def points_used_by_ticket ticket
+    return ticket['pointUsage']['point'] if ticket['pointUsage']
+    return 0.0
+end
+
 puts 'Usage: ruby tckets_man.rb [start_date backward_total_days]'
 puts 'eg: ruby tickets_man.rb 2019-07-09 2'
 start_day = Date.today
@@ -75,5 +133,7 @@ backward_count = 2
 start_day = Date.parse(ARGV[0]) if ARGV[0]
 backward_count = ARGV[1].to_i if ARGV[1]
 
+#tickets = get_all_tickets
+#tickets = get_demo_tickets
 tickets = retrieve_json_data_since start_day, backward_count
-update_tickets_db tickets
+update_tickets_in_db tickets
