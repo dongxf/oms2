@@ -11,7 +11,7 @@ the_day = Date.today
 counter = 2
 silence_mode = false
 
-start_day = Date.parse(ARGV[0]) if ARGV[0]
+the_day = Date.parse(ARGV[0]) if ARGV[0]
 counter = ARGV[1].to_i if ARGV[1]
 silence_mode = true if ARGV[2] == '-s'
 
