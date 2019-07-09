@@ -163,7 +163,9 @@ def verify_order order
     return order
 end
 
-def patch_order order
+def patch_order rds, order
+
+    return order if order['line'] == '[X]' #do not patch canceled orders
 
     items = order['items']
     points_used = 0.0
@@ -216,15 +218,19 @@ def patch_order order
         text += "- FOUND #{questioned_items} questioned items\n"
         text += "  price to rebate : #{order['rebate_base']}\n"
         text += "  order discount  : #{pfloat(order['order_discount'])}\n"
-        text += "  points to rebate: #{pfloat(order['need_rebate']*100)}\n"
+        text += "  rebate: #{pfloat(order['need_rebate'])}\n"
     else
         text += "- GOOD\n"
     end
 
     order.store('statement',text)
 
-    puts text
-
+    sqlu = "UPDATE ogoods.pospal_orders set
+                order_discount=#{sprintf('%.2f',order['order_discount'])}, need_rebate=#{sprintf('%.2f',order['need_rebate'])},
+                statement='#{text.gsub("'","''")}'
+            WHERE order_id='#{order['orderNo'][0..16]}'
+    "
+    rds.query sqlu
     return order
 end
 
@@ -235,9 +241,9 @@ rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :po
 
 orders.each do |order|
     extended_order = verify_order order
-    next if !extended_order['need_rebate']
-    patch_order order
+    #next if !extended_order['need_rebate'] #we need to generate statement for every order
+    patch_order rds, order
     total_need_rebate += extended_order['need_rebate']
 end
 
-puts "total need_rebate in points: #{sprintf('%.2f',total_need_rebate*100)}"
+puts "total need_rebate: #{sprintf('%.2f',total_need_rebate)}"
