@@ -57,7 +57,7 @@ def retrieve_json_data_since day, count
         stime = day.strftime('%Y-%m-%d') + " 00:00:00"
         etime = day.strftime('%Y-%m-%d') + " 23:59:59"
         puts "  retrieving tickets during #{stime} - #{etime}"
-        tickets = get_pospal_tickets_within stime, etime #this function already save json file
+        tickets += get_pospal_tickets_within(stime, etime)
         day = day.prev_day
     end
     puts "done. total tickets: #{tickets.size}"
@@ -67,7 +67,7 @@ end
 p 'usage: ruby tckets_man.rb [start_date backward_total_days]'
 p 'eg: ruby tickets_man.rb 2019-07-09 2'
 start_day = Date.today
-backward_count = 1
+backward_count = 2
 start_day = Date.parse(ARGV[0]) if ARGV[0]
 backward_count = ARGV[1].to_i if ARGV[1]
 
