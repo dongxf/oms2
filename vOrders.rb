@@ -15,15 +15,12 @@ require 'json'
 require 'awesome_print'
 
 if !ARGV[0]
-    p 'usage: ruby verifyOrders.rb condition [--debug]'
+    p 'usage: ruby verifyOrders.rb condition'
     p 'eg: ruby verifyOrders.rb c=13600060044'
     p 'eg: ruby verifyOrders.rb o=19060918234971452'
     p 'eg: ruby verifyOrders.rb all'
     return
 end
-
-@debug_mode=false
-@debug_mode=true if ARGV[1]=='--debug'
 
 def get_customer_current_discount rds, order
     customer_id = order['customerNumber']
@@ -78,15 +75,11 @@ def is_secondary_promotion product_uid, items
 end
 
 def verify_order order
-
     customer_discount = order['customer_discount']
-    if customer_discount == 100 || order['line'] == '[T]' || order['line'] == '[X]'#对于百花蜜，团购和团购订单无需核算
+    if customer_discount == 100 #对于百花蜜无需核算
         order.store('rebate_base',0.0)
         return order
     end
-
-    order.store('rebate_base',0.0)
-    order.store('need_rebate',0.0)
 
     text =  "\n-------------------------------------------------\n"
     text += "order ##{order['orderNo']} on #{order['orderDateTime']} STATE:#{order['state']}\n"
@@ -139,16 +132,16 @@ def verify_order order
     text += "                                  实付 #{pfloat(amount)}\n"
     #积分倒算 (折前商品总价+运费-用户实际支付)*100 #因为信息中并没有用户实际支付，无法计算出来，除非提供按照折扣的估算
     #折扣倒算 (实付+积分支付-运费-未打折商品总价)/打折商品折前总价
-    if total_discount_list_price == 0
-        #order_discount = order['customer_discount']/100
-        order_discount = 1.0
-    else
-        order_discount = (amount+points_used/100-shipping_fee-total_no_discount_price)/total_discount_list_price
-    end
+    order_discount = 1.0 if order['line'] == '[T]'
+    order_discount = (amount+points_used/100-shipping_fee-total_no_discount_price)/total_discount_list_price
+    order_discount = order['customer_discount'] if order_discount.nan? || order_discount.infinite?  #当只有一种不打会员折扣的商品时,order_discount会得到NaN
+    puts "****#{order_discount}***"
     text += "                              本单折扣 #{pfloat(order_discount)}\n"
     text += "折扣前总标价 #{pfloat(total_list_price)}  不打折总标价 #{pfloat(total_no_discount_price)}  应打折总标价 #{pfloat(total_discount_list_price)} 折后总价 #{pfloat(total_item_price)}\n"
     text += "----------------------------- #{has_question_item ? 'FOUND' : 'GOOD'}\n"
 
+    order.store('rebate_base',0.0)
+    order.store('need_rebate',0.0)
     if has_question_item 
         text += "list_price: #{total_question_price} order_discount: #{pfloat(order_discount)} need_rebate: #{pfloat(total_question_price * (1-order_discount))}\n"
         order.store('rebate_base',total_question_price)
@@ -163,8 +156,11 @@ def verify_order order
     return order
 end
 
-def patch_order order
+def save_patched_order rds, order
 
+    text =  "\n-----------------------------------------------------------\n"
+    text += "order ##{order['orderNo']} on #{order['orderDateTime']} STATE:#{order['state']}\n"
+    text += "客户编号：******" + order['customerNumber'][6..11]+"\n\n"
     items = order['items']
     points_used = 0.0
     points_used = order['points_used'] if order['points_used']
@@ -173,9 +169,6 @@ def patch_order order
     order_discount = 1
     order_discount = order['order_discount'] if order['order_discount']
     total_item_price = 0.0
-    text =  "\n----------------------------------------------------------\n"
-    text += "order ##{order['orderNo']} on #{order['orderDateTime']} STATE:#{order['state']}\n"
-    text += "客户编号：*****" + order['customerNumber'][6..12]+ "        当期折扣：#{pfloat(order_discount)}         #{order['line']}\n\n"
     text += "  零售价  促销价  折扣   执行价   数量   小计  商品名称\n"
     amount = order['totalAmount'] #实付
     questioned_items = 0
@@ -212,6 +205,7 @@ def patch_order order
     text += "                              积分抵扣 #{pfloat(points_used/100)}\n"
     due = total_item_price + shipping_fee       #应付
     text += "                                  实付 #{pfloat(amount)}\n"
+    text += "                              本单折扣 #{pfloat(order_discount)}\n"
     if questioned_items > 0
         text += "- FOUND #{questioned_items} questioned items\n"
         text += "  price to rebate : #{order['rebate_base']}\n"
@@ -220,11 +214,16 @@ def patch_order order
     else
         text += "- GOOD\n"
     end
-
     order.store('statement',text)
-
     puts text
 
+    sqlu = "UPDATE ogoods.pospal_orders set
+                order_discount=#{sprintf('%.2f',order['order_discount'])}, need_rebate=#{sprintf('%.2f',order['need_rebate']*100)},
+                statement='#{text.gsub("'","''")}'
+            WHERE order_id='#{order['orderNo'][0..16]}'
+    "
+    puts sqlu
+    rds.query sqlu
     return order
 end
 
@@ -234,10 +233,10 @@ total_need_rebate = 0.0
 rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 
 orders.each do |order|
-    extended_order = verify_order order
-    next if !extended_order['need_rebate']
-    patch_order order
-    total_need_rebate += extended_order['need_rebate']
+    patched_order = verify_order order
+    save_patched_order rds, patched_order
+    next if patched_order['need_rebate']==0.0
+    total_need_rebate += patched_order['need_rebate']
 end
 
 puts "total need_rebate in points: #{sprintf('%.2f',total_need_rebate*100)}"
