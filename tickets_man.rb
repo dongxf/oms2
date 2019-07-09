@@ -58,7 +58,7 @@ def retrieve_json_data_since day, count
         etime = day.strftime('%Y-%m-%d') + " 23:59:59"
         puts "  retrieving tickets during #{stime} - #{etime}"
         tickets = get_pospal_tickets_within stime, etime #this function already save json file
-        day = day.next_day
+        day = day.prev_day
     end
     puts "done. total tickets: #{tickets.size}"
     return tickets
