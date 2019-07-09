@@ -89,8 +89,6 @@ def verify_order order
     total_discount_list_price = 0.0
     has_question_item = false
     total_question_price = 0.0
-    tlp_cd = 0.0 #所有用了客户折扣的折扣前价格合计
-    tsp_uncd = 0.0   #所有没有用客户折扣的商品实际销售价格合计
     text += "  零售价  促销价  折扣   执行价   数量   小计  商品名称\n"
     items.each do |item|
         psp = item['productSellPrice']
@@ -107,9 +105,9 @@ def verify_order order
         line += " #{pfloat(pq)}"                                            #数量
         line += " #{pfloat(esp * pq)}"                                      #小计
         line += " #{pn}\n"                                                  #商品名称
-        total_list_price += ipi ?  psp*pq : psp*pq
+        total_list_price += ipi ?  esp*pq : psp*pq
         total_item_price += esp * pq
-        total_no_discount_price += psp * pq if !icd
+        total_no_discount_price += ( ipi ? esp : psp ) * pq if !icd
         total_discount_list_price += psp * pq if icd
         code = item['productBarcode']
         if  ( !ipi && !icd && !is_qualified_code(code) && order['line']!='[T]' && !is_secondary_promotion(item['productUid'], items) ) then
