@@ -46,12 +46,9 @@ def get_order_data_by cond
         raw_data = r['raw_data']
         order = JSON.parse(raw_data)
         order.store('line',r['line'])
-        order.store('odate',r['odate'])
-        order.store('date',r['date'])
-        order.store('number',r['number'])
+        order.store('shipping_fee',r['shipping_fee'])
         order.store('points_used',r['points_used'])
-        customer_discount = get_customer_current_discount rds, order
-        order.store('customer_discount',customer_discount)
+        order.store('order_id',r['order_id'])
         orders += [ order ]
     end
     return orders
@@ -78,22 +75,19 @@ end
 
 def rationalize_order rds, order
 
-    ap order
-
-    puts "rationalizing order #{order['orderNo']}..."
-
+    customer_discount = get_customer_current_discount rds, order
     items = order['items']
     points_used = order['points_used'] ? order['points_used'] : 0.0
-    shipping_fee = order['shippingFee']
+    shipping_fee = order['shipping_fee'] #if using order['shippingFee'], line T will get nil
     amount = order['totalAmount']
-    customer_discount = order['customer_discount']
+    order_discount = 1 #后面将在能计算出订单折扣的地方，让icd情况下，最低的item_discount（但不超过customer_discount)作为最新值
 
     questioned_items_number = 0
     questioned_items_price = 0.0
 
     text =  "\n------------------------------------------------\n"
     text += "cid ##{order['orderNo']} on #{order['orderDateTime']} STATE:#{order['state']}\n"
-    text += "oid ******" + order['customerNumber'][6..12]+"  #{customer_discount}% #{pfloat(points_used)}p  #{pfloat(shipping_fee)}s #{pfloat(amount)}a\n\n"
+    text += "oid *****" + order['customerNumber'][6..12] + "  #{customer_discount}% #{pfloat(points_used)}p  #{pfloat(shipping_fee)}s #{pfloat(amount)}a\n\n"
     text += "    标价    数量    折扣    抵扣    实付    小计    品名\n"
 
     esp_sum = 0.0
@@ -102,8 +96,8 @@ def rationalize_order rds, order
         esp_sum += item['eshopSellPrice'] * item['productQuantity']
         psp_sum += item['productSellPrice'] * item['productQuantity']
     end
-    subtotal_sum = 0.0
 
+    subtotal_sum = 0.0
     items.each do |item|
 
         icd = item['isCustomerDiscount'] ? item['isCustomerDiscount'] : false
@@ -114,11 +108,13 @@ def rationalize_order rds, order
         esp = item['eshopSellPrice']   #分摊积分后实价单价
         esp_sub = esp * pq             #分摊积分后实付小计
         pn = item['productName']       #产品名
-        points_paid = 0.0         #商品积分抵用
 
+        points_paid = 0.0              #商品积分抵用
         line = ''
         if points_used == 0
+            #未使用积分抵扣
             item_discount = icd ? item['customerDiscount']/100 : esp / psp
+            order_discount = item_discount if item_discount < order_discount && icd
             points_paid = 0.0
             actual_paid = esp * pq
             subtotal = points_paid + actual_paid
@@ -128,6 +124,7 @@ def rationalize_order rds, order
                 #未来或许可根据icd&&ipi商品，以及已知客户折扣准备
                 points_paid = psp*pq*points_used/100/psp_sum
                 item_discount = points_paid / (psp*pq)
+                order_discount = item_discount if item_discount < order_discount && icd
                 actual_paid = 0.0
                 subtotal = points_paid
             else
@@ -136,20 +133,25 @@ def rationalize_order rds, order
                 actual_paid = esp * pq
                 subtotal = points_paid + actual_paid
                 item_discount = subtotal/(psp*pq)
+                order_discount = item_discount if item_discount < order_discount && icd
             end
         end
         subtotal_sum += subtotal
 
-        line ="#{pfloat(psp)} #{pfloat(pq)} #{pfloat(item_discount)} #{pfloat(points_paid)} #{pfloat(actual_paid)} #{pfloat(subtotal)}    #{pn}\n"
+        dmark = item_discount>=0.999 ? '!' : ' '
+        line ="#{pfloat(psp)} #{pfloat(pq)} #{pfloat(item_discount)} #{pfloat(points_paid)}#{dmark}#{pfloat(actual_paid)} #{pfloat(subtotal)}    #{pn}\n"
 
+        mark = " "
         if  ( item_discount >0.999 && should_have_discount(item['productBarcode']) && order['line']!='[T]' && !is_secondary_promotion(item['productUid'], items) && customer_discount < 100 ) 
-            text += ">#{line}"
+            mark = ">"
             questioned_items_price += psp*pq
             questioned_items_number += 1
-        else
-            text += " #{line}"
         end
+        mark = "*" if ipi || is_secondary_promotion(item['productUid'],items)
+
+        text += "#{mark}#{line}"
     end
+
     text += "\n"
     text += "折前总价 #{pfloat(psp_sum)}                    合计 #{pfloat(subtotal_sum)}\n"
     text += "                                    运费 #{pfloat(shipping_fee)}\n"
@@ -158,10 +160,17 @@ def rationalize_order rds, order
     text += "                                    应付 #{pfloat(due)}\n"
     text += "                                    实收 #{pfloat(amount)} #{(due-amount)<0.01&&(amount-due<0.01) ? '   OK' : '   NG'}\n"
 
-    # or update order data here
-    order.store('questioned_items_price',questioned_items_price)
-    order.store('questioned_items_number',questioned_items_number)
-    
+    # update order data here
+    need_rebate = questioned_items_price * ( 1 - order_discount )
+    order.store('order_discount',order_discount)
+    order.store('need_rebate',need_rebate)
+    order.store('statment',text)
+    sqlu = "update ogoods.pospal_orders set 
+                need_rebate=#{sprintf('%.2f',need_rebate)}, order_discount=#{sprintf('%.2f',order_discount)},
+                statement = '#{text.to_json.gsub("'","''")}'
+            where order_id = '#{order['order_id']}'"
+    rds.query sqlu
+
     puts text if @debug_mode
     return order
 end
@@ -172,7 +181,11 @@ total_need_rebate = 0.0
 rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 
 orders.each do |order|
-    rationalize_order rds, order
+    rorder = rationalize_order rds, order
+    if rorder['need_rebate'] > 0.01
+        total_need_rebate += rorder['need_rebate']
+        puts rorder['statement'] 
+    end
 end
 
 puts "total need_rebate: #{sprintf('%.2f',total_need_rebate)}"
