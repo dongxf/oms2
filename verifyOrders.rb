@@ -34,6 +34,7 @@ def get_customer_current_discount rds, order
 end
 
 def get_order_data_by cond
+    printf('getting order data')
     orders = []
     condition = cond.gsub(/c=/,"customer_id like '%");
     condition = condition.gsub(/o=/,"order_id like '%");
@@ -43,6 +44,7 @@ def get_order_data_by cond
     sql = "select * from ogoods.pospal_orders where line!='[X]'" if cond == 'all'
     res = rds.query(sql)
     res.each do |r|
+        print('.')
         raw_data = r['raw_data']
         order = JSON.parse(raw_data)
         order.store('line',r['line'])
@@ -51,6 +53,7 @@ def get_order_data_by cond
         order.store('order_id',r['order_id'])
         orders += [ order ]
     end
+    printf("done\n")
     return orders
 end
 
@@ -164,7 +167,7 @@ def rationalize_order rds, order
     need_rebate = questioned_items_price * ( 1 - order_discount )
     order.store('order_discount',order_discount)
     order.store('need_rebate',need_rebate)
-    order.store('statment',text)
+    order.store('statement',text)
     sqlu = "update ogoods.pospal_orders set 
                 need_rebate=#{sprintf('%.2f',need_rebate)}, order_discount=#{sprintf('%.2f',order_discount)},
                 statement = '#{text.to_json.gsub("'","''")}'
@@ -180,12 +183,16 @@ orders = get_order_data_by ARGV[0]
 total_need_rebate = 0.0
 rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 
+printf("rationalizing order")
 orders.each do |order|
+    printf(".")
     rorder = rationalize_order rds, order
     if rorder['need_rebate'] > 0.01
         total_need_rebate += rorder['need_rebate']
-        puts rorder['statement'] 
+        printf "x"
+        puts rorder['statement'] if @debug_mode
     end
 end
+printf("done\n")
 
 puts "total need_rebate: #{sprintf('%.2f',total_need_rebate)}"
