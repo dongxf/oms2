@@ -17,24 +17,19 @@ require 'awesome_print'
 load 'get_orders.rb'
 
 if !ARGV[0]
-    p 'usage: ruby rationalizeOrders.rb condition [--debug]'
+    p 'usage: ruby rationalizeOrders.rb condition [--debug] [--WOS]' #WOS means generate WOS files
     p 'eg: ruby rationalizeOrders.rb c=13600060044'
     p 'eg: ruby rationalizeOrders.rb o=19060918234971452'
-    p 'eg: ruby rationalizeOrders.rb d=2019-07-11'
-    p 'eg: ruby rationalizeOrders.rb all'
+    p 'eg: ruby rationalizeOrders.rb d=2019-07-11' #2019-07-11 00:00:00 -  2019-07-11 23:59:59
+    p 'eg: ruby rationalizeOrders.rb all'           #without today
+    p 'eg: ruby rationalizeOrders.rb yesterday' # yesterday 00:00:00 -  today 00:00:00
     return
 end
 
 @debug_mode = false
-@debug_mode = true if ARGV[1] == '--debug'
-
-def get_customer_current_discount rds, order
-    customer_id = order['customerNumber']
-    sql = "select * from ogoods.pospal_users where number='#{order['customerNumber']}'"
-    res = rds.query(sql)
-    return res.first['discount'] if res.first
-    return 100
-end
+@debug_mode = true if ARGV[1] == '--debug' ||  ARGV[2] == '--debug'
+@wos_mode = false
+@wos_mode = true if ARGV[1] == '--WOS' || ARGV[2] == '--WOS'
 
 def pfloat f
     sprintf('%4.2f',f).rjust 7, ' '
@@ -57,7 +52,7 @@ end
 
 def rationalize_order rds, order
 
-    customer_discount = get_customer_current_discount rds, order
+    customer_discount = order['customer_discount']
     items = order['items']
     points_used = order['points_used'] ? order['points_used'] : 0.0
     shipping_fee = order['shipping_fee'] #if using order['shippingFee'], line T will get nil
@@ -121,7 +116,7 @@ def rationalize_order rds, order
         subtotal_sum += subtotal
 
         dmark = item_discount>=0.999 ? '!' : ' '
-        line ="#{pfloat(psp)} #{pfloat(pq)} #{pfloat(item_discount)} #{pfloat(points_paid)}#{dmark}#{pfloat(actual_paid)} #{pfloat(subtotal)}    #{pn}\n"
+        line ="#{pfloat(psp)} #{pfloat(pq)} #{pfloat(item_discount)}#{dmark}#{pfloat(points_paid)} #{pfloat(actual_paid)} #{pfloat(subtotal)}    #{pn}\n"
 
         mark = " "
         if  ( item_discount >0.999 && should_have_discount(item['productBarcode']) && order['line']!='[T]' && !is_secondary_promotion(item['productUid'], items) && customer_discount < 100 ) 
@@ -158,10 +153,26 @@ def rationalize_order rds, order
 end
 
 orders = []
+
 condition = ARGV[0]
-condition = " order_time >= '#{Date.today.prev_day.strftime('%Y-%m-%d')}' and order_time <= '#{Date.today.strftime('%Y-%m-%d')}' " if ARGV[0] == 'latest'
+case ARGV[0]
+when 'all'
+    condition = " order_time <= '#{Date.today.strftime('%Y-%m-%d')} 00:00:00' "
+when 'yesterday'
+    condition = " order_time >= '#{Date.today.prev_day.strftime('%Y-%m-%d')} 00:00:00' and order_time < '#{Date.today.strftime('%Y-%m-%d %H%M')} 00:00:00' "
+else
+    if condition.include? 'd='
+        the_day = Date.parse( condition.split('d=')[1] )
+        condition = " order_time >= '#{the_day} 00:00:00' and order_time <= '#{the_day} 23:59:59' " 
+    else
+        condition = cond.gsub(/c=/,"customer_id like '%");
+        condition = condition.gsub(/o=/,"order_id like '%");
+        condition += "%'"
+    end
+end
 
 orders = get_order_data_by condition
+
 total_need_rebate = 0.0
 rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 
@@ -177,12 +188,10 @@ orders.each do |order|
         puts rorder['statement'] if @debug_mode
     end
 
-    if order['openid']
-        fn = ".\\auto_import\\statements\\OS-" + order['openid'] + ".txt"
+    if @wos_mode
+        fn = ".\\auto_import\\statements\\OS-" + rorder['openid'] + ".txt"
         File.open(fn,"a+:UTF-8") { |f| f.write rorder['statement'] }
-        printf "a"
-    else
-        puts "missing openid for oid ##{order['order_id']}"
+        printf "*"
     end
 
 end

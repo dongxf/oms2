@@ -50,7 +50,6 @@ def update_discount
         user = JSON.parse(r['raw_data'])
         discount = user['discount']
         sqlu = "update ogoods.pospal_users set discount=#{discount} where uid=#{uid}" 
-        p sqlu
         rds.query sqlu
     end
 end
