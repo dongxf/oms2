@@ -12,6 +12,7 @@ This ruby file is use to:
 
 require 'mysql2'
 require 'json'
+require 'find'
 require 'awesome_print'
 
 load 'get_orders.rb'
@@ -48,6 +49,14 @@ def is_secondary_promotion product_uid, items
         return true if item['productUid'] == product_uid && item['promotionRuleUid']
     end
     return false
+end
+
+def set_headers_for_hosfiles
+    header = "   丰巢3.0线上订单历史对账单 - 更新至前一日\n"
+    Find.find(".//auto_import//hos") do |fn|
+        next if ! ( fn.include? '.txt' )
+        File.open(fn,"w:UTF-8") { |f| f.write header }
+    end
 end
 
 def rationalize_order rds, order
@@ -191,7 +200,7 @@ orders.each do |order|
     end
 
     if @wos_mode
-        fn = ".\\auto_import\\statements\\OS-" + rorder['openid'] + ".txt"
+        fn = ".\\auto_import\\hos\\H" + rorder['openid'] + "oS.txt"
         File.open(fn,"a+:UTF-8") { |f| f.write rorder['statement'] }
         printf "*"
     end
