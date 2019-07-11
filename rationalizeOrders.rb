@@ -201,8 +201,13 @@ orders.each do |order|
 
     if @wos_mode
         fn = ".\\auto_import\\hos\\H" + rorder['openid'] + "oS.txt"
-        File.open(fn,"a+:UTF-8") { |f| f.write rorder['statement'] }
-        printf "*"
+        if FileTest::exist? fn
+            File.open(fn,"a+:UTF-8") { |f| f.write rorder['statement'] }
+        else
+            header = "   丰巢3.0网店对账单 - 更新至前一日\n"
+            File.open(fn,"a+:UTF-8") { |f| f.write header+rorder['statement']}
+        end
+        printf "-"
     end
 
 end
