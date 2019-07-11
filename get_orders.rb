@@ -64,9 +64,14 @@ def get_order_data_by cond
     condition = cond.gsub(/c=/,"customer_id like '%");
     condition = condition.gsub(/o=/,"order_id like '%");
     condition += "%'"
+    if cond.include? 'd='
+        the_day = Date.parse( cond.split('d=')[1] )
+        condition = " order_time >= '#{the_day} 00:00:00' and order_time <= '#{the_day} 23:59:59' " 
+    end
     rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
     sql = "select * from ogoods.pospal_orders where line!='[X]' and "+condition
     sql = "select * from ogoods.pospal_orders where line!='[X]'" if cond == 'all'
+    puts sql
     res = rds.query(sql)
     res.each do |r|
         print('.')
@@ -76,6 +81,8 @@ def get_order_data_by cond
         order.store('shipping_fee',r['shipping_fee'])
         order.store('points_used',r['points_used'])
         order.store('order_id',r['order_id'])
+        order.store('openid',r['openid'])
+        order.store('tel',r['tel'])
         orders += [ order ]
     end
     printf("done\n")

@@ -20,12 +20,13 @@ if !ARGV[0]
     p 'usage: ruby rationalizeOrders.rb condition [--debug]'
     p 'eg: ruby rationalizeOrders.rb c=13600060044'
     p 'eg: ruby rationalizeOrders.rb o=19060918234971452'
+    p 'eg: ruby rationalizeOrders.rb d=2019-07-11'
     p 'eg: ruby rationalizeOrders.rb all'
     return
 end
 
-@debug_mode=false
-@debug_mode=true if ARGV[1]=='--debug'
+@debug_mode = false
+@debug_mode = true if ARGV[1] == '--debug'
 
 def get_customer_current_discount rds, order
     customer_id = order['customerNumber']
@@ -66,8 +67,8 @@ def rationalize_order rds, order
     questioned_items_number = 0
     questioned_items_price = 0.0
 
-    text =  "\n------------------------------------------------\n"
-    text += "cid ##{order['orderNo']} on #{order['orderDateTime']} STATE:#{order['state']}\n"
+    text =  "\n-------------------------------------------------\n"
+    text += "cid ##{order['orderNo']} #{order['orderDateTime']} #{order['line']}\n"
     text += "oid *****" + order['customerNumber'][6..12] + "  #{customer_discount}% #{pfloat(points_used)}p  #{pfloat(shipping_fee)}s #{pfloat(amount)}a\n\n"
     text += "    标价    数量    折扣    抵扣    实付    小计    品名\n"
 
@@ -157,19 +158,33 @@ def rationalize_order rds, order
 end
 
 orders = []
-orders = get_order_data_by ARGV[0]
+condition = ARGV[0]
+condition = " order_time >= '#{Date.today.prev_day.strftime('%Y-%m-%d')}' and order_time <= '#{Date.today.strftime('%Y-%m-%d')}' " if ARGV[0] == 'latest'
+
+orders = get_order_data_by condition
 total_need_rebate = 0.0
 rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 
 printf("rationalizing order")
 orders.each do |order|
+
     printf(".")
     rorder = rationalize_order rds, order
+
     if rorder['need_rebate'] > 0.01
         total_need_rebate += rorder['need_rebate']
         printf "x"
         puts rorder['statement'] if @debug_mode
     end
+
+    if order['openid']
+        fn = ".\\auto_import\\statements\\OS-" + order['openid'] + ".txt"
+        File.open(fn,"a+:UTF-8") { |f| f.write rorder['statement'] }
+        printf "a"
+    else
+        puts "missing openid for oid ##{order['order_id']}"
+    end
+
 end
 printf("done\n")
 
