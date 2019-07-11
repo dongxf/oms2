@@ -139,9 +139,8 @@ def rationalize_order rds, order
 
     # update order data here
     need_rebate = questioned_items_price * ( 1 - order_discount )
-    order.store('order_discount',order_discount)
-    order.store('need_rebate',need_rebate)
-    order.store('statement',text)
+    text += "NEED REBATE:     #{pfloat(need_rebate)}\n" if need_rebate > 0.01
+
     sqlu = "update ogoods.pospal_orders set 
                 need_rebate=#{sprintf('%.2f',need_rebate)}, order_discount=#{sprintf('%.2f',order_discount)},
                 statement = '#{text.to_json.gsub("'","''")}'
@@ -149,6 +148,9 @@ def rationalize_order rds, order
     rds.query sqlu
 
     puts text if @debug_mode
+    order.store('order_discount',order_discount)
+    order.store('need_rebate',need_rebate)
+    order.store('statement',text)
     return order
 end
 
