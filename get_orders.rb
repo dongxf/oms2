@@ -251,6 +251,7 @@ def update_order_by_json rds, jorder
     online_paid = order['isOnlinePaymentCompleted'].nil? ? 0 : order['isOnlinePaymentCompleted']
     amount = order['totalAmount'].nil? ? 0.0 : order['totalAmount']
     delivery_type = order['deliveryType'].nil? ? -1 : order['deliveryType']
+    order['contactAddress'] = order['contactAddress'].gsub("\n","") #如果地址中有换行，parse时会出错
     escaped_order_json = order.to_json.gsub("'","''") #用于SQL语句中的转义
     escaped_plain_text = jorder[:plain_text].gsub("'","''")
 

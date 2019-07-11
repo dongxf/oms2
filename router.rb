@@ -7,6 +7,7 @@ require 'spreadsheet'
 def get_short_addr order
     return '番禺大石朝阳东路425号锦绣银湾3街17号' if order['contactTel']=='13711382291' #泳远恭子'
     fat_addr = order['contactAddress'].gsub(" ","")
+    fat_addr = order['contactAddress'].gsub("\n","")
     fat_addr.gsub!('10座1101，梁幼花，15768099989','10座1101')
     fat_addr.gsub!('侨朕中学（雅居乐旁，地铁员岗站A出口往西100米）','侨朕中学')
     fat_addr.gsub!('五幢（入口在西城花园九街五座斜对面）602','五幢602')
