@@ -14,11 +14,13 @@ require 'mysql2'
 require 'json'
 require 'awesome_print'
 
+load 'get_orders.rb'
+
 if !ARGV[0]
-    p 'usage: ruby verifyOrders.rb condition [--debug]'
-    p 'eg: ruby verifyOrders.rb c=13600060044'
-    p 'eg: ruby verifyOrders.rb o=19060918234971452'
-    p 'eg: ruby verifyOrders.rb all'
+    p 'usage: ruby rationalizeOrders.rb condition [--debug]'
+    p 'eg: ruby rationalizeOrders.rb c=13600060044'
+    p 'eg: ruby rationalizeOrders.rb o=19060918234971452'
+    p 'eg: ruby rationalizeOrders.rb all'
     return
 end
 
@@ -31,30 +33,6 @@ def get_customer_current_discount rds, order
     res = rds.query(sql)
     return res.first['discount'] if res.first
     return 100
-end
-
-def get_order_data_by cond
-    printf('getting order data')
-    orders = []
-    condition = cond.gsub(/c=/,"customer_id like '%");
-    condition = condition.gsub(/o=/,"order_id like '%");
-    condition += "%'"
-    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
-    sql = "select * from ogoods.pospal_orders where line!='[X]' and "+condition
-    sql = "select * from ogoods.pospal_orders where line!='[X]'" if cond == 'all'
-    res = rds.query(sql)
-    res.each do |r|
-        print('.')
-        raw_data = r['raw_data']
-        order = JSON.parse(raw_data)
-        order.store('line',r['line'])
-        order.store('shipping_fee',r['shipping_fee'])
-        order.store('points_used',r['points_used'])
-        order.store('order_id',r['order_id'])
-        orders += [ order ]
-    end
-    printf("done\n")
-    return orders
 end
 
 def pfloat f

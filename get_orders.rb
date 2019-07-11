@@ -57,7 +57,31 @@ def get_pospal_orders_within s_time, e_time
         return porders
 
 end 
-#
+
+def get_order_data_by cond
+    printf('getting order data')
+    orders = []
+    condition = cond.gsub(/c=/,"customer_id like '%");
+    condition = condition.gsub(/o=/,"order_id like '%");
+    condition += "%'"
+    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
+    sql = "select * from ogoods.pospal_orders where line!='[X]' and "+condition
+    sql = "select * from ogoods.pospal_orders where line!='[X]'" if cond == 'all'
+    res = rds.query(sql)
+    res.each do |r|
+        print('.')
+        raw_data = r['raw_data']
+        order = JSON.parse(raw_data)
+        order.store('line',r['line'])
+        order.store('shipping_fee',r['shipping_fee'])
+        order.store('points_used',r['points_used'])
+        order.store('order_id',r['order_id'])
+        orders += [ order ]
+    end
+    printf("done\n")
+    return orders
+end
+
 # get tickets form pospal,  time duration must be within 24hours
 def get_pospal_tickets_within s_time, e_time
 
