@@ -116,11 +116,19 @@ def get_uid_by_number_in_pospal number
 
 end
 
+def get_urec_by_number_in_pospal number
+    req = { 'customerNum' => number }
+    res = pospal_api :queryCustomerUid, req
+    rec = res['data']
+    update_userdb [rec]
+    return rec
+end
+
 def get_uid_by_number number
     uid = get_uid_by_number_in_ogoods number
     return uid if uid
-
-    return get_uid_by_number_in_pospal number
+    urec = get_urec_by_number_in_pospal number
+    return rec['customerUid']
 end
 
 def get_openid_by_number number

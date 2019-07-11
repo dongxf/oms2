@@ -230,9 +230,17 @@ end
 
 def get_userinfo_by_customer_number rds, cn
     sqlu = "select * from ogoods.pospal_users where number='#{cn}'"
-    p sqlu
     res = rds.query(sqlu)
     return {:uid => res.first['uid'], :customer_discount => res.first['discount'], :openid =>res.first['openid'] } if res.first
+
+    #if there's no recs, try to get from pospal api and create new rec
+    urec = get_urec_by_number_in_pospal cn
+
+    sqlu = "select * from ogoods.pospal_users where number='#{cn}'"
+    res = rds.query(sqlu)
+    return {:uid => res.first['uid'], :customer_discount => res.first['discount'], :openid =>res.first['openid'] } if res.first
+
+    #giveup
     return {:uid => '', :customer_discount => 100, :openid => ''}
 end
 
