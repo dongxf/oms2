@@ -234,12 +234,21 @@ def get_ogoods_orders_within s_time, e_time
         return oorders
 end
 
+def get_userinfo_by_customer_number rds, cn
+    sqlu = "select * from ogoods.pospal_users where number='#{cn}'"
+    p sqlu
+    res = rds.query(sqlu)
+    return {:uid => res.first['uid'], :customer_discount => res.first['discount'], :openid =>res.first['openid'] } if res.first
+    return {:uid => '', :customer_discount => 100, :openid => ''}
+end
+
 #rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 def update_order_by_json rds, jorder
 
     order = jorder[:order]
 
     #convert nil values to zero or ''
+    userinfo = get_userinfo_by_customer_number rds, order['customerNumber']
     state = order['state'].nil? ? -1 : order['state']
     pay_method = order['payMethod'].nil? ? '' : order['payMethod']
     pay_online = order['payOnLine'].nil? ? -1 : order['payOnLine']
@@ -254,6 +263,7 @@ def update_order_by_json rds, jorder
     sqlu = "INSERT INTO ogoods.pospal_orders
             (
              order_id,state,pay_method,pay_online,online_paid,
+             openid,uid,customer_discount,
              amount,delivery_type,customer_id,shipping_fee,zone_code,
              remark,order_time,name,addr,tel,line,
              mark,number,short_number,date_time,short_time,
@@ -263,6 +273,7 @@ def update_order_by_json rds, jorder
              raw_data,plain_text
             ) VALUES (
              '#{jorder[:number]}',#{state},'#{pay_method}',#{pay_online},#{online_paid},
+             '#{userinfo[:openid]}','#{userinfo[:uid]}',#{userinfo[:customer_discount]},
               #{amount},#{delivery_type},'#{order['customerNumber']}',#{shipping_fee},'#{zone_code}',
              '#{order['orderRemark']}','#{order['orderDateTime']}','#{jorder[:name]}','#{jorder[:addr]}','#{jorder[:tel]}','#{jorder[:line]}',
              '#{jorder[:mark]}', '#{jorder[:number]}', '#{jorder[:short_number]}', '#{jorder[:date_time]}', '#{jorder[:short_time]}', 
@@ -273,6 +284,7 @@ def update_order_by_json rds, jorder
             )
             ON DUPLICATE KEY
             UPDATE state=#{state}, pay_method='#{pay_method}', pay_online=#{pay_online}, online_paid=#{online_paid},
+            openid='#{userinfo[:openid]}', uid='#{userinfo[:uid]}',customer_discount=#{userinfo[:customer_discount]},
             delivery_type=#{delivery_type}, shipping_fee=#{shipping_fee}, zone_code='#{zone_code}',
             line='#{jorder[:line]}',
             mark='#{jorder[:mark]}',number='#{jorder[:number]}',short_number='#{jorder[:short_number]}',
