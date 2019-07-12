@@ -33,24 +33,19 @@ def pg_test
     connect.finish
 end
 
-def send_points_notice openids
-    notice = {
-        touser: 'owHN1t0ETyOD1p_J324Gcb9twHuk',
-        template_id:  'RTPLTnnAvu-jI7fsAoWu0CwLpGZwoMBXK3bRlIxrkU8',
-        url:  'https://shop.foodtrust.cn/m/accountv4',  
-        data:  {
-            first:  { value:  "您在丰巢见证评论区的留言获得积分奖励。", color:  '#173177' },
-            keyword1:  { value:   "#{Time.now}", color:  '#173177' },
-            keyword2:  { value:  '200分', color:  '#ff0000' },
-            keyword3:  { value:  "见证诚信，传播友善，记录真实。\n积分规则：\n参与平台每篇文章讨论最多可获一次积分\n *单项正常留言50分\n *全平台首次留言200积分\n *关联购买顾客留言200分\n *按最高分值项计算", color:  '#173177' },
-            keyword4:  { value:  '点击详情查看最新积分', color:  '#0000ff' },
-            remark:  { value: "FOODTRUST® 丰巢有机\n每一天更安心的选择", color:  '#88b04b' },
-        }
-    }
-    wat = wechat_access_token
-    openids.each do |openid|
-        notice.store(:touser,openid) #注意，如果是'touser' 就不工作了
-        wechat_api :sendTemplateMessage, wat, notice
+def award_customer_by_uid uids, point, reason
+    uids.each do |uid| 
+        openid = get_openid_by_uid(uid)
+        puts "awarding cuid #{uid} with #{point}p..."
+        req = { 'customerUid' => uid, 'balanceIncrement' => 0.0, 'pointIncrement' => point, 'dataChangeTime' => Time.now }
+        res = pospal_api :updateBiPi, req
+        ap res
+        if res['status'] == 'success'
+            puts "update BiPi GOOD, sending msg"
+            send_specific_points_notice openid, point, reason, 'https://shop.foodtrust.cn/m/accountv4'
+        else
+            puts "update BiPi FAILED"
+        end
     end
 end
 
@@ -73,6 +68,41 @@ end
     'owHN1tybpxMT4hKO8167ouWJjuiM', #邓宇虹
     'owHN1t6e-heZydDZDAaOx-1VZpFk'  #有凤来仪
     'owHN1t-k_JVJBzvI-iqFzl8miUJw', #霞女士
-=end
 openids = [ 'owHN1t0ETyOD1p_J324Gcb9twHuk' ]
 send_points_notice openids
+=end
+
+uids = [
+    1009037249495472884,
+    1048499026482618445,
+    1063519358070424934,
+    142886309997235545,
+    147662480809713937,
+    16792689893207733,
+    169675655794225530,
+    227436188072119765,
+    247738792439758552,
+    25400512841826788,
+    377377989387054720,
+    435843654573977446,
+    478137862877704782,
+    530736910498933704,
+    56299318598132460,
+    606279562048122110,
+    628559793878451218,
+    642552711720576776,
+    662560813479380800,
+    738479673966941048,
+    810791209821523082,
+    846545909407264586,
+    851007562155276952,
+    938952386434297186,
+    943729362906451086,
+    946223111440761711,
+    947718076798512932,
+    960332509663342177
+]
+
+uids = [ 965193016323785568 ]
+reason = '很抱歉因操作失误，刚才向您错误发送积分和余额变动消息，打扰之处请多谅解，随道歉送上100积分结账抵扣之用。您的账户一切正常，请放心使用，如有疑问请咨询丰巢小蜜'
+award_customer_by_uid uids, 100, reason
