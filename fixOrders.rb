@@ -29,7 +29,7 @@ def get_customer_current_discount rds, order
     return 100
 end
 
-def get_order_data_by cond
+def get_orders_data_by cond
     orders = []
     condition = cond.gsub(/c=/,"customer_id like '%");
     condition = condition.gsub(/o=/,"order_id like '%");
@@ -149,7 +149,7 @@ def ship_order order
 end
 
 orders = []
-orders = get_order_data_by ARGV[0]
+orders = get_orders_data_by ARGV[0]
 total_rebate = 0.0
 orders.each do |order|
     ap order if mode == 'debug'

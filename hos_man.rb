@@ -49,33 +49,31 @@ else
     end
 end
 
-orders = get_order_data_by condition
+sql = "select * from ogoods.pospal_orders where line!='[X]' and " + condition + " order by order_time desc"
+orders = get_orders_data_by_sql sql
 
 total_need_rebate = 0.0
-rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 
-printf("rationalizing order")
 orders.each do |order|
 
     printf(".")
-    rorder = rationalize_order rds, order
 
-    if rorder['need_rebate'] > 0.01
-        total_need_rebate += rorder['need_rebate']
+    if order['need_rebate'] > 0.01
+        total_need_rebate += order['need_rebate']
         printf "x"
     end
 
     if wos_mode
         printf "-"
-        fn = ".\\auto_import\\hos\\H" + rorder['openid'] + "oS.txt"
+        fn = ".\\auto_import\\hos\\H" + order['openid'] + "oS.txt"
         if FileTest::exist? fn
             existed = IO.readlines(fn)
             File.open(fn,"w:UTF-8") do |f| 
-                f.puts rorder['statement'] 
+                f.puts order['statement'] 
                 f.puts existed
             end
         else
-            File.open(fn,"a+:UTF-8") { |f| f.write rorder['statement']}
+            File.open(fn,"a+:UTF-8") { |f| f.write order['statement']}
         end
     end
 

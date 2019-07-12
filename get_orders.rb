@@ -58,17 +58,25 @@ def get_pospal_orders_within s_time, e_time
 
 end 
 
-def get_order_data_by cond
-    printf('getting order data')
-    orders = []
-    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
+def get_orders_data_by cond
 
     sql = "select * from ogoods.pospal_orders where line!='[X]' and " + cond + " order by order_time desc"
+    orders = get_orders_data_by_sql sql
+    return orders
+end
+
+def get_orders_data_by_sql sql
+
+    orders = []
+    printf 'getting order data'
+
+    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
     res = rds.query(sql)
     res.each do |r|
         printf('.')
         raw_data = r['raw_data']
         order = JSON.parse(raw_data)
+        order.store('need_rebate',r['need_rebate'])
         order.store('line',r['line'])
         order.store('shipping_fee',r['shipping_fee'])
         order.store('points_used',r['points_used'])
@@ -77,10 +85,13 @@ def get_order_data_by cond
         order.store('uid',r['uid'])
         order.store('customer_discount',r['customer_discount'])
         order.store('tel',r['tel'])
+        order.store('statement',r['statement'])
         orders += [ order ]
     end
-    printf("done\n")
+
+    printf "done\n"
     return orders
+
 end
 
 # get tickets form pospal,  time duration must be within 24hours
