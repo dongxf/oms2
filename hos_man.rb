@@ -6,7 +6,8 @@ This ruby file is use to:
 1) find payment and points unmatching issues
 2) to generate rebate bonus for those goods missing member discount
 3) to generate order discount 
-3) to generate a order statement for customer
+4) to generate hos file ( history order statement )
+此文件不应处理实时订单，以免生产的HOS文件重新
 
 =end
 
@@ -19,12 +20,12 @@ require 'tempfile'
 load 'get_orders.rb'
 
 if !ARGV[0]
-    p 'usage: ruby rationalizeOrders.rb condition [--debug] [--WOS]' #WOS means generate WOS files
-    p 'eg: ruby rationalizeOrders.rb c=13600060044'
-    p 'eg: ruby rationalizeOrders.rb o=19060918234971452'
-    p 'eg: ruby rationalizeOrders.rb d=2019-07-11' #2019-07-11 00:00:00 -  2019-07-11 23:59:59
-    p 'eg: ruby rationalizeOrders.rb all'           #without today
-    p 'eg: ruby rationalizeOrders.rb yesterday' # yesterday 00:00:00 -  today 00:00:00
+    p 'usage: ruby hos_man.rb condition [--debug] [--WOS]' #WOS means generate WOS files
+    p 'eg: ruby hos_man.rb c=13600060044'
+    p 'eg: ruby hos_man.rb o=19060918234971452'
+    p 'eg: ruby hos_man.rb d=2019-07-11' #2019-07-11 00:00:00 -  2019-07-11 23:59:59
+    p 'eg: ruby hos_man.rb all'           #without today
+    p 'eg: ruby hos_man.rb yesterday' # yesterday 00:00:00 -  today 00:00:00
     return
 end
 
