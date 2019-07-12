@@ -6,10 +6,15 @@ require 'json'          #to use JSON
 require 'awesome_print' #to use ap helper
 
 #return hash instead of JSON string
-def wechat_access_token
+def get_wechat_access_token
    res = RestClient.get "https://foodtrust.cn/wx/get-access-token?badge=#{ENV['RDS_AGENT']}"
    #ap res.code;  res.cookies; ap res.headers; ap res.body
    return JSON.parse(res.body)['access_token']
+end
+
+def wechat_access_token
+   @wat = get_wechat_access_token if @wat.nil?
+   return @wat
 end
 
 #data should be hash, not JSON string
