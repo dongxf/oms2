@@ -49,6 +49,17 @@ def award_customer_by_uid uids, point, reason
     end
 end
 
+def uids_have_orders
+    uids = []
+    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
+    sqlu = "select uid from ogoods.pospal_orders group by uid"
+    res = rds.query(sqlu)
+    res.each do |r|
+        uids += [ r['uid'] ]
+    end
+    return uids
+end
+
 #insert data into msqly: post_id, goods_code, good_name, last_buy_date, openid, tel, invited_times, reviewed_times
 #创建一个商品介绍，缩写为Cnnnnnnn-M20002370，如C0110050
 #tag review tag
@@ -72,7 +83,7 @@ openids = [ 'owHN1t0ETyOD1p_J324Gcb9twHuk' ]
 send_points_notice openids
 =end
 
-uids = [
+avoided_uids = [
     1009037249495472884,
     1048499026482618445,
     1063519358070424934,
@@ -103,5 +114,11 @@ uids = [
     960332509663342177
 ]
 
-reason = '很抱歉因后台操作失误，系统刚才向您推送了错误的积分和余额变动消息，如有打扰请多谅解！随致歉送上100积分供结账抵扣之用。您的账户一切正常，请放心使用，任何问题请咨询丰巢小蜜'
+all_uids = uids_have_orders
+p all_uids.size
+
+uids = all_uids - avoided_uids
+p uids.size
+
+reason = '很抱歉因后台操作失误，系统刚才向部分上半年有订单的客户推送了错误的积分和余额变动消息，如有打扰请多谅解！随致歉为您送上100积分供结账抵扣之用。您的账户一切正常，请放心使用，任何问题请咨询丰巢小蜜'
 award_customer_by_uid uids, 100, reason
