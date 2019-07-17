@@ -36,7 +36,7 @@ list.each do |el|
     res = pospal_api :updateBiPi, req
     if res['status'] == 'success'
         puts "sending notice"
-        send_specific_points_notice openid, "#{points}分", reason, "https://foodtrust.cn/a20190711/"
+        send_specific_points_notice openid, "#{points}分", reason, "https://foodtrust.cn/a20190711/", "您的账户余额有变动，详情如下"
         sqlu = "update ogoods.pospal_orders 
                 set rebate_comment='#{reason} at #{Time.now}', point_rebated=#{sprintf('%.2f',points)}  
                 where uid = #{uid} and need_rebate > 0 and point_rebated = 0 and order_time < '2019-07-11 00:00:00'"

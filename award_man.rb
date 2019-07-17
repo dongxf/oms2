@@ -42,7 +42,7 @@ def award_customer_by_uid uids, point, reason
         ap res
         if res['status'] == 'success'
             puts "update BiPi GOOD, sending msg"
-            send_specific_points_notice openid, point, reason, 'https://foodtrust.cn/a20190711/'
+            send_specific_points_notice openid, point, reason, 'https://foodtrust.cn/a20190711/', "您的账户余额有变动，详情如下"
         else
             puts "update BiPi FAILED"
         end

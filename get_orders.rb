@@ -13,6 +13,8 @@ load 'router.rb'
 load 'pospal_api.rb'
 load 'user_api.rb' #to use get_openid_by_number
 
+@rds = Mysql2::Client.new(:host =>ENV['RDS_AGENT'], :username =>"psi_root", :port =>'1401', :password =>ENV['PSI_PASSWORD'], :encoding =>'utf8mb4') if @rds.nil?
+
 def get_orders_by_shipdate ship_day
         yesterday = ship_day.prev_day
         s_time = yesterday.strftime('%Y-%m-%d') + ' 14:00:01'
@@ -33,9 +35,10 @@ def get_pospal_orders_within s_time, e_time
         page_count = 0
         req={'postBackParameter'=>{}, 'startTime'=> s_time, 'endTime'=> e_time }
 
+        printf "Quering order pages ["
         begin
                 page_count += 1 # to control loop times
-                #puts "calling pospal api in #{page_count} time"
+                printf "."
 
                 res=pospal_api(:queryOrderPages,req)
                 recs = res['data']['result']
@@ -50,6 +53,7 @@ def get_pospal_orders_within s_time, e_time
                 break if page_count >= 50 #used for saving api call times in coding pharse
 
         end while recs.size == page_size
+        printf "] Done\n"
 
         rtime = Time.now.strftime('%Y%m%d%H%M%S')
         fn = ".\\auto_import\\porders\\porders-" + s_time.gsub('-','').gsub(':','').gsub(' ','') + '-' + e_time.gsub('-','').gsub(':','').gsub(' ','') + '_' + rtime + ".json"
@@ -68,28 +72,47 @@ end
 def get_orders_data_by_sql sql
 
     orders = []
-    printf 'getting order data'
+    printf 'getting order data[ '
 
-    rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
-    res = rds.query(sql)
+    res = @rds.query(sql)
     res.each do |r|
         printf('.')
+=begin
         raw_data = r['raw_data']
-        order = JSON.parse(raw_data)
-        order.store('need_rebate',r['need_rebate'])
-        order.store('line',r['line'])
-        order.store('shipping_fee',r['shipping_fee'])
-        order.store('points_used',r['points_used'])
-        order.store('order_id',r['order_id'])
-        order.store('openid',r['openid'])
-        order.store('uid',r['uid'])
-        order.store('customer_discount',r['customer_discount'])
-        order.store('tel',r['tel'])
-        order.store('statement',r['statement'])
+        raw_data = raw_data[1..raw_data.length-2] if raw_data[0..1]=='"{' #很奇怪的说，在7月15日有一些raw数据在头尾上加入了"",尚未找到原因
+        begin
+            order = JSON.parse(raw_data)
+        rescue JSON::ParserError
+            puts "\nERROR: #{raw_data}\n"
+            next
+        end
+=end
+        order = {}
+        order.store(:need_rebate,r['need_rebate'])
+        order.store(:online_paid,r['online_paid'])
+        order.store(:line,r['line'])
+        order.store(:shipping_fee,r['shipping_fee'])
+        order.store(:points_used,r['points_used'])
+        order.store(:order_id,r['order_id'])
+        order.store(:openid,r['openid'])
+        order.store(:uid,r['uid'])
+        order.store(:customer_discount,r['customer_discount'])
+        order.store(:customer_id,r['customer_id'])
+        order.store(:tel,r['tel'])
+        order.store(:statement,r['statement'])
+        order.store(:zone_code,r['zone_code'])
+        order.store(:amount,r['amount'])
+        order.store(:ship_refunded,r['ship_refunded'])
+        order.store(:point_awarded,r['point_awarded'])
+        order.store(:need_rebate,r['need_rebate'])
+        order.store(:rebate_comment,r['rebate_comment'])
+        order.store(:comment,r['comment'].nil? ? '' : r['comment'])
+        order.store(:name,r['name'])
+        order.store(:plain_text,r['plain_text'])
         orders += [ order ]
     end
 
-    printf "done\n"
+    printf " ]done\n"
     return orders
 
 end
@@ -149,26 +172,37 @@ def get_orders_within s_time, e_time
             end
             first_item = ''
             first_item = order['items'][0]['productName'] if !order['items'].nil? && !order['items'].empty?
-            forders += [{
+            forder = {
+                    :customer_id => order['customerNumber'],
                     :line => decide_route(order),
                     :mark => get_batch_mark(order),
                     :number => get_short_no(order),
-                    :zone_code => get_zone_code(order),
                     :short_number => get_short_no(order)[12..16],
+                    :zone_code => get_zone_code(order),
                     :date_time => order['orderDateTime'],
                     :short_time => order['orderDateTime'][5..20],
+                    :date => order['orderDateTime'][0..9], #duplicated, to be reduced
                     :odate => order['orderDateTime'][0..9],
                     :name => get_short_name(order),
                     :addr => get_short_addr(order),
                     :tel => order['contactTel'],
-                    :amt => order['totalAmount'],
+                    :amount => order['totalAmount'].nil? ? 0.0 : order['totalAmount'], #duplicated, to be reduced
                     :comment => get_noti(order) + get_short_remark(order),
-                    :date => get_short_date(order),
                     :plain_text => get_plain_text(order),
                     :first_item => first_item,
                     :items_count => items_count,
+                    :state => order['state'].nil? ? -1 : order['state'],
+                    :pay_method => order['payMethod'].nil? ? '' : order['payMethod'],
+                    :pay_online => order['payOnLine'].nil? ? -1 : order['payOnLine'],
+                    :shipping_fee => order['shippingFee'].nil? ? 0.0 : order['shippingFee'],
+                    :online_paid => order['isOnlinePaymentCompleted'].nil? ? 0 : order['isOnlinePaymentCompleted'],
+                    :delivery_type => order['deliveryType'].nil? ? -1 : order['deliveryType'],
+                    :remark => order['orderRemark'],
                     :order => order
-            }]
+            }
+            update_order_by_json forder
+
+            forders += [forder]
 
         end
         return forders
@@ -194,9 +228,8 @@ def get_ogoods_orders_within s_time, e_time
 
         puts "retrieving ogoods orders between #{s_time} and  #{e_time}\n"
 
-        rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
         sqlu = "select * from ogoods.pospal_orders where order_time >= '#{s_time}' and order_time <= '#{e_time}'"
-        resu = rds.query(sqlu)
+        resu = @rds.query(sqlu)
         resu.each do |r|
             comment = r['comment'].nil? ? '' : r['comment']
             oorders += [{
@@ -239,40 +272,28 @@ def get_ogoods_orders_within s_time, e_time
         return oorders
 end
 
-def get_userinfo_by_customer_number rds, cn
+def get_userinfo_by_customer_number cn
+
     sqlu = "select * from ogoods.pospal_users where number='#{cn}'"
-    res = rds.query(sqlu)
+    res = @rds.query(sqlu)
     return {:uid => res.first['uid'], :customer_discount => res.first['discount'], :openid =>res.first['openid'] } if res.first
 
     #if there's no recs, try to get from pospal api and create new rec
     urec = get_urec_by_number_in_pospal cn
 
     sqlu = "select * from ogoods.pospal_users where number='#{cn}'"
-    res = rds.query(sqlu)
+    res = @rds.query(sqlu)
     return {:uid => res.first['uid'], :customer_discount => res.first['discount'], :openid =>res.first['openid'] } if res.first
 
     #giveup
     return {:uid => '', :customer_discount => 100, :openid => ''}
 end
 
-#rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
-def update_order_by_json rds, jorder
+def update_order_by_json jorder
 
-    order = jorder[:order]
-
-    #convert nil values to zero or ''
-    userinfo = get_userinfo_by_customer_number rds, order['customerNumber']
-    state = order['state'].nil? ? -1 : order['state']
-    pay_method = order['payMethod'].nil? ? '' : order['payMethod']
-    pay_online = order['payOnLine'].nil? ? -1 : order['payOnLine']
-    shipping_fee = order['shippingFee'].nil? ? 0.0 : order['shippingFee']
-    zone_code = jorder[:zone_code]
-    online_paid = order['isOnlinePaymentCompleted'].nil? ? 0 : order['isOnlinePaymentCompleted']
-    amount = order['totalAmount'].nil? ? 0.0 : order['totalAmount']
-    delivery_type = order['deliveryType'].nil? ? -1 : order['deliveryType']
-    order['contactAddress'] = order['contactAddress'].gsub("\n","") #如果地址中有换行，parse时会出错
-    escaped_order_json = order.to_json.gsub("'","''") #用于SQL语句中的转义
-    escaped_plain_text = jorder[:plain_text].gsub("'","''")
+    userinfo = get_userinfo_by_customer_number jorder[:customer_id]
+    escaped_order_json = jorder[:order].to_json.gsub("\n","").gsub("'","''") #用于SQL语句中的转义
+    escaped_plain_text = jorder[:plain_text].gsub("'","''") #千万不要在这里将换行符去掉
 
     sqlu = "INSERT INTO ogoods.pospal_orders
             (
@@ -286,10 +307,10 @@ def update_order_by_json rds, jorder
              print_times,ship_refunded,point_awarded,
              raw_data,plain_text
             ) VALUES (
-             '#{jorder[:number]}',#{state},'#{pay_method}',#{pay_online},#{online_paid},
+             '#{jorder[:number]}',#{jorder[:state]},'#{jorder[:pay_method]}',#{jorder[:pay_online]},#{jorder[:online_paid]},
              '#{userinfo[:openid]}','#{userinfo[:uid]}',#{userinfo[:customer_discount]},
-              #{amount},#{delivery_type},'#{order['customerNumber']}',#{shipping_fee},'#{zone_code}',
-             '#{order['orderRemark']}','#{order['orderDateTime']}','#{jorder[:name]}','#{jorder[:addr]}','#{jorder[:tel]}','#{jorder[:line]}',
+              #{jorder[:amount]},#{jorder[:delivery_type]},'#{jorder[:customer_id]}',#{jorder[:shipping_fee]},'#{jorder[:zone_code]}',
+             '#{jorder[:remark]}','#{jorder[:date_time]}','#{jorder[:name]}','#{jorder[:addr]}','#{jorder[:tel]}','#{jorder[:line]}',
              '#{jorder[:mark]}', '#{jorder[:number]}', '#{jorder[:short_number]}', '#{jorder[:date_time]}', '#{jorder[:short_time]}', 
              '#{jorder[:odate]}', '#{jorder[:date]}', 
              '#{jorder[:first_item]}', #{jorder[:items_count]},
@@ -297,9 +318,9 @@ def update_order_by_json rds, jorder
              '#{escaped_order_json}','#{escaped_plain_text}'
             )
             ON DUPLICATE KEY
-            UPDATE state=#{state}, pay_method='#{pay_method}', pay_online=#{pay_online}, online_paid=#{online_paid},
+            UPDATE state=#{jorder[:state]}, pay_method='#{jorder[:pay_method]}', pay_online=#{jorder[:pay_online]}, online_paid=#{jorder[:online_paid]},
             openid='#{userinfo[:openid]}', uid='#{userinfo[:uid]}',customer_discount=#{userinfo[:customer_discount]},
-            delivery_type=#{delivery_type}, shipping_fee=#{shipping_fee}, zone_code='#{zone_code}',
+            delivery_type=#{jorder[:delivery_type]}, shipping_fee=#{jorder[:shipping_fee]}, zone_code='#{jorder[:zone_code]}',
             line='#{jorder[:line]}',
             mark='#{jorder[:mark]}',number='#{jorder[:number]}',short_number='#{jorder[:short_number]}',
             date_time='#{jorder[:date_time]}',short_time='#{jorder[:short_time]}',
@@ -307,7 +328,7 @@ def update_order_by_json rds, jorder
             first_item='#{jorder[:first_item]}',items_count=#{jorder[:items_count]},
             raw_data='#{escaped_order_json}',plain_text='#{escaped_plain_text}'
     "
-    resu = rds.query(sqlu)
+    resu = @rds.query(sqlu)
 end
 
 def pfloat f
@@ -329,7 +350,7 @@ def is_secondary_promotion product_uid, items
     return false
 end
 
-def rationalize_order rds, order
+def rationalize_order order
 
     customer_discount = order['customer_discount']
     items = order['items']
@@ -422,9 +443,9 @@ def rationalize_order rds, order
 
     sqlu = "update ogoods.pospal_orders set 
                 need_rebate=#{sprintf('%.2f',need_rebate)}, order_discount=#{sprintf('%.2f',order_discount)},
-                statement = '#{text.to_json.gsub("'","''")}'
+                statement = '#{text.gsub("'","''")}'
             where order_id = '#{order['order_id']}'"
-    rds.query sqlu
+    @rds.query sqlu
 
     order.store('order_discount',order_discount)
     order.store('need_rebate',need_rebate)

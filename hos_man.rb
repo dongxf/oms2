@@ -49,7 +49,7 @@ else
     end
 end
 
-sql = "select * from ogoods.pospal_orders where line!='[X]' and " + condition + " order by order_time desc"
+sql = "select openid, statement from ogoods.pospal_orders where line!='[X]' and " + condition + " order by order_time desc"
 orders = get_orders_data_by_sql sql
 
 total_need_rebate = 0.0
@@ -58,26 +58,19 @@ orders.each do |order|
 
     printf(".")
 
-    if order['need_rebate'] > 0.01
-        total_need_rebate += order['need_rebate']
-        printf "x"
-    end
-
     if wos_mode
-        printf "-"
-        fn = ".\\auto_import\\hos\\H" + order['openid'] + "oS.txt"
+        printf "w"
+        fn = ".\\auto_import\\hos\\H" + order[:openid] + "oS.txt"
         if FileTest::exist? fn
             existed = IO.readlines(fn)
             File.open(fn,"w:UTF-8") do |f| 
-                f.puts order['statement'] 
+                f.puts order[:statement] 
                 f.puts existed
             end
         else
-            File.open(fn,"a+:UTF-8") { |f| f.write order['statement']}
+            File.open(fn,"a+:UTF-8") { |f| f.write order[:statement]}
         end
     end
 
 end
 printf("done\n")
-
-puts "total need_rebate: #{sprintf('%.2f',total_need_rebate)}"

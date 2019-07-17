@@ -26,7 +26,8 @@ def wechat_api api_name, wat, data
   url = base + apiURLs[api_name]
 
   res = RestClient.post url, data.to_json
-  ap JSON.parse(res.body)
+  return true if JSON.parse(res.body)['errocode'] == 0
+  return false
 end
 
 def send_balance_notice openids
@@ -44,14 +45,17 @@ def send_balance_notice openids
             remark:  { value: "FOODTRUST® 丰巢有机\n每一天更安心的选择", color:  '#88b04b' },
         }
     }
-    wat = wechat_access_token
     openids.each do |openid|
         notice.store(:touser,openid) #注意，如果是'touser' 就不工作了
-        wechat_api :sendTemplateMessage, wat, notice
+        wechat_api :sendTemplateMessage, wechat_access_token, notice
+        notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
+        wechat_api :sendTemplateMessage, wechat_access_token, notice
+        notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
+        wechat_api :sendTemplateMessage, wechat_access_token, notice
     end
 end
 
-def send_specific_points_notice openid, points, reason, url
+def send_specific_points_notice openid, points, reason, url, content
     notice = {
         touser: 'owHN1t0ETyOD1p_J324Gcb9twHuk',
         template_id:  'RTPLTnnAvu-jI7fsAoWu0CwLpGZwoMBXK3bRlIxrkU8',
@@ -68,12 +72,18 @@ def send_specific_points_notice openid, points, reason, url
     wat = wechat_access_token
     notice.store(:touser,openid) #注意，如果是'touser' 就不工作了
     notice.store(:url,url)
+    notice[:data].store(:first, {value: content, color: '#173177'})
     notice[:data].store(:keyword2, {value: points, color: '#ff0000'})
     notice[:data].store(:keyword3, {value: reason, color: '#173177'})
     wechat_api :sendTemplateMessage, wechat_access_token, notice
+
+    notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
+    wechat_api :sendTemplateMessage, wechat_access_token, notice
+    notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
+    wechat_api :sendTemplateMessage, wechat_access_token, notice
 end
 
-def send_specific_balance_notice openid, balance, reason, url
+def send_specific_balance_notice openid, balance, reason, url, content
     notice = {
         touser: 'owHN1t0ETyOD1p_J324Gcb9twHuk',
         template_id:  'JJq04n18SSmcNItaCwcLDmNqFJoGCIk5nvOWPm3KvJg',
@@ -85,13 +95,19 @@ def send_specific_balance_notice openid, balance, reason, url
             keyword3:  { value:  "团购订单或特定区域运费返回\n运费退回规则：\n *所有已提交的团购订单（无论是否拼成）\n *特定小区大于88元的日常订单\n *广东省外快递改为到付(满298另有积分奖励)", color:  '#173177' },
             keyword4:  { value:  '+10.00', color:  '#0000ff' },
             keyword5:  { value:  '点击详情查看会员对账单及最新余额', color:  '#0000ff' },
-            remark:  { value: "FOODTRUST® 丰巢有机\n每一天更安心的选择", color:  '#88b04b' },
+            remark:  { value: "客服小蜜：18998382701（微信同号）\nFOODTRUST® 丰巢有机\n每一天更安心的选择", color:  '#88b04b' },
         }
     }
     wat = wechat_access_token
     notice.store(:touser,openid) #注意，如果是'touser' 就不工作了
     notice.store(:url,url)
+    notice[:data].store(:first, {value: content, color: '#173177'})
     notice[:data].store(:keyword3, {value: reason, color: '#173177'})
     notice[:data].store(:keyword4, {value: balance, color: '#0000ff'})
+    wechat_api :sendTemplateMessage, wechat_access_token, notice
+
+    notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
+    wechat_api :sendTemplateMessage, wechat_access_token, notice
+    notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
     wechat_api :sendTemplateMessage, wechat_access_token, notice
 end
