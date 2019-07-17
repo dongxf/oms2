@@ -92,6 +92,7 @@ def decide_route order
     return '[Q]' if address.include? '金山谷'
     return '[Q]' if address.include? '富豪山庄'
 
+    return '[P]' if address.include? '丹山新村'
     return '[P]' if address.include? '大学城'
     return '[P]' if address.include? '前龙西路'
     return '[P]' if address.include? '大学小筑'
@@ -109,6 +110,7 @@ def decide_route order
     if address.include? '广州'
       #Insert any exception here
       #Exception in Area Name and Road name
+      return '[K]' if address.include? '天源路'
       return '[G]' if address.include? '白云路'
       #Exception in PanYu
       return '[G]' if address.include? '星河湾半岛'
