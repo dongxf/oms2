@@ -71,6 +71,7 @@ end
 def update_userdb pusers
 
     ucount=0
+    printf "updating userdb ["
     pusers.each do |user|
         openid=''
         openid=user['weixinOpenIds'][0]['openId'] if user['weixinOpenIds']
@@ -78,10 +79,10 @@ def update_userdb pusers
         number=user['number']
         uname=user['name'].gsub("'","''")
         phone=user['phone'].gsub("'","''")
-        puts "\n"
+        printf "."
         discount=user['discount']
 
-        p "updating user[#{ucount}] number #{number}..."
+        #p "updating user[#{ucount}] number #{number}..."
         ucount += 1
 
         #next if ucount<832 #to debug question rec_no 833 debug only 
@@ -92,9 +93,9 @@ def update_userdb pusers
                     ON DUPLICATE KEY
                     UPDATE uid=#{user['customerUid']}, number='#{number}',name='#{uname}', openid='#{openid}', phone='#{phone}', discount=#{discount}, raw_data='#{raw_data}'
         "
-        p sqlu
         resu = @rds.query(sqlu)
     end
+    printf " ]done\n"
 
 end
 
