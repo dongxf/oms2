@@ -65,7 +65,7 @@ orders.each do |order|
             existed = IO.readlines(fn)
             File.open(fn,"w:UTF-8") do |f| 
                 f.puts order[:statement] 
-                f.puts existed
+                existed.each { |e| f.puts e.force_encoding('utf-8') } #to avoid 'GBK' converting error caused by 'f.puts existed'
             end
         else
             File.open(fn,"a+:UTF-8") { |f| f.write order[:statement]}
