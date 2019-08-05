@@ -51,4 +51,13 @@ def fix_raw_data
     end
 end
 
-fix_raw_data
+#re-generate statement for order since 2019-07-12
+def gen_statement
+    sql = "select * from ogoods.pospal_orders where line!='[X]' and order_time >= '2019-07-12'"
+    res = @rds.query(sql)
+    res.each do |r|
+        rationalize_order r
+    end
+end
+
+gen_statement

@@ -353,18 +353,21 @@ end
 def rationalize_order order
 
     customer_discount = order['customer_discount']
-    items = order['items']
     points_used = order['points_used'] ? order['points_used'] : 0.0
     shipping_fee = order['shipping_fee'] #if using order['shippingFee'], line T will get nil
-    amount = order['totalAmount']
+    amount = order['amount']
+
+    raw_order = JSON.parse order['raw_data']
+    items = raw_order['items']
+
     order_discount = 1 #后面将在能计算出订单折扣的地方，让icd情况下，最低的item_discount（但不超过customer_discount)作为最新值
 
     questioned_items_number = 0
     questioned_items_price = 0.0
 
     text =  "\n-------------------------------------------------\n"
-    text += "oid ##{order['orderNo']} #{order['orderDateTime']} #{order['line']}\n"
-    text += "cid *****" + order['customerNumber'][6..12] + "  #{customer_discount}% #{pfloat(points_used)}p  #{pfloat(shipping_fee)}s #{pfloat(amount)}a\n\n"
+    text += "oid ##{order['order_id']} #{order['order_time']} #{order['line']}\n"
+    text += "cid *****" + order['customer_id'][6..12] + "  #{customer_discount}% #{pfloat(points_used)}p  #{pfloat(shipping_fee)}s #{pfloat(amount)}a\n\n"
     text += "    标价    数量    折扣    抵扣    实付    小计    品名\n"
 
     esp_sum = 0.0
