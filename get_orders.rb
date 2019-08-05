@@ -329,6 +329,13 @@ def update_order_by_json jorder
             raw_data='#{escaped_order_json}',plain_text='#{escaped_plain_text}'
     "
     resu = @rds.query(sqlu)
+
+    #udpate statement for this order
+    sql = "select * from ogoods.pospal_orders where line!='[X]' and order_id >= '#{jorder[:number]}'"
+    res = @rds.query(sql)
+    res.each do |r|
+        rationalize_order r
+    end
 end
 
 def pfloat f
