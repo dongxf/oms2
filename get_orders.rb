@@ -77,16 +77,6 @@ def get_orders_data_by_sql sql
     res = @rds.query(sql)
     res.each do |r|
         printf('.')
-=begin
-        raw_data = r['raw_data']
-        raw_data = raw_data[1..raw_data.length-2] if raw_data[0..1]=='"{' #很奇怪的说，在7月15日有一些raw数据在头尾上加入了"",尚未找到原因
-        begin
-            order = JSON.parse(raw_data)
-        rescue JSON::ParserError
-            puts "\nERROR: #{raw_data}\n"
-            next
-        end
-=end
         order = {}
         order.store(:need_rebate,r['need_rebate'])
         order.store(:online_paid,r['online_paid'])
