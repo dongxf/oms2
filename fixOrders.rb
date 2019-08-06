@@ -59,5 +59,3 @@ def gen_statement
         rationalize_order r
     end
 end
-
-gen_statement
