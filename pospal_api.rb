@@ -30,6 +30,7 @@ def pospal_api api_name, request_body
     :completeOrder => 'orderOpenApi/completeOrder',
     :shipOrder => 'orderOpenApi/shipOrder',
     :getCategoryPages => 'productOpenApi/queryProductCategoryPages',
+    :queryOrderByNo => 'orderOpenApi/queryOrderByNo',
     :queryOrderPages => 'orderOpenApi/queryOrderPages',
     :queryTicketPages => 'ticketOpenApi/queryTicketPages',
     :updateBiPi => 'customerOpenApi/updateBalancePointByIncrement',

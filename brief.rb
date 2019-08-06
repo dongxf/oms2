@@ -45,7 +45,8 @@ end
 
 amt = 0.0
 oorders.each do |oorder|
-    order = JSON.parse(oorder[:raw_data])
+    raw_data = oorder[:raw_data].gsub("\n","")
+    order = JSON.parse raw_data
 
     line = oorder[:line]
     comment = oorder[:comment]

@@ -77,16 +77,6 @@ def get_orders_data_by_sql sql
     res = @rds.query(sql)
     res.each do |r|
         printf('.')
-=begin
-        raw_data = r['raw_data']
-        raw_data = raw_data[1..raw_data.length-2] if raw_data[0..1]=='"{' #很奇怪的说，在7月15日有一些raw数据在头尾上加入了"",尚未找到原因
-        begin
-            order = JSON.parse(raw_data)
-        rescue JSON::ParserError
-            puts "\nERROR: #{raw_data}\n"
-            next
-        end
-=end
         order = {}
         order.store(:need_rebate,r['need_rebate'])
         order.store(:online_paid,r['online_paid'])
@@ -364,7 +354,8 @@ def rationalize_order order
     shipping_fee = order['shipping_fee'] #if using order['shippingFee'], line T will get nil
     amount = order['amount']
 
-    raw_order = JSON.parse order['raw_data']
+    raw_data = order['raw_data'].gsub("\n","")
+    raw_order = JSON.parse raw_data
     items = raw_order['items']
 
     order_discount = 1 #后面将在能计算出订单折扣的地方，让icd情况下，最低的item_discount（但不超过customer_discount)作为最新值
