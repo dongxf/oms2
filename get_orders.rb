@@ -164,6 +164,7 @@ def get_orders_within s_time, e_time
             first_item = order['items'][0]['productName'] if !order['items'].nil? && !order['items'].empty?
             forder = {
                     :customer_id => order['customerNumber'],
+                    :full_order_number => order['orderNo'],
                     :line => decide_route(order),
                     :mark => get_batch_mark(order),
                     :number => get_short_no(order),
