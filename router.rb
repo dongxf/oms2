@@ -88,7 +88,6 @@ def decide_route order
     return '[P]' if address.include? '洛浦街道'
     return '[P]' if address.include? '百事佳花园'
     return '[P]' if address.include? '洛溪南浦锦绣半岛'
-
     return '[Q]' if address.include? '祈福'
     return '[Q]' if address.include? '金山谷'
     return '[Q]' if address.include? '富豪山庄'
@@ -104,9 +103,11 @@ def decide_route order
     return '[P]' if address.include? '前锋村'
     return '[P]' if address.include? '西城花园'
     return '[P]' if address.include?('雅居乐') && !address.include?('南城')
+    return '[P]' if address.include?('顺德') && !address.include?('碧桂园')
     return '[P]' if address.include? '清华坊'
     return '[P]' if address.include?('南奥') || address.include?('南国奥')
     return '[P]' if address.include? '华南碧桂园'
+    return '[P]' if address.include? '兴亚二路'
 
     if address.include? '广州'
       #Insert any exception here

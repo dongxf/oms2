@@ -32,6 +32,13 @@ end
 printf "Generating order text ["
 orders.each do |order|
     printf "."
+    if order[:state] == 1 && order[:online_paid] == 1
+        #ship this order, next time will be printed as normal order
+        req_body = { "orderNo": order[:full_order_number] }
+        pospal_api :shipOrder, req_body
+        pospal_api :completeOrder, req_body
+        printf "!"
+    end
     next if order[:line] == '[X]'
     next if order[:first_item].include?('产地直发') && order[:line]==['T'] #所有标注了产地直发的团购订单，并不打印
     if !silence_mode
