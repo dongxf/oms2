@@ -100,6 +100,7 @@ def decide_route order
     return '[P]' if address.include? '小谷围街道'
     return '[P]' if address.include? '深井村'
     return '[P]' if address.include? '亚运城'
+    return '[P]' if address.include? '长洲街道'
     return '[P]' if address.include? '前锋村'
     return '[P]' if address.include? '西城花园'
     return '[P]' if address.include?('雅居乐') && !address.include?('南城')
