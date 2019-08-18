@@ -104,7 +104,7 @@ def decide_route order
     return '[P]' if address.include? '前锋村'
     return '[P]' if address.include? '西城花园'
     return '[P]' if address.include?('雅居乐') && !address.include?('南城')
-    return '[P]' if address.include?('顺德') && !address.include?('碧桂园')
+    return '[P]' if address.include?('顺德') && address.include?('碧桂园')
     return '[P]' if address.include? '清华坊'
     return '[P]' if address.include?('南奥') || address.include?('南国奥')
     return '[P]' if address.include? '华南碧桂园'
