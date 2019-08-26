@@ -35,7 +35,8 @@ def pospal_api api_name, request_body
     :queryTicketPages => 'ticketOpenApi/queryTicketPages',
     :updateBiPi => 'customerOpenApi/updateBalancePointByIncrement',
     :queryCustomerPages => 'customerOpenApi/queryCustomerPages',
-    :queryCustomerUid => 'customerOpenApi/queryByNumber'
+    :queryCustomerUid => 'customerOpenApi/queryByNumber',
+    :queryCustomerByUuid => 'customerOpenApi/queryByUid'
   }
 
   #please set POSPAL_APPID and APPKEY in .bashrc
