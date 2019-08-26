@@ -6,6 +6,7 @@ require 'spreadsheet'
 
 def get_short_addr order
     return '番禺大石朝阳东路425号锦绣银湾3街17号' if order['contactTel']=='13711382291' #泳远恭子'
+    return '番禺汉溪大道锦绣香江山水园8栋1102' if order['contactTel']=='13682263085' #皮女士'
     fat_addr = order['contactAddress'].gsub(" ","")
     fat_addr = order['contactAddress'].gsub("\n","") #如果地址中有换行，parse时会出错
     fat_addr.gsub!('10座1101，梁幼花，15768099989','10座1101')
@@ -82,6 +83,7 @@ def decide_route order
     return '[P]' if address.include? '华南新村'
     return '[P]' if address.include? '锦绣香江'
     return '[P]' if address.include? '奥园城市天地'
+    return '[P]' if address.include? '星汇文宇'
     return '[P]' if address.include?('星河湾') && !address.include?('半岛')
 
     return '[P]' if address.include? '丽江花园'
@@ -250,7 +252,7 @@ def get_zone_code order
   #附近小区
   if addr.include? '番禺'
         return 'GD' if addr.include? '星河湾半岛' #例外,区分于星河湾
-        near_zones=[ '华碧','华南碧桂园', '欧泊', '红郡' , '华南新城' , '雅居乐', '侨联中学' , '侨朕中学','华南新村' , '锦绣香江' , '星河湾' , '祈福' , '金山谷' , '富豪山庄' ,'南奥','南国奥','汉溪村']
+        near_zones=[ '华碧','华南碧桂园', '欧泊', '红郡' , '华南新城' , '雅居乐', '侨联中学' , '侨朕中学','华南新村' , '锦绣香江' , '星河湾' , '祈福' , '金山谷' , '富豪山庄' ,'南奥','南国奥','汉溪村', '南村时代倾城']
         near_zones.each do |zone|
             return 'ZB' if addr.include? zone
         end
