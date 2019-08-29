@@ -56,17 +56,13 @@ end
 
 def decide_route order
 
-    return '[P]' if order['contactTel']=='13711382291' #泳远恭子'
-
-    #return '[T]' if order['state'].nil? && order['isOnlinePaymentCompleted']==1
-    #return '[X]' if order['state'] != 4
-
-    if order['state'].nil? && order['isOnlinePaymentCompleted']==1
-      #团购或待确认订单
-      return '[T]'
-    else
-      return '[X]' if order['state'] != 4
-    end
+    #    payment==0 && state == 4: X
+    #    payment==0 && state != 4: X
+    #    payment==1 && state != 4: T
+    #    payment==1 && state == 4: normal
+    #    if payment == 1 & state ==3, it's question order should be marked as Z
+    return '[X]' if order['isOnlinePaymentCompleted']==0
+    return '[T]' if order['state']!=4 #团购或待确认订单,或者奇怪的已取消已付款订单
 
     address = get_short_addr order
 
