@@ -63,7 +63,7 @@ def decide_route order
     #    payment==1 && state == other: T
     #    if payment == 1 & state ==3, it's normal order cancel by all refund
     return '[X]' if order['isOnlinePaymentCompleted']==0
-    return '[X]' if order'[state']==3 #其中会包含哪些全单退款的订单,将来这种订单应该要把它再单独标识出来
+    return '[X]' if order['state']==3 #其中会包含哪些全单退款的订单,将来这种订单应该要把它再单独标识出来
     return '[T]' if order['state']!=4 #nil, 1, 2 团购或待确认订单,或者奇怪的已取消已付款订单
     #pay==1 && state==4 goes below
 
