@@ -110,6 +110,7 @@ def decide_route order
     return '[P]' if address.include?('南奥') || address.include?('南国奥')
     return '[P]' if address.include? '华南碧桂园'
     return '[P]' if address.include? '兴亚二路'
+    return '[P]' if address.include? '南村时代倾城'
 
     if address.include? '广州'
       #Insert any exception here
