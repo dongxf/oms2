@@ -37,10 +37,12 @@ end
 #Z: 自提 C: 承诺达 G:广州 Q:祈福 P:番禺自送 K：快递 T:团购 X:问题单
 lines = ["[A]", "[B]", "[C]", "[D]", "[E]", "[F]", "[G]", "[H]", "[I]", "[J]", "[K]", "[L]", "[M]", "[N]", "[O]", "[P]", "[Q]", "[R]", "[S]", "[T]", "[U]", "[V]", "[W]", "[X]", "[Y]","[Z]"]
 routes = {}
+routes_sum = {} #记录每条线路的订单金额小计
 line_data = {}
 lines.each do |line| 
         line_data[line] = {}
         routes[line] = {} 
+        routes_sum[line] = 0
 end
 
 amt = 0.0
@@ -55,6 +57,7 @@ oorders.each do |oorder|
 
     info =  " #{oorder[:addr]} [#{oorder[:short_number]}]LFCR  #{oorder[:mark]}#{oorder[:name]} #{oorder[:tel]} #{comment}LFCR"
     info += "  :::#{oorder[:date_time]} #{oorder[:number]} #{sprintf("%.2f",oorder[:amount])}\n" # " :::" 用于生成派线表时作为分割识别
+    routes_sum[line] += oorder[:amount]
 
     if line != '[X]'
         #merge non-X line orders summary when has same addr
@@ -92,6 +95,7 @@ lines.each do  |line|
   if routes[line].size!= 0 
     #显示订单信息
     puts show_content
+    puts "-- line #{line} total amount: #{sprintf('%02d',routes_sum[line])}\n"
     #生成派线单
     if !silence_mode
 
