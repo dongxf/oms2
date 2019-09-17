@@ -335,10 +335,10 @@ def update_order_by_json jorder
         jorder[:order_times] = r['order_times']
         jorder[:total_times] = r['total_times']
         new_str = sprintf(" #%d",r['order_times'])
-        eopl = "缺货24小时内原路退款，售后请致电小蜜18998382701微信同号\n　　　　　　　　foodtrust.cn 买有机，到丰巢\n"
+        eopl = "缺货24小时内原路退款，售后请致电小蜜，不满意无障碍退换，18998382701微信同号\n　　　　　　　　foodtrust.cn 让健康和友善随手可及\n"
         if r['order_times'] == 1
             new_str = " !!!!!!!!" 
-            eopl = "       【首单提示】\n感谢选择丰巢！和我们一起追求健康友善的生活！除了最安心的安全和环保标准，更高的品质也是我们的不懈追求；如果您遇到任何问题，请联系客服丰巢小蜜为您处理，不满意无障碍退换，手机微信同号18998382701\n　　　　　　　　foodtrust.cn 每一天，更安心的选择\n" 
+            eopl = "       【首单提示】感谢选择丰巢！和我们一起追求健康友善的生活！除了最安心的安全和环保标准，更高的品质也是我们的不懈追求；如果您遇到任何问题，请联系客服丰巢小蜜为您处理，不满意无障碍退换，手机微信同号18998382701\n　　　　　　　　foodtrust.cn 让健康和友善随手可及\n" 
         end
         jorder[:plain_text] = r['plain_text'].gsub('<<<<<<<<<',new_str).gsub('END_OF_PICKUP_LIST',eopl)
     end
