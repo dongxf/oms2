@@ -253,6 +253,8 @@ def get_ogoods_orders_within s_time, e_time
                     :short_number => r['short_number'],
                     :date_time => r['date_time'],
                     :short_time => r['short_time'],
+                    :order_times => r['order_times'],
+                    :total_times => r['total_times'],
                     :odate => r['odate'],
                     :date => r['date'],
                     :first_item => r['first_item'],
@@ -332,8 +334,8 @@ def update_order_by_json jorder
         rationalize_order r
         jorder[:order_times] = r['order_times']
         jorder[:total_times] = r['total_times']
-        new_str = sprintf("<<<<<#%d",r['order_times'])
-        new_str = "!!!!!!!!!" if r['order_times'] <= 1
+        new_str = sprintf(" #%d",r['order_times'])
+        new_str = " !!!!!!!!" if r['order_times'] <= 1
         jorder[:plain_text] = r['plain_text'].gsub('<<<<<<<<<',new_str)
     end
 

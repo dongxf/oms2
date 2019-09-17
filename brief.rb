@@ -55,7 +55,10 @@ oorders.each do |oorder|
     comment = "#{oorder[:first_item]} #{oorder[:comment]}"  if line == '[T]'
     odate = order['orderDateTime'][0..9]
 
-    info =  " #{oorder[:addr]} [#{oorder[:short_number]}]LFCR  #{oorder[:mark]}#{oorder[:name]} #{oorder[:tel]} #{comment}LFCR"
+    attention = "##{oorder[:order_times]}"
+    attention = "!!!!!!!" if oorder[:order_times] == 1
+
+    info =  " #{oorder[:addr]} [#{oorder[:short_number]}]LFCR  #{oorder[:name]} #{oorder[:tel]} #{comment} #{attention}LFCR"
     info += "  :::#{oorder[:date_time]} #{oorder[:number]} #{sprintf("%.2f",oorder[:amount])}\n" # " :::" 用于生成派线表时作为分割识别
     routes_sum[line] += oorder[:amount]
 
