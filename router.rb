@@ -235,8 +235,7 @@ def get_plain_text order
 
     #add footer
     content += "--------------------------------------------------------------------\n"
-    content += "缺货24小时内原路退款，售后请致电小蜜18998382701微信同号\n"
-    content += "　　　　　　　　foodtrust.cn 买有机，到丰巢\n"
+    content += "END_OF_PICKUP_LIST"
 
     return content
 
