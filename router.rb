@@ -217,7 +217,7 @@ def get_plain_text order
         content += ">>>>>>>>> 警告：非常态，单独处理 s#{order['state']} p#{order['isOnLinePaymentCompleted']}<<<<<<<<<\n"
       end
     else
-      content += "--------------------------------------------------------------------\n"
+      content += "--------------------------------------------------<<<<<<<<<\n"
     end
     content += " 数量     商品名及规格\n"
     items = order['items']

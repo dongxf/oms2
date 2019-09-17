@@ -191,9 +191,9 @@ def get_orders_within s_time, e_time
                     :remark => order['orderRemark'],
                     :order => order
             }
-            update_order_by_json forder
+            updated_forder = update_order_by_json forder #order_counts, statements will will be updated there
 
-            forders += [forder]
+            forders += [updated_forder]
 
         end
         return forders
@@ -320,13 +320,25 @@ def update_order_by_json jorder
             raw_data='#{escaped_order_json}',plain_text='#{escaped_plain_text}'
     "
     resu = @rds.query(sqlu)
+ 
+    #update order_counts for this order
+    sql = "call ogoods.calcOrderTimes('#{jorder[:customer_id]}')"
+    res = @rds.query(sql)
 
-    #udpate statement for this order
-    sql = "select * from ogoods.pospal_orders where line!='[X]' and order_id >= '#{jorder[:number]}'"
+    #udpate statement and plain text for this order
+    sql = "select * from ogoods.pospal_orders where line!='[X]' and order_id = '#{jorder[:number]}'"
     res = @rds.query(sql)
     res.each do |r|
         rationalize_order r
+        jorder[:order_times] = r['order_times']
+        jorder[:total_times] = r['total_times']
+        new_str = sprintf("<<<<<#%d",r['order_times'])
+        new_str = "!!!!!!!!!" if r['order_times'] <= 1
+        jorder[:plain_text] = r['plain_text'].gsub('<<<<<<<<<',new_str)
     end
+
+    return jorder
+
 end
 
 def pfloat f
