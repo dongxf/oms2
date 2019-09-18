@@ -111,3 +111,33 @@ def send_specific_balance_notice openid, balance, reason, url, content
     notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
     wechat_api :sendTemplateMessage, wechat_access_token, notice
 end
+
+def send_confirm_notice openid, info, order_number, order_type, remark, url
+    notice = {
+        touser: 'owHN1t0ETyOD1p_J324Gcb9twHuk',
+        template_id:  'mYo2eI-KIN9FwW3vQSG3L34valYzs87eZx97mEfQvsA',
+        url:  'https://foodtrust.cn/first-order-qna/',
+        data:  {
+            first:  { value:  "【客户名】您好，订单已收到，我们将按团购商品说明为您如期安排配送或产地直发。", color:  '#173177' },
+            keyword1:  { value:   "订单号", color:  '#173177' },
+            keyword2:  { value:  '配送类型', color:  '#ff0000' },
+            remark:  { value: "任何问题请联系客服丰巢小蜜，手机微信同号18998382701。\nFOODTRUST® 丰巢有机\n每一天更安心的选择", color:  '#88b04b' },
+        }
+    }
+    wat = wechat_access_token
+
+    notice.store(:touser,openid) #注意，如果是'touser' 就不工作了
+    notice.store(:url,url)
+
+    notice[:data].store(:first, {value: info, color: '#173177'})
+    notice[:data].store(:keyword1, {value: order_number, color: '#173177'})
+    notice[:data].store(:keyword2, {value: order_type, color: '#ff0000'})
+    notice[:data].store(:remark, {value: remark, color: '#88b04b'})
+
+    wechat_api :sendTemplateMessage, wechat_access_token, notice
+
+    notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
+    wechat_api :sendTemplateMessage, wechat_access_token, notice
+    notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
+    wechat_api :sendTemplateMessage, wechat_access_token, notice
+end
