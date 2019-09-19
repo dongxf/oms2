@@ -98,6 +98,8 @@ def get_orders_data_by_sql sql
         order.store(:need_rebate,r['need_rebate'])
         order.store(:rebate_comment,r['rebate_comment'])
         order.store(:comment,r['comment'].nil? ? '' : r['comment'])
+        order.store(:notify_history,r['notify_history'])
+        order.store(:order_times,r['order_times'])
         order.store(:name,r['name'])
         order.store(:plain_text,r['plain_text'])
         orders += [ order ]
