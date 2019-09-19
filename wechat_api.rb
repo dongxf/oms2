@@ -140,4 +140,6 @@ def send_confirm_notice openid, info, order_number, order_type, remark, url
     wechat_api :sendTemplateMessage, wechat_access_token, notice
     notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
     wechat_api :sendTemplateMessage, wechat_access_token, notice
+    notice.store(:touser,'owHN1t3GUvWYmKsxbwZdSpQDo4O4') #CC to 庞建全
+    wechat_api :sendTemplateMessage, wechat_access_token, notice
 end
