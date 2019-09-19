@@ -89,6 +89,7 @@ def get_orders_data_by_sql sql
         order.store(:customer_discount,r['customer_discount'])
         order.store(:customer_id,r['customer_id'])
         order.store(:tel,r['tel'])
+        order.store(:addr,r['addr'])
         order.store(:statement,r['statement'])
         order.store(:zone_code,r['zone_code'])
         order.store(:amount,r['amount'])
