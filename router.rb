@@ -132,11 +132,12 @@ def get_plain_text order
     fat_addr = order['contactAddress'].gsub(" ","")
     slim_addr=fat_addr.gsub("\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02","\u5E7F\u5DDE")
     line_mark = decide_route order
+    zone_code = get_zone_code order
     odrmk = order['orderRemark'] ? order['orderRemark'].gsub('配送','') : ''
 
     #add header twice
     #全角空格字符 (　) (_) (﹏)
-    content ="#{line_mark}　　　　　　　　　每一天,更安心的选择　　　　﹏ of 2 ﹏\n"
+    content ="#{line_mark} #{zone_code}　　　　　　每一天,更安心的选择　　　　﹏ of 2 ﹏\n"
 
     # remove '104' from the tail
     content  += "#{get_short_no order}　　#{order['orderDateTime']}\n"
