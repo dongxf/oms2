@@ -67,71 +67,18 @@ def decide_route order
     return '[T]' if order['state']!=4 #nil, 1, 2 团购或待确认订单,或者奇怪的已取消已付款订单
     #pay==1 && state==4 goes below
 
-    address = get_short_addr order
-
-    return '[Z]' if address.include? '到店自提'
-    return '[Z]' if address.include? '汉溪村'
-
-    # if G line worload is too low , otherwise use P line
-    return '[P]' if address.include? '欧泊' 
-    return '[P]' if address.include? '红郡'
-    return '[P]' if address.include? '华南新城'
-    return '[P]' if address.include? '雅居乐'
-    return '[P]' if address.include? '侨联中学'
-    return '[P]' if address.include? '侨朕中学'
-    return '[P]' if address.include? '华南新村'
-    return '[P]' if address.include? '锦绣香江'
-    return '[P]' if address.include? '奥园城市天地'
-    return '[P]' if address.include? '星汇文宇'
-    return '[P]' if address.include?('星河湾') && !address.include?('半岛')
-
-    return '[P]' if address.include? '丽江花园'
-    return '[P]' if address.include? '洛浦街道'
-    return '[P]' if address.include? '百事佳花园'
-    return '[P]' if address.include? '洛溪南浦锦绣半岛'
-    return '[Q]' if address.include? '祈福'
-    return '[Q]' if address.include? '金山谷'
-    return '[Q]' if address.include? '富豪山庄'
-
-    return '[P]' if address.include? '丹山新村'
-    return '[P]' if address.include? '大学城'
-    return '[P]' if address.include? '前龙西路'
-    return '[P]' if address.include? '大学小筑'
-    return '[P]' if address.include? '谷围新村'
-    return '[P]' if address.include? '小谷围街道'
-    return '[P]' if address.include? '深井村'
-    return '[P]' if address.include? '亚运城'
-    return '[P]' if address.include? '长洲街道'
-    return '[P]' if address.include? '前锋村'
-    return '[P]' if address.include? '西城花园'
-    return '[P]' if address.include?('雅居乐') && !address.include?('南城')
-    return '[P]' if address.include?('顺德') && address.include?('碧桂园')
-    return '[P]' if address.include? '清华坊'
-    return '[P]' if address.include?('南奥') || address.include?('南国奥')
-    return '[P]' if address.include? '华南碧桂园'
-    return '[P]' if address.include? '兴亚二路'
-    return '[P]' if address.include? '南村时代倾城'
-
-    if address.include? '广州'
-      #Insert any exception here
-      #Exception in Area Name and Road name
-      return '[K]' if address.include? '天源路'
-      return '[G]' if address.include? '白云路'
-      #Exception in PanYu
-      return '[G]' if address.include? '星河湾半岛'
-      return '[G]' if address.include? '沙溪'
-      #Exception in YueXiu
-      return '[K]' if address.include? '机务段机山巷'
-      return '[K]' if address.include? '东莞庄路'
-
-      #normal area
-      return '[G]' if address.include? '天河区'
-      return '[G]' if address.include? '海珠区'
-      return '[G]' if address.include? '越秀区'
-      return '[G]' if address.include? '荔湾区'
+    case get_zone_code(order)
+    when 'ZT' 
+        return '[Z]'
+    when 'ZB', 'ZPP' 
+        return '[P]'
+    when 'ZPG' 
+        return '[G]'
+    when 'KD1', 'KD2', 'SW' 
+        return '[K]'
+    else 
+        return '[K]'
     end
-
-    return '[K]'
  
 end
 
@@ -248,8 +195,8 @@ def get_zone_code order
   #到店自提：ZT
   [ '到店自提', '汉溪村'].each { |w| return 'ZT' if addr.include? w }
 
-  #番禺区: ZPP ZPG ZB KD1
-  if addr.include? '番禺'
+  #番禺区&大学城: ZPP ZPG ZB KD1
+  if addr.include?('番禺') || addr.include?('黄埔')
     #宅配P: ZPP
     return 'ZPP' if addr.include?('雅居乐') && !addr.include?('南城')
     return 'ZPP' if addr.include?('顺德') && addr.include?('碧桂园')
