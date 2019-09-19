@@ -65,7 +65,7 @@ oorders.each do |oorder|
     if line != '[X]'
         #merge non-X line orders summary when has same addr
         info = "*" + routes[line][oorder[:addr]] if routes[line].has_key? oorder[:addr]
-        routes[line].store(oorder[:addr],info)
+        routes[line].store(oorder[:addr]+oorder[:tel],info)
         amt += oorder[:amount]
     else
         routes[line].store(oorder[:order_id],info)
