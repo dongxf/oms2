@@ -55,31 +55,31 @@ def get_esat order
         if is_holiday the_day
             est = '下一工作日'
         else
-            est = order_time > time_2 ? '下一工作日' : '今天'
+            est = order_time > time_2 ? '下一工作日' : '下单当天'
         end
-        eat = '当天'
+        eat = '配送当日'
     when 'ZPP', 'ZPG' 
         if is_holiday the_day
             est = '下一工作日'
         else
-            est = order_time > time_1 ? '下一工作日' : '今天'
+            est = order_time > time_1 ? '下一工作日' : '下单当天'
         end
-        eat = '当天'
+        eat = '配送当日'
     when 'KD1' 
         if is_holiday the_day
             est = '下一工作日'
-            eat = '当天'
+            eat = '配送当日'
         else
             if order_time <= time_1
-                est = '今天'
-                eat = '当天'
+                est = '下单当天'
+                eat = '配送当日'
             else
                 if order_time <= time_2
-                    est = '今天'
+                    est = '下单当天'
                     eat = '隔日'
                 else
                     est = '下一工作日'
-                    eat = '当天'
+                    eat = '配送当日'
                 end
             end
         end
@@ -88,7 +88,7 @@ def get_esat order
             est = '下一工作日'
             eat = '隔日'
         else
-            est = order_time > time_2 ? '下一工作日' : '今天'
+            est = order_time > time_2 ? '下一工作日' : '下单当天'
             eat = '隔日'
         end
     else 
@@ -127,7 +127,7 @@ def get_delivery_info order
 
     remark = ""
     remark += "【首单提醒】丰巢所有产品禁用化学防腐剂，保质期内如遇任何品质问题，请联系客服无障碍退换。\n" if order[:order_times] == 1
-    remark += "FOODTRUST® 丰巢有机\n每一天，更安心的选择\n点击详情查看订单常见问答。\n"
+    remark += "FOODTRUST® 每一天，更安心的选择\n点击详情查看订单常见问答。\n"
 
     return {:info => info, :remark => remark, :ship=> ship }
 end
@@ -146,7 +146,7 @@ def confirm_orders orders
         notification = "#{now} oid##{order_id} 订单配送提示"
         text += "O##{order_id} #{order[:line]} #{order[:zone_code]} #{order[:order_time]} #{order[:addr]}\n"
         text += " #{info[:info]}\n"
-        send_confirm_notice openid, info[:info], "#{order[:order_time]}\n#{order_id}\n#{order[:addr]}", info[:ship], info[:remark], "https://foodtrust.cn/first-order-qna/"
+        send_confirm_notice openid, info[:info], "#{order[:date_time]} #{sprintf('%.2f',order[:amount])}\n#{order_id}\n#{order[:addr]}", info[:ship], info[:remark], "https://foodtrust.cn/first-order-qna/"
         comment = order[:notify_history] + " | #{notification}"
         sqlu = "update ogoods.pospal_orders set notify_history='#{comment}' where order_id = '#{order_id}'"
         resu = @rds.query(sqlu)
