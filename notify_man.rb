@@ -45,7 +45,7 @@ def get_esat order
     order_time = order[:order_time]
     zone_code = order[:zone_code]
     the_day = Date.parse(order_time.strftime('%Y-%m-%d'))
-    time_1 = Time.parse(order_time.strftime('%Y-%m-%d 09:10:00'))
+    time_1 = Time.parse(order_time.strftime('%Y-%m-%d 09:00:00'))
     time_2 = Time.parse(order_time.strftime('%Y-%m-%d 14:00:00'))
 
     ship =  {'ZB'=>'周边小区宅配','ZT'=>'补拍或自提','ZPP'=>'番禺城区宅配','ZPG'=>'广州城区宅配','KD1'=>'广深东莞快递','KD2'=>'广东省内快递','SW'=>'广东省外到付'}[zone_code] #如果用 {'a':'b'}, 则要用[:a]
