@@ -11,9 +11,9 @@ the_day = Date.today
 counter = 1
 silence_mode = false
 
-the_day = Date.parse(ARGV[0]) if ARGV[0]
+the_day = Date.parse(ARGV[0]) if ARGV[0] && ARGV[0] != '-s'
 counter = ARGV[1].to_i if ARGV[1]
-silence_mode = true if ARGV[2] == '-s'
+silence_mode = true if ARGV[2] == '-s' || ARGV[0] == '-s'
 
 orders = []
 counter.times do 
