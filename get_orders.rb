@@ -85,6 +85,7 @@ def get_orders_data_by_sql sql
         order.store(:points_used,r['points_used'])
         order.store(:order_id,r['order_id'])
         order.store(:order_time,r['order_time'])
+        order.store(:date_time,r['date_time'])
         order.store(:openid,r['openid'])
         order.store(:uid,r['uid'])
         order.store(:customer_discount,r['customer_discount'])
