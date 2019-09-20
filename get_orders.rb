@@ -329,6 +329,20 @@ def update_order_by_json jorder
     resu = @rds.query(sqlu)
  
     #update order_counts for this order
+=begin
+CREATE DEFINER=`psi_root`@`%` PROCEDURE `calcOrderTimes`(IN cid varchar(255))
+BEGIN
+	declare orderCount int;
+	#先将订单次数号全部置为零（取消订单的次数号统一为零）
+	update ogoods.pospal_orders set order_times = 0, total_times = 0 where customer_id = cid;
+	#获得所有非取消订单的数量
+	select count(*) into orderCount from ogoods.pospal_orders where line NOT LIKE '%[X]%' and customer_id = cid;
+	# 注意必须用 := 而不是 @i = @i + 1, 否则结果一直为零
+	set @i = 0;
+	update ogoods.pospal_orders set order_times = ( select @i := @i +1), total_times = orderCount
+	where line NOT LIKE '%[X]%' and customer_id = cid ORDER BY order_time;
+END
+=end
     sql = "call ogoods.calcOrderTimes('#{jorder[:customer_id]}')"
     res = @rds.query(sql)
 

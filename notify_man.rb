@@ -110,24 +110,26 @@ def get_delivery_info order
 
     case line
     when '[X]'
-        info += "已整单取消，感谢信任与支持！如有任何需要请联系客服丰巢小蜜，手机微信同号18998382701。"
+        info += "已整单取消，感谢信任与支持！任何需要请联系客服小蜜，手机微信同号18998382701"
         ship = '已取消订单'
     when '[T]'
         info += "已收到，我们将按该团的【交付时间】，为您安排配送或产地直发。"
-        info += "感谢信任与支持！如有任何需要请联系客服丰巢小蜜，手机微信同号18998382701。"
+        info += "感谢信任与支持！任何需要请联系客服小蜜，手机微信同号18998382701"
         ship = '团购订单'
     when '[Z]'
         info += "已收到，补拍订单将与主订单一起合并配送，自提单请于【#{esat[:est]}】至丰巢仓库自取。"
-        info += "感谢信任与支持！如有特别需要请联系客服丰巢小蜜，手机微信同号18998382701。"
+        info += "感谢信任与支持！任何需要请联系客服小蜜，手机微信同号18998382701"
         ship = '补拍或自提订单'
     else
-        info += "已收到，我们将于【#{esat[:est]}】为您进行配送，预计【#{esat[:eat]}】送达，感谢信任与支持！如有任何需要请联系客服丰巢小蜜，手机微信同号18998382701。"
+        info += "已收到，我们将于【#{esat[:est]}】为您进行配送，预计【#{esat[:eat]}】送达，感谢信任与支持！任何需要请联系客服小蜜，手机微信同号18998382701。"
         ship = esat[:ship]
     end
 
-    remark = ""
-    remark += "【首单提醒】丰巢所有产品禁用化学防腐剂，保质期内如遇任何品质问题，请联系客服无障碍退换。\n" if order[:order_times] == 1
-    remark += "FOODTRUST® 每一天，更安心的选择\n订单常见问答请点击详情\n"
+    if order[:order_times] == 1
+        remark = "【首单提醒】丰巢所有产品保质期内品质问题可无障碍退换，点查看详情了解更多\nFOODTRUST® 每一天，更安心的选择"
+    else
+        remark = "常见订单问答请点查看详情\nFOODTRUST® 每一天，更安心的选择"
+    end
 
     return {:info => info, :remark => remark, :ship=> ship }
 end
@@ -146,7 +148,7 @@ def confirm_orders orders
         notification = "#{now} oid##{order_id} 订单配送提示"
         text += "O##{order_id} #{order[:line]} #{order[:zone_code]} #{order[:order_time]} #{order[:addr]}\n"
         text += " #{info[:info]}\n"
-        send_confirm_notice openid, info[:info], "#{order[:date_time]} #{sprintf('%.2f',order[:amount])}\n#{order_id}\n#{order[:addr]}", info[:ship], info[:remark], "https://foodtrust.cn/first-order-qna/"
+        send_confirm_notice openid, info[:info], "#{order[:order_id]} #{sprintf('%.2f',order[:amount])}\n#{order[:addr]}", info[:ship], info[:remark], "https://foodtrust.cn/first-order-qna/"
         comment = order[:notify_history] + " | #{notification}"
         sqlu = "update ogoods.pospal_orders set notify_history='#{comment}' where order_id = '#{order_id}'"
         resu = @rds.query(sqlu)
