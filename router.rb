@@ -194,7 +194,7 @@ def get_zone_code order
   addr = get_short_addr order
 
   #到店自提：ZT
-  [ '到店自提', '汉溪村'].each { |w| return 'ZT' if addr.include? w }
+  [ '到店自提', '汉溪村', 'Self Pickup'].each { |w| return 'ZT' if addr.include? w }
 
   #番禺区&大学城: ZPP ZPG ZB KD1
   if addr.include?('番禺') || addr.include?('黄埔')
