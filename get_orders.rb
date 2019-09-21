@@ -167,6 +167,12 @@ def get_orders_within s_time, e_time
             end
             first_item = ''
             first_item = order['items'][0]['productName'] if !order['items'].nil? && !order['items'].empty?
+            presale_items = ''
+            order['items'].each do |item| 
+                if item['productName'].include? '【面点预售】'
+                    presale_items += "#{item['productQuantity']} x #{item['productName']}\n" 
+                end
+            end
             forder = {
                     :customer_id => order['customerNumber'],
                     :full_order_number => order['orderNo'],
@@ -186,6 +192,7 @@ def get_orders_within s_time, e_time
                     :comment => get_noti(order) + get_short_remark(order),
                     :plain_text => get_plain_text(order),
                     :first_item => first_item,
+                    :presale_items => presale_items,
                     :items_count => items_count,
                     :state => order['state'].nil? ? -1 : order['state'],
                     :pay_method => order['payMethod'].nil? ? '' : order['payMethod'],
@@ -301,7 +308,7 @@ def update_order_by_json jorder
              remark,order_time,name,addr,tel,line,
              mark,number,short_number,date_time,short_time,
              odate,date,
-             first_item,items_count,
+             presale_items,first_item,items_count,
              print_times,ship_refunded,point_awarded,
              raw_data,plain_text
             ) VALUES (
@@ -311,7 +318,7 @@ def update_order_by_json jorder
              '#{jorder[:remark]}','#{jorder[:date_time]}','#{jorder[:name]}','#{jorder[:addr]}','#{jorder[:tel]}','#{jorder[:line]}',
              '#{jorder[:mark]}', '#{jorder[:number]}', '#{jorder[:short_number]}', '#{jorder[:date_time]}', '#{jorder[:short_time]}', 
              '#{jorder[:odate]}', '#{jorder[:date]}', 
-             '#{jorder[:first_item]}', #{jorder[:items_count]},
+             '#{jorder[:presale_items]}','#{jorder[:first_item]}', #{jorder[:items_count]},
              0,0.0,0.0,
              '#{escaped_order_json}','#{escaped_plain_text}'
             )
@@ -323,7 +330,7 @@ def update_order_by_json jorder
             mark='#{jorder[:mark]}',number='#{jorder[:number]}',short_number='#{jorder[:short_number]}',
             date_time='#{jorder[:date_time]}',short_time='#{jorder[:short_time]}',
             odate='#{jorder[:odate]}',date='#{jorder[:date]}', 
-            first_item='#{jorder[:first_item]}',items_count=#{jorder[:items_count]},
+            presale_items='#{jorder[:presale_items]}',first_item='#{jorder[:first_item]}',items_count=#{jorder[:items_count]},
             raw_data='#{escaped_order_json}',plain_text='#{escaped_plain_text}'
     "
     resu = @rds.query(sqlu)
