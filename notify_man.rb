@@ -132,6 +132,9 @@ def get_delivery_info order
     end
 
     return {:info => info, :remark => remark, :ship=> ship }
+    p info
+    p remark
+    p ship
 end
 
 def confirm_orders orders
@@ -144,12 +147,15 @@ def confirm_orders orders
         cid = order[:customer_id]
         now = Time.now.strftime('%Y-%m-%d %H:%M:%S')
         info = get_delivery_info order
+        info_body = info[:info]
+        info_body = "【更新】" + info[:info] if order[:notify_history] == 'resend'
         printf "."
         notification = "#{now} oid##{order_id} 订单配送提示"
         text += "O##{order_id} #{order[:line]} #{order[:zone_code]} #{order[:order_time]} #{order[:addr]}\n"
         text += " #{info[:info]}\n"
-        send_confirm_notice openid, info[:info], "#{order[:order_id]} #{sprintf('%.2f',order[:amount])}\n#{order[:addr]}", info[:ship], info[:remark], "https://foodtrust.cn/first-order-qna/"
+        send_confirm_notice openid, info_body, "#{order[:order_id]} #{sprintf('%.2f',order[:amount])}\n#{order[:addr]}", info[:ship], info[:remark], "https://foodtrust.cn/first-order-qna/"
         comment = order[:notify_history] + " | #{notification}"
+        p order['zone_code']
         sqlu = "update ogoods.pospal_orders set notify_history='#{comment}' where order_id = '#{order_id}'"
         resu = @rds.query(sqlu)
     end
@@ -158,7 +164,7 @@ def confirm_orders orders
 end
 
 #待将*改为具体columne以提高效率
-sql = "select * from ogoods.pospal_orders where line != '[X]' and ( notify_history='' or notify_history like 'test%' )"
+sql = "select * from ogoods.pospal_orders where line != '[X]' and ( notify_history='' or notify_history like 'test%' or notify_history = 'resend' )"
 orders = get_orders_data_by_sql sql
 confirm_text = confirm_orders orders
 puts confirm_text

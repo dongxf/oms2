@@ -196,11 +196,13 @@ def get_zone_code order
   #到店自提：ZT
   [ '到店自提', '汉溪村', 'Self Pickup'].each { |w| return 'ZT' if addr.include? w }
 
+  #正常会用佛山市顺德区
+  return 'ZPP' if addr.include? '顺德碧桂园'
+
   #番禺区&大学城: ZPP ZPG ZB KD1
   if addr.include?('番禺') || addr.include?('黄埔')
     #宅配P: ZPP
     return 'ZPP' if addr.include?('雅居乐') && !addr.include?('南城')
-    return 'ZPP' if addr.include?('顺德') && addr.include?('碧桂园')
     ['星汇文宇','丽江花园','洛浦街道', '百事佳花园', '洛溪南浦锦绣半岛', '丹山新村', '大学城', '前龙西路', '大学小筑', '谷围新村', '小谷围街道', '深井村', '亚运城', '长洲街道', '前锋村', '西城花园' , '兴亚二路' , '清华坊', '长洲岛'].each do |w| 
         return 'ZPP' if addr.include? w 
     end
