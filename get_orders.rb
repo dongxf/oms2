@@ -169,7 +169,7 @@ def get_orders_within s_time, e_time
             first_item = order['items'][0]['productName'] if !order['items'].nil? && !order['items'].empty?
             presale_items = ''
             order['items'].each do |item| 
-                if item['productName'].include? '【面点预售】'
+                if item['productName'].include? '【面点预售'
                     presale_items += "#{item['productQuantity']} x #{item['productName']}\n" 
                 end
             end
