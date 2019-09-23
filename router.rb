@@ -207,7 +207,7 @@ def get_zone_code order
         return 'ZPP' if addr.include? w 
     end
     #宅配G: ZPG
-    return 'ZPG' if addr.include?('星河湾半岛') || addr.include?('沙溪')
+    return 'ZPG' if addr.include?('星河湾半岛') || addr.include?('沙溪') || addr.include?('珠江花园')
     #周边小区: ZB
     [ '华碧','华南碧桂园', '欧泊', '红郡' , '华南新城' , '雅居乐', '侨联中学' , '侨朕中学','华南新村' , '锦绣香江' , '星河湾' , '祈福' , '金山谷' , '富豪山庄' ,'南奥','南国奥','汉溪村', '奥园城市天地', '南村时代倾城'].each do |w| 
         return 'ZB' if addr.include? w 
