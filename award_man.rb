@@ -42,7 +42,7 @@ def award_customer_by_uid uids, point, reason
         ap res
         if res['status'] == 'success'
             puts "update BiPi GOOD, sending msg"
-            send_specific_points_notice openid, point, reason, 'https://foodtrust.cn/a20190711/', "您的账户余额有变动，详情如下"
+            send_specific_points_notice openid, point, reason, 'https://shop.foodtrust.cn/m/accountv4#/invite', "您的积分余额有变动，详情如下", res['data']['pointAfterUpdate'].to_s
         else
             puts "update BiPi FAILED"
         end
@@ -114,11 +114,15 @@ avoided_uids = [
     960332509663342177
 ]
 
-all_uids = uids_have_orders
-p all_uids.size
+#all_uids = uids_have_orders
+#p all_uids.size
 
-uids = all_uids - avoided_uids
-p uids.size
+#uids = all_uids - avoided_uids
+#p uids.size
+=begin
+uids = [ 396364422146041050, 123087313539152191, 42723279870242647, 862266000527630405 ] #留言: 力力，布丁姑娘，田心
+=end
+uids = [ 965193016323785568 ] #136000600440
 
-reason = '很抱歉因后台操作失误，系统刚才向部分上半年有订单的客户推送了错误的积分和余额变动消息，如有打扰请多谅解！随致歉为您送上100积分供结账抵扣之用。您的账户一切正常，请放心使用，任何问题请咨询丰巢小蜜'
-award_customer_by_uid uids, 100, reason
+reason = '安心早餐，轻松喂投活动留言积分奖励'
+award_customer_by_uid uids, 500, reason

@@ -55,7 +55,7 @@ def send_balance_notice openids
     end
 end
 
-def send_specific_points_notice openid, points, reason, url, content
+def send_specific_points_notice openid, points, reason, url, content, newPoints
     notice = {
         touser: 'owHN1t0ETyOD1p_J324Gcb9twHuk',
         template_id:  'RTPLTnnAvu-jI7fsAoWu0CwLpGZwoMBXK3bRlIxrkU8',
@@ -65,8 +65,8 @@ def send_specific_points_notice openid, points, reason, url, content
             keyword1:  { value:   "#{Time.now}", color:  '#173177' },
             keyword2:  { value:  '200分', color:  '#ff0000' },
             keyword3:  { value:  "见证诚信，传播友善，记录真实。\n积分规则：\n参与平台每篇文章讨论最多可获一次积分\n *单项正常留言50分\n *全平台首次留言200积分\n *关联购买顾客留言200分\n *按最高分值项计算", color:  '#173177' },
-            keyword4:  { value:  '点击详情查看变动依据及最新积分', color:  '#0000ff' },
-            remark:  { value: "FOODTRUST® 丰巢有机\n每一天更安心的选择", color:  '#88b04b' },
+            keyword4:  { value:  newPoints, color:  '#0000ff' },
+            remark:  { value: "点击详情进入【邀请有礼】领取更多积分\nFOODTRUST® 每一天更安心的选择", color:  '#88b04b' },
         }
     }
     wat = wechat_access_token

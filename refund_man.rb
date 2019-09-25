@@ -90,7 +90,7 @@ def award_orders orders
                 printf "."
                 reason = "#{now} 补贴成功: oid##{order_id} 省外订单超过298奖励积分 #{sprintf('%.2f',award_points)}"
                 text += "  #{order[:addr]}\n  #{order[:name]} #{order[:tel]}\n"
-                send_specific_points_notice openid, "#{award_points}分", reason, "https://shop.foodtrust.cn/m/accountv4", "#{order[:name]}，您的会员积分有变动，详情如下"
+                send_specific_points_notice openid, "#{award_points}分", reason, "https://shop.foodtrust.cn/m/accountv4", "#{order[:name]}，您的会员积分有变动，详情如下", res['data']['pointAfterUpdate'].to_s
                 text += "O##{order_id} C##{cid} #{order[:date_time]} p#{sprintf('%.2f',award_points)}\n"
                 text += " #{order[:addr]} #{order[:name]} #{order[:tel]} Y#{sprintf('%.2f',order[:amount])}\n"
             else
@@ -98,6 +98,7 @@ def award_orders orders
                 reason = "#{now} 补贴失败: oid##{order_id} 省外订单超过298补贴积分 #{sprintf('%.2f',award_points)}"
                 message = "因技术故障，订单#{order_id} 省外运费积分补贴未成功，系统将于下一次的18:00为您再次处理，如需提前处理请联系丰巢小蜜，不便之处请多包涵"
                 send_specific_points_notice openid, "+0.00", message, "https://shop.foodtrust.cn/m/accountv4", "#{order[:name]}，您的会员积分有变动，详情如下"
+            send_specific_points_notice openid, point, reason, 'https://shop.foodtrust.cn/m/accountv4#/invite', "您的积分余额有变动，详情如下", res['data']['pointAfterUpdate'].to_s
                 text += "O##{order_id} C##{cid} #{order[:date_time]} <<< 补贴失败\n"
                 text += " #{order[:addr]} #{order[:name]} #{order[:tel]} Y#{sprintf('%.2f',order[:amount])}\n"
             end
