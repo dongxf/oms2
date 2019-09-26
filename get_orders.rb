@@ -251,6 +251,7 @@ def get_ogoods_orders_within s_time, e_time
                     :order_time => r['order_time'],
                     :name => r['name'],
                     :addr => r['addr'],
+                    :tips => r['tips'],
                     :tel => r['tel'],
                     :line => r['line'],
                     :zone_code => r['zone_code'],
@@ -354,7 +355,7 @@ END
     res = @rds.query(sql)
 
     #udpate statement and plain text for this order
-    sql = "select customer_id, raw_data, customer_discount, points_used, shipping_fee, amount, order_times, total_times, plain_text from ogoods.pospal_orders where line!='[X]' and order_id = '#{jorder[:number]}'"
+    sql = "select customer_id, raw_data, customer_discount, points_used, shipping_fee, amount, order_times, total_times, plain_text, tips from ogoods.pospal_orders where line!='[X]' and order_id = '#{jorder[:number]}'"
 
     res = @rds.query(sql)
     res.each do |r|
@@ -368,6 +369,7 @@ END
             eopl = "       【首单提示】感谢选择丰巢，和我们一起追求健康友善的生活！我们所有的产品禁用化学保鲜及防腐剂，保质期内如有任何品质问题，请联系客服丰巢小蜜做不满意无障碍退换，手机微信同号18998382701\n　　　　　　　　foodtrust.cn 让健康和友善随手可及\n" 
         end
         jorder[:plain_text] = r['plain_text'].gsub('<<<<<<<<<',new_str).gsub('END_OF_PICKUP_LIST',eopl)
+        jorder[:plain_text] += "\n#{r['tips']}" if r['tips'] != ''
     end
 
     return jorder
