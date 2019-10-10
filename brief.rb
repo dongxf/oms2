@@ -72,9 +72,14 @@ oorders.each do |oorder|
         routes[line].store(oorder[:order_id],info)
     end
 
-    csv=[ '丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201', 
-          oorder[:name],oorder[:tel],oorder[:addr], '生鲜','寄付',sprintf('%d',oorder[:items_count]),"1000",comment,odate+'-'+oorder[:order_id]
-    ]
+    #csv=[ '丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201', 
+    #      oorder[:name],oorder[:tel],oorder[:addr], '生鲜','寄付',sprintf('%d',oorder[:items_count]),"1000",comment,odate+'-'+oorder[:order_id]
+    #]
+    csv = ['',oorder[:number],'','','','',
+           'FOODTRUST丰巢有机','丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201',
+           '',oorder[:name],oorder[:tel],oorder[:addr],
+           '有机食品','','','','','',
+           1,'顺丰即日','寄付月结','0207375546']
     line_data[line].store(oorder[:number],csv) #if want to avoid duplicate use tel, otherwise using oorder[:number]
 
 end
