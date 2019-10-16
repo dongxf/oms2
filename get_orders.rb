@@ -402,8 +402,15 @@ def rationalize_order order
     shipping_fee = order['shipping_fee'] #if using order['shippingFee'], line T will get nil
     amount = order['amount']
 
-    raw_data = order['raw_data'].gsub("\n","")
-    raw_order = JSON.parse raw_data
+    raw_data = order['raw_data'].gsub("\n","").gsub("\t","")
+    begin
+      raw_order = JSON.parse raw_data
+    rescue Exception => e
+      puts e.message
+      puts "Exception!! -- #{order['order_id']} --"
+      puts raw_data
+      return order
+    end
     items = raw_order['items']
 
     order_discount = 1 #后面将在能计算出订单折扣的地方，让icd情况下，最低的item_discount（但不超过customer_discount)作为最新值

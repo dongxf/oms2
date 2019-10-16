@@ -47,8 +47,15 @@ end
 
 amt = 0.0
 oorders.each do |oorder|
-    raw_data = oorder[:raw_data].gsub("\n","")
+    raw_data = oorder[:raw_data].gsub("\n","").gsub("\t","")
+    begin
     order = JSON.parse raw_data
+    rescue Exception => e
+      #puts e.message
+      puts "#{oorder[:number]} Exception!!!"
+      puts raw_data
+      next
+    end
 
     line = oorder[:line]
     comment = oorder[:comment]
