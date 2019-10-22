@@ -234,10 +234,10 @@ def get_zone_code order
   end
 
   #东莞及深圳主要区域：KD1
-  ['东莞','深圳'].each { |w| return 'KD1' if addr.include? w }
+  ['东莞','深圳','中山','珠海','佛山'].each { |w| return 'KD1' if addr.include? w }
 
   #其它广东省内: KD2
-  ['中山','惠州','江门','珠海','汕头','佛山','湛江','河源', '肇庆','潮州','清远','韶关','揭阳','阳江','云浮','茂名','梅州','汕尾'].each { |w| return 'KD2' if addr.include? w }
+  ['惠州','江门','汕头','湛江','河源', '肇庆','潮州','清远','韶关','揭阳','阳江','云浮','茂名','梅州','汕尾'].each { |w| return 'KD2' if addr.include? w }
 
   #其余：SW
   return 'SW'
