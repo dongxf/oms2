@@ -51,14 +51,14 @@ def get_esat order
     ship =  {'ZB'=>'周边小区宅配','ZT'=>'补拍或自提','ZPP'=>'番禺城区宅配','ZPG'=>'广州城区宅配','KD1'=>'珠三角快递','KD2'=>'广东省内快递','SW'=>'广东省外到付'}[zone_code] #如果用 {'a':'b'}, 则要用[:a]
 
     case zone_code
-    when 'ZB','ZT'
+    when 'ZT'
         if is_holiday the_day
             est = '下一工作日'
         else
             est = order_time > time_2 ? '下一工作日' : '下单当天'
         end
         eat = '配送当日'
-    when 'ZPP', 'ZPG' 
+    when 'ZB', 'ZPP', 'ZPG' 
         if is_holiday the_day
             est = '下一工作日'
         else
