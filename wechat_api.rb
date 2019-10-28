@@ -112,7 +112,7 @@ def send_specific_balance_notice openid, balance, reason, url, content
     wechat_api :sendTemplateMessage, wechat_access_token, notice
 end
 
-def send_confirm_notice openid, info, order_number, order_type, remark, url
+def send_confirm_notice openid, info, order_number, order_type, remark, url, flag
     notice = {
         touser: 'owHN1t0ETyOD1p_J324Gcb9twHuk',
         template_id:  'mYo2eI-KIN9FwW3vQSG3L34valYzs87eZx97mEfQvsA',
@@ -136,8 +136,10 @@ def send_confirm_notice openid, info, order_number, order_type, remark, url
 
     wechat_api :sendTemplateMessage, wechat_access_token, notice
 
-    notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
-    wechat_api :sendTemplateMessage, wechat_access_token, notice
+    if flag == 1 # only send 1st order to foodcherry
+        notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
+        wechat_api :sendTemplateMessage, wechat_access_token, notice
+    end
     notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
     wechat_api :sendTemplateMessage, wechat_access_token, notice
     notice.store(:touser,'owHN1t3GUvWYmKsxbwZdSpQDo4O4') #CC to 庞建全
