@@ -223,6 +223,7 @@ def get_zone_code order
   if addr.include? '广州'
       #用于缺失分区信息的客户地址，例如'广州市金穗路'
       ['金穗路'].each { |w| return 'ZPG' if addr.include? w }
+      ['祈福新村'].each { |w| return 'ZB' if addr.include? w }
       #例外: KD1
       ['龙洞', '天源路','机务段机山巷','东莞庄路','白云区','黄埔区','萝岗区'].each { |w| return 'KD1' if addr.include? w }
       #边远区域: KD2
