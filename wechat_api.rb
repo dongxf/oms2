@@ -30,6 +30,22 @@ def wechat_api api_name, wat, data
   return false
 end
 
+#
+def send_bot_message content, list
+    #content =   "今日丰巢实时新增用户反馈<font color=\"warning\">132例</font>，请相关同事注意。\n >类型:<font color=\"comment\">用户反馈</font> \n >普通用户反馈:<font color=\"comment\">117例</font> \n >VIP用户反馈:<font color=\"comment\">15例</font>" 
+    data = {
+        "msgtype": "markdown",
+        "markdown": {
+            "content": content,
+            "mentioned_list": list
+        }
+    }
+
+    res = RestClient.post ENV['WWBOT_WC'], data.to_json
+    return true if JSON.parse(res.body)['errocode'] == 0
+    return false
+end
+
 def send_balance_notice openids
     notice = {
         touser: 'owHN1t0ETyOD1p_J324Gcb9twHuk',

@@ -141,6 +141,8 @@ def confirm_orders orders
     text = ''
     printf "confirm orders[ "
     orders.each do |order|
+
+        #send wechat template message
         order_id = order[:order_id]
         uid = order[:uid]
         openid = order[:openid]
@@ -154,8 +156,21 @@ def confirm_orders orders
         text += "O##{order_id} #{order[:line]} #{order[:zone_code]} #{order[:order_time]} #{order[:addr]}\n"
         text += " #{info[:info]}\n"
         send_confirm_notice openid, info_body, "#{order[:order_id]} #{sprintf('%.2f',order[:amount])}\n#{order[:addr]}\n#{order[:tel]}", info[:ship], info[:remark], "https://foodtrust.cn/first-order-qna/", order[:order_times]
+
+        #send work wechat bot message
+        content = "老板们，来单咯~\n"
+        list = []
+        if order[:order_times]==1
+            content = "小蜜，快来接新客哦\n" 
+            list = ["foodcherry"] 
+        end
+        content += ">#{order[:order_id]} RMB#{sprintf('%.2f',order[:amount])}\n
+        >#{order[:addr]}\n
+        >#{order[:tel]} #{order[:name]}\n"
+        send_bot_message content,list
+
+        #update notification history
         comment = order[:notify_history] + " | #{notification}"
-        p order['zone_code']
         sqlu = "update ogoods.pospal_orders set notify_history='#{comment}' where order_id = '#{order_id}'"
         resu = @rds.query(sqlu)
     end
