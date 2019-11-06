@@ -58,14 +58,14 @@ def get_esat order
             est = order_time > time_2 ? '下一工作日' : '下单当天'
         end
         eat = '配送当日'
-    when 'ZB', 'ZPP', 'ZPG' 
+    when 'ZB', 'ZPP', 'ZPG', 'KD1'
         if is_holiday the_day
             est = '下一工作日'
         else
             est = order_time > time_1 ? '下一工作日' : '下单当天'
         end
         eat = '配送当日'
-    when 'KD1' 
+    when 'KD---'  #depreciated
         if is_holiday the_day
             est = '下一工作日'
             eat = '配送当日'
