@@ -15,13 +15,6 @@ load 'user_api.rb' #to use get_openid_by_number
 
 @rds = Mysql2::Client.new(:host =>ENV['RDS_AGENT'], :username =>"psi_root", :port =>'1401', :password =>ENV['PSI_PASSWORD'], :encoding =>'utf8mb4') if @rds.nil?
 
-def get_orders_by_shipdate ship_day
-        yesterday = ship_day.prev_day
-        s_time = yesterday.strftime('%Y-%m-%d') + ' 14:00:01'
-        e_time = ship_day.strftime('%Y-%m-%d') + ' 14:00:00'
-        return get_orders_within s_time, e_time
-end
-
 def get_orders_by_day someday
         s_time = someday.strftime('%Y-%m-%d') + ' 00:00:00'
         e_time = someday.strftime('%Y-%m-%d') + ' 23:59:59'
@@ -213,8 +206,8 @@ end
 
 def get_ogoods_orders_by_shipdate ship_day
         yesterday = ship_day.prev_day
-        s_time = yesterday.strftime('%Y-%m-%d') + ' 14:00:01'
-        e_time = ship_day.strftime('%Y-%m-%d') + ' 14:00:00'
+        s_time = yesterday.strftime('%Y-%m-%d') + ' 09:00:01'
+        e_time = ship_day.strftime('%Y-%m-%d') + ' 09:00:00'
         return get_ogoods_orders_within s_time, e_time
 end
 
