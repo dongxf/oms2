@@ -199,6 +199,7 @@ end
 def get_zone_code order
 
   addr = get_short_addr order
+  puts "---#{addr}---" if addr.include? '钟村街道天湖居'
 
   #到店自提：ZT
   [ '到店自提', '汉溪村', 'Self Pickup'].each { |w| return 'ZT' if addr.include? w }
@@ -208,6 +209,10 @@ def get_zone_code order
 
   #番禺区&大学城: ZPP ZPG ZB KD1
   if addr.include?('番禺') || addr.include?('黄埔')
+
+    #用于缺失小区信息的地址，例如 广州市钟村街道天湖居
+    ['钟村街道天湖居'].each { |w| return 'ZB' if addr.include? w }
+
     #宅配P: ZPP
     return 'ZPP' if addr.include?('雅居乐') && !addr.include?('南城')
     ['星汇文宇','丽江花园','洛浦街道', '百事佳花园', '洛溪南浦锦绣半岛', '丹山新村', '大学城', '前龙西路', '大学小筑', '谷围新村', '小谷围街道', '深井村', '亚运城', '长洲街道', '前锋村', '西城花园' , '兴亚二路' , '清华坊', '长洲岛', '东华花园','康城水郡','东湖洲花园'].each do |w| 
