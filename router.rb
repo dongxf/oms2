@@ -71,6 +71,11 @@ def decide_route order
     when 'ZT' 
         return '[Z]'
     when 'ZB', 'ZPP' 
+        addr = get_short_addr order
+        [ '清华坊', '华碧','华南碧桂园', '欧泊', '红郡' , '华南新城' , '雅居乐', '侨联中学' , '侨朕中学', 
+          '锦绣香江' , '星河湾' , '奥园城市天地', '南村时代倾城'].each do |w| 
+            return '[G]' if addr.include? w 
+        end
         return '[P]'
     when 'ZPG' 
         return '[G]'
