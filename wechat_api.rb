@@ -155,9 +155,9 @@ def send_confirm_notice openid, info, order_number, order_type, remark, url, fla
     if flag == 1 # only send 1st order to foodcherry
         notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
         wechat_api :sendTemplateMessage, wechat_access_token, notice
+        notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
+        wechat_api :sendTemplateMessage, wechat_access_token, notice
+        notice.store(:touser,'owHN1t3GUvWYmKsxbwZdSpQDo4O4') #CC to 庞建全
+        wechat_api :sendTemplateMessage, wechat_access_token, notice
     end
-    #notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
-    #wechat_api :sendTemplateMessage, wechat_access_token, notice
-    #notice.store(:touser,'owHN1t3GUvWYmKsxbwZdSpQDo4O4') #CC to 庞建全
-    #wechat_api :sendTemplateMessage, wechat_access_token, notice
 end
