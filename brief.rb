@@ -10,6 +10,7 @@ require 'awesome_print'
 
 load 'router.rb'
 load 'get_orders.rb'
+load 'wechat_api.rb'
 
 oorders = []
 
@@ -98,6 +99,7 @@ lines.each do  |line|
   rdex = 1
   show_content =  "\n>>> Route #{line} <<<\n"
   print_content = ">>> 分线单 #{line}  #{Time.now.to_s} <<<\n"
+  body_content = "" #具体内容
   routes[line].sort_by{|_key, value| value}.to_h.each { |tel, info|
     merged_orders += 1 if line!= '[X]'
     #生成显示内容,每条订单一行不包括换行
@@ -105,9 +107,10 @@ lines.each do  |line|
     show_content += "#{sprintf('%02d',rdex)} " + s_info
     #生成打印内容,每条订单占两行,不含日期订单号金额等信息
     p_info = info.gsub('LFCR',"\n").split("  :::")[0]
-    print_content += "#{sprintf('%02d',rdex)} " + p_info
+    body_content += "#{sprintf('%02d',rdex)} " + p_info
     rdex +=1
   }
+  print_content += body_content
   if routes[line].size!= 0 
     #显示订单信息
     puts show_content
@@ -117,8 +120,14 @@ lines.each do  |line|
 
         fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"
         File.open(fn_name,"w:UTF-8") { |f| f.write print_content }
-
         save_line_excel line[1], line_data[line] #line[1] means 'P','G','Q' etc
+
+        #send work wechat bot message
+        msg_content = "#{rday} 分线单#{line} #{rtime}\n"
+        list = []
+        msg_content += "#{body_content}"
+        send_bot_message msg_content,list
+
     end
   end 
  
