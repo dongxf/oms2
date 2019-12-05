@@ -20,13 +20,15 @@ end
 #data should be hash, not JSON string
 def wechat_api api_name, wat, data
   apiURLs={
-    :sendTemplateMessage => "cgi-bin/message/template/send?access_token=#{wat}"
+    :sendTemplateMessage => "cgi-bin/message/template/send?access_token=#{wat}",
+    :sendTextMessage => "cgi-bin/message/custom/send?access_token=#{wat}"
   }
   base = 'https://api.weixin.qq.com/'
   url = base + apiURLs[api_name]
 
   res = RestClient.post url, data.to_json
-  return true if JSON.parse(res.body)['errocode'] == 0
+  ap res.body
+  return true if JSON.parse(res.body)['errcode'] == 0
   return false
 end
 
@@ -42,7 +44,7 @@ def send_bot_message content, list
     }
 
     res = RestClient.post ENV['WWBOT_WC'], data.to_json
-    return true if JSON.parse(res.body)['errocode'] == 0
+    return true if JSON.parse(res.body)['errcode'] == 0
     return false
 end
 
@@ -97,6 +99,19 @@ def send_specific_points_notice openid, points, reason, url, content, newPoints
     wechat_api :sendTemplateMessage, wechat_access_token, notice
     notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
     wechat_api :sendTemplateMessage, wechat_access_token, notice
+end
+
+def send_text_message openid, content
+    notice = {
+        touser: 'owHN1t0ETyOD1p_J324Gcb9twHuk',
+        msgtype: 'text',
+        text: {
+            content: 'Hello,World'
+        }
+    }
+    notice.store(:touser,openid) #注意，如果是'touser' 就不工作了
+    notice[:text].store(:content,content)
+    wechat_api :sendTextMessage, wechat_access_token, notice
 end
 
 def send_specific_balance_notice openid, balance, reason, url, content
