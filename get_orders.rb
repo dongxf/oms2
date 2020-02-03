@@ -206,8 +206,8 @@ end
 
 def get_ogoods_orders_by_shipdate ship_day
         yesterday = ship_day.prev_day
-        s_time = yesterday.strftime('%Y-%m-%d') + ' 09:00:01'
-        e_time = ship_day.strftime('%Y-%m-%d') + ' 09:00:00'
+        s_time = yesterday.strftime('%Y-%m-%d') + ' 15:00:01'
+        e_time = ship_day.strftime('%Y-%m-%d') + ' 15:00:00'
         return get_ogoods_orders_within s_time, e_time
 end
 

@@ -19,7 +19,7 @@ orders = []
 counter.times do 
     if the_day == Date.today #没办法，就得节省API调用次数啊
         stime = (DateTime.now - 1).to_time.strftime('%Y-%m-%d %H:%M:%S')
-        etime = (Time.now - 2).strftime('%Y-%m-%d %H:%M:%S')
+        etime = (Time.now - 1).strftime('%Y-%m-%d %H:%M:%S')
     else
         stime = the_day.strftime('%Y-%m-%d') + " 00:00:00"
         etime = the_day.strftime('%Y-%m-%d') + " 23:59:59"
