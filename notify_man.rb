@@ -46,56 +46,16 @@ def get_esat order
     zone_code = order[:zone_code]
     the_day = Date.parse(order_time.strftime('%Y-%m-%d'))
     time_1 = Time.parse(order_time.strftime('%Y-%m-%d 09:00:00'))
-    time_2 = Time.parse(order_time.strftime('%Y-%m-%d 14:00:00'))
+    time_2 = Time.parse(order_time.strftime('%Y-%m-%d 15:00:00'))
 
-    ship =  {'ZB'=>'周边小区宅配','ZT'=>'补拍或自提','ZPP'=>'番禺城区宅配','ZPG'=>'广州城区宅配','KD1'=>'珠三角快递','KD2'=>'广东省内快递','SW'=>'广东省外到付'}[zone_code] #如果用 {'a':'b'}, 则要用[:a]
+    ship =  {'ZB'=>'周边小区','ZT'=>'补拍或自提','ZPP'=>'番禺城区','ZPG'=>'广州城区','KD1'=>'珠三角周边','KD2'=>'广东省内','SW'=>'省外到付'}[zone_code] #如果用 {'a':'b'}, 则要用[:a]
 
-    case zone_code
-    when 'ZT'
-        if is_holiday the_day
-            est = '下一工作日'
-        else
-            est = order_time > time_2 ? '下一工作日' : '下单当天'
-        end
-        eat = '配送当日'
-    when 'ZB', 'ZPP', 'ZPG', 'KD1'
-        if is_holiday the_day
-            est = '下一工作日'
-        else
-            est = order_time > time_1 ? '下一工作日' : '下单当天'
-        end
-        eat = '配送当日'
-    when 'KD---'  #depreciated
-        if is_holiday the_day
-            est = '下一工作日'
-            eat = '配送当日'
-        else
-            if order_time <= time_1
-                est = '下单当天'
-                eat = '配送当日'
-            else
-                if order_time <= time_2
-                    est = '下单当天'
-                    eat = '隔日'
-                else
-                    est = '下一工作日'
-                    eat = '配送当日'
-                end
-            end
-        end
-    when 'KD2','SW'
-        if is_holiday the_day
-            est = '下一工作日'
-            eat = '隔日'
-        else
-            est = order_time > time_2 ? '下一工作日' : '下单当天'
-            eat = '隔日'
-        end
-    else 
-        ship = '其它配送订单'
-        est = '待确定'
-        eat = '待确定'
+    if is_holiday the_day
+        est = '下一工作日'
+    else
+        est = order_time > time_2 ? '下一工作日' : '下单当天'
     end
+    eat = '配送当日'
 
     return {:est => est, :eat => eat, :ship => ship}
 end
@@ -110,18 +70,18 @@ def get_delivery_info order
 
     case line
     when '[X]'
-        info += "已整单取消，感谢信任！客服请联系丰巢小蜜18998382701微信同号"
+        info += "已整单取消，感谢信任！售后请联系商店客服的企业微信"
         ship = '已取消订单'
     when '[T]'
         info += "已收到，我们将按该团的【交付时间】，为您安排配送或产地直发。"
-        info += "感谢信任！客服请联系丰巢小蜜18998382701微信同号"
+        info += "感谢信任！售后请联系商店客服的企业微信"
         ship = '团购订单'
     when '[Z]'
         info += "已收到，补拍订单将与主订单一起合并配送，自提单请于【#{esat[:est]}】至丰巢仓库自取。"
-        info += "感谢信任！客服请联系丰巢小蜜18998382701微信同号"
+        info += "感谢信任！售后请联系商店客服的企业微信"
         ship = '补拍或自提订单'
     else
-        info += "已收到，我们将于【#{esat[:est]}】为您进行配送，预计【#{esat[:eat]}】送达，感谢信任！客服请联系丰巢小蜜18998382701微信同号"
+        info += "已收到，我们将于【#{esat[:est]}】为您进行发货，预计【#{esat[:eat]}】送达，感谢信任！售后请联系商店客服的企业微信"
         ship = esat[:ship]
     end
 
