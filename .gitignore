@@ -1,7 +1,6 @@
-incoming/
-converted/
-mailed/
-routing/
-goods_exported/
-auto_import/
 tmp/
+converted/
+incoming/
+mailed/
+auto_import/
+goods_exported/
