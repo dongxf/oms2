@@ -36,18 +36,22 @@ else
 end
 
 #Z: 自提 C: 承诺达 G:广州 Q:祈福 P:番禺自送 K：快递 T:团购 X:问题单
-lines = ["[A]", "[B]", "[C]", "[D]", "[E]", "[F]", "[G]", "[H]", "[I]", "[J]", "[K]", "[L]", "[M]", "[N]", "[O]", "[P]", "[Q]", "[R]", "[S]", "[T]", "[U]", "[V]", "[W]", "[X]", "[Y]","[Z]"]
+LINES = ["[A]", "[B]", "[C]", "[D]", "[E]", "[F]", "[G]", "[H]", "[I]", "[J]", "[K]", "[L]", "[M]", "[N]", "[O]", "[P]", "[Q]", "[R]", "[S]", "[T]", "[U]", "[V]", "[W]", "[X]", "[Y]","[Z]"]
 routes = {}
 routes_sum = {} #记录每条线路的订单金额小计
 line_data = {}
-all_lines_data = {}
-all_print_content = ''
-lines.each do |line| 
-        line_data[line] = {}
-        routes[line] = {} 
-        routes_sum[line] = 0
+LINES.each do |line| 
+
+        #merge all lines into one line[A] except line[X] and line[Z]
+        actual_line = line
+        actual_line = '[A]' if line != '[X]' and line != '[Z]'
+
+        line_data[actual_line] = {}
+        routes[actual_line] = {} 
+        routes_sum[actual_line] = 0
 end
 
+# 遍历订单集合，生成各条线路的打印(routes)及统计数据(line_data)
 amt = 0.0
 oorders.each do |oorder|
     raw_data = oorder[:raw_data].gsub("\n","").gsub("\t","")
@@ -61,6 +65,8 @@ oorders.each do |oorder|
     end
 
     line = oorder[:line]
+    line = '[A]' if oorder[:line] != '[X]' and oorder[:line] != '[Z]'
+
     comment = oorder[:comment]
     comment = "#{oorder[:first_item]} #{oorder[:comment]}"  if line == '[T]'
     odate = order['orderDateTime'][0..9]
@@ -82,30 +88,33 @@ oorders.each do |oorder|
         routes[line].store(oorder[:order_id],info)
     end
 
+    # 承诺达的格式
     #csv=[ '丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201', 
     #      oorder[:name],oorder[:tel],oorder[:addr], '生鲜','寄付',sprintf('%d',oorder[:items_count]),"1000",comment,odate+'-'+oorder[:order_id]
     #]
+
+    #顺丰的格式
     csv = ['',oorder[:number],'','','','',
            'FOODTRUST丰巢有机','黄冲','18998382701','广州市番禺区汉溪村汉溪路6号201',
            '',oorder[:name],oorder[:tel],oorder[:addr],
            '有机食品','','','','','',
            1,'顺丰即日','寄付月结','0207375546']
-    line_data[line].store(oorder[:number],csv) #if want to avoid duplicate use tel, otherwise using oorder[:number]
-    all_lines_data.store(oorder[:tel],csv) if oorder[:line]!= '[X]' && oorder[:line]!= '[Z]' #if want to avoid duplicate use tel, otherwise using oorder[:number]
+
+    line_data[line].store(oorder[:tel],csv) #if want to avoid duplicate use tel, otherwise using oorder[:number]
 
 end
 
-save_line_excel 'A', all_lines_data
-
+#遍历路线集合，生产各条线路的可打印信息及EXCEL表
 merged_orders = 0
-lines.each do  |line|
+['[A]','[Z]','[X]'].each do  |line|
+
   rday =Date.today.strftime('%Y-%m-%d')
   rtime=Time.now.strftime("%H%M%S")
   rdex = 1
   show_content =  "\n>>> Route #{line} <<<\n"
   print_content = ">>> 分线单 #{line}  #{Time.now.to_s} <<<\n"
-  all_print_content += print_content
   body_content = "" #具体内容
+
   routes[line].sort_by{|_key, value| value}.to_h.each { |tel, info|
     merged_orders += 1 if line!= '[X]'
     #生成显示内容,每条订单一行不包括换行
@@ -116,37 +125,33 @@ lines.each do  |line|
     body_content += "#{sprintf('%02d',rdex)} " + p_info
     rdex +=1
   }
+
   print_content += body_content
-  all_print_content += body_content
+
   if routes[line].size!= 0 
+
     #显示订单信息
     puts show_content
     puts "-- line #{line} total amount: #{sprintf('%02d',routes_sum[line])}\n"
+
     #生成派线单
     if !silence_mode
 
         fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"
         File.open(fn_name,"w:UTF-8") { |f| f.write print_content }
 
-        #save_line_excel line[1], line_data[line] #line[1] means 'P','G','Q' etc
+        save_line_excel line[1], line_data[line] if line!='[Z]' && line !='[X]'
 
         #send work wechat bot message
         msg_content = "#{rday} 分线单#{line} #{rtime}\n"
         list = []
         msg_content += "#{body_content}"
-        #send_bot_message msg_content,list
+        send_bot_message msg_content,list
 
     end
   end 
  
-  #保存派线单数据
-  #if line_data[line].size!=0
-  #  save_line_excel line[1], line_data[line] #line[1] means 'P','G','Q' etc
-  #end
 end
-
-fn_name = ".\\incoming\\" + rday + "-all-line-" + rtime + ".txt"
-File.open(fn_name,"w:UTF-8") { |f| f.write all_print_content }
 
 puts "------------------------------------"
 puts "Valid orders: #{merged_orders}/#{oorders.count-routes['[X]'].count} RMB#{sprintf("%.2f",amt)}"
