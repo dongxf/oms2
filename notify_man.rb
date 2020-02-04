@@ -55,7 +55,7 @@ def get_esat order
     else
         est = order_time > time_2 ? '下一工作日' : '下单当天'
     end
-    eat = '配送当日'
+    eat = '发货次日'
 
     return {:est => est, :eat => eat, :ship => ship}
 end
@@ -86,9 +86,9 @@ def get_delivery_info order
     end
 
     if order[:order_times] == 1
-        remark = "【首单提醒】保质期内品质问题无障碍退换，点查看详情了解更多\nFOODTRUST® 每一天，更安心的选择"
+        remark = "【首单提醒】保质期内品质问题无障碍退换，点查看详情了解更多\nFOODTRUST® 让健康和友善触手可及"
     else
-        remark = "常见订单问答请点查看详情\nFOODTRUST® 每一天，更安心的选择"
+        remark = "常见订单问答请点查看详情\nFOODTRUST® 让健康和友善触手可及"
     end
 
     return {:info => info, :remark => remark, :ship=> ship }

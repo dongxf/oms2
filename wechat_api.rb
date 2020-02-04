@@ -60,7 +60,7 @@ def send_balance_notice openids
             keyword3:  { value:  "团购订单或特定区域运费返回\n运费退回规则：\n *所有已提交的团购订单（无论是否拼成）\n *特定小区大于88元的日常订单\n *广东省外快递改为到付(满298另有积分奖励)", color:  '#173177' },
             keyword4:  { value:  '+10.00', color:  '#0000ff' },
             keyword5:  { value:  '点击详情查看最新余额', color:  '#0000ff' },
-            remark:  { value: "FOODTRUST® 丰巢有机\n每一天更安心的选择", color:  '#88b04b' },
+            remark:  { value: "FOODTRUST® 丰巢有机\n让健康和友善触手可及", color:  '#88b04b' },
         }
     }
     openids.each do |openid|
@@ -84,7 +84,7 @@ def send_specific_points_notice openid, points, reason, url, content, newPoints
             keyword2:  { value:  '200分', color:  '#ff0000' },
             keyword3:  { value:  "见证诚信，传播友善，记录真实。\n积分规则：\n参与平台每篇文章讨论最多可获一次积分\n *单项正常留言50分\n *全平台首次留言200积分\n *关联购买顾客留言200分\n *按最高分值项计算", color:  '#173177' },
             keyword4:  { value:  newPoints, color:  '#0000ff' },
-            remark:  { value: "点击详情进入【邀请有礼】领取更多积分\nFOODTRUST® 每一天更安心的选择", color:  '#88b04b' },
+            remark:  { value: "点击详情进入【邀请有礼】领取更多积分\nFOODTRUST® 让健康和友善触手可及", color:  '#88b04b' },
         }
     }
     wat = wechat_access_token
@@ -126,7 +126,7 @@ def send_specific_balance_notice openid, balance, reason, url, content
             keyword3:  { value:  "团购订单或特定区域运费返回\n运费退回规则：\n *所有已提交的团购订单（无论是否拼成）\n *特定小区大于88元的日常订单\n *广东省外快递改为到付(满298另有积分奖励)", color:  '#173177' },
             keyword4:  { value:  '+10.00', color:  '#0000ff' },
             keyword5:  { value:  '点击详情查看会员对账单及最新余额', color:  '#0000ff' },
-            remark:  { value: "客服小蜜：18998382701（微信同号）\nFOODTRUST® 丰巢有机\n每一天更安心的选择", color:  '#88b04b' },
+            remark:  { value: "关注微信公号foodtrust联系客服\nFOODTRUST® 丰巢有机\n让健康和友善触手可及", color:  '#88b04b' },
         }
     }
     wat = wechat_access_token
@@ -152,7 +152,7 @@ def send_confirm_notice openid, info, order_number, order_type, remark, url, fla
             first:  { value:  "【客户名】您好，订单已收到，我们将按团购商品说明为您如期安排配送或产地直发。", color:  '#173177' },
             keyword1:  { value:   "订单号", color:  '#173177' },
             keyword2:  { value:  '配送类型', color:  '#ff0000' },
-            remark:  { value: "任何问题请联系客服丰巢小蜜，手机微信同号18998382701。\nFOODTRUST® 丰巢有机\n每一天更安心的选择", color:  '#88b04b' },
+            remark:  { value: "任何问题请联系商店客服的企业微信。\nFOODTRUST® 丰巢有机\n让健康和友善触手可及", color:  '#88b04b' },
         }
     }
     wat = wechat_access_token

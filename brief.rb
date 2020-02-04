@@ -40,6 +40,8 @@ lines = ["[A]", "[B]", "[C]", "[D]", "[E]", "[F]", "[G]", "[H]", "[I]", "[J]", "
 routes = {}
 routes_sum = {} #记录每条线路的订单金额小计
 line_data = {}
+all_lines_data = {}
+all_print_content = ''
 lines.each do |line| 
         line_data[line] = {}
         routes[line] = {} 
@@ -84,13 +86,16 @@ oorders.each do |oorder|
     #      oorder[:name],oorder[:tel],oorder[:addr], '生鲜','寄付',sprintf('%d',oorder[:items_count]),"1000",comment,odate+'-'+oorder[:order_id]
     #]
     csv = ['',oorder[:number],'','','','',
-           'FOODTRUST丰巢有机','丰巢小蜜','18998382701','广州市番禺区汉溪村汉溪路6号201',
+           'FOODTRUST丰巢有机','黄冲','18998382701','广州市番禺区汉溪村汉溪路6号201',
            '',oorder[:name],oorder[:tel],oorder[:addr],
            '有机食品','','','','','',
            1,'顺丰即日','寄付月结','0207375546']
     line_data[line].store(oorder[:number],csv) #if want to avoid duplicate use tel, otherwise using oorder[:number]
+    all_lines_data.store(oorder[:tel],csv) if oorder[:line]!= '[X]' && oorder[:line]!= '[Z]' #if want to avoid duplicate use tel, otherwise using oorder[:number]
 
 end
+
+save_line_excel 'A', all_lines_data
 
 merged_orders = 0
 lines.each do  |line|
@@ -99,6 +104,7 @@ lines.each do  |line|
   rdex = 1
   show_content =  "\n>>> Route #{line} <<<\n"
   print_content = ">>> 分线单 #{line}  #{Time.now.to_s} <<<\n"
+  all_print_content += print_content
   body_content = "" #具体内容
   routes[line].sort_by{|_key, value| value}.to_h.each { |tel, info|
     merged_orders += 1 if line!= '[X]'
@@ -111,6 +117,7 @@ lines.each do  |line|
     rdex +=1
   }
   print_content += body_content
+  all_print_content += body_content
   if routes[line].size!= 0 
     #显示订单信息
     puts show_content
@@ -120,13 +127,14 @@ lines.each do  |line|
 
         fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"
         File.open(fn_name,"w:UTF-8") { |f| f.write print_content }
-        save_line_excel line[1], line_data[line] #line[1] means 'P','G','Q' etc
+
+        #save_line_excel line[1], line_data[line] #line[1] means 'P','G','Q' etc
 
         #send work wechat bot message
         msg_content = "#{rday} 分线单#{line} #{rtime}\n"
         list = []
         msg_content += "#{body_content}"
-        send_bot_message msg_content,list
+        #send_bot_message msg_content,list
 
     end
   end 
@@ -136,6 +144,9 @@ lines.each do  |line|
   #  save_line_excel line[1], line_data[line] #line[1] means 'P','G','Q' etc
   #end
 end
+
+fn_name = ".\\incoming\\" + rday + "-all-line-" + rtime + ".txt"
+File.open(fn_name,"w:UTF-8") { |f| f.write all_print_content }
 
 puts "------------------------------------"
 puts "Valid orders: #{merged_orders}/#{oorders.count-routes['[X]'].count} RMB#{sprintf("%.2f",amt)}"
