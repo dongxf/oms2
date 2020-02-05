@@ -86,10 +86,10 @@ def get_delivery_info order
     end
 
     if order[:order_times] == 1
-        remark = "【首单提醒】保质期内品质问题无障碍退换，点击详情查看！！\nFOODTRUST® 让健康和友善触手可及"
+        remark = "【首单提醒】保质期内品质问题无障碍退换，点击详情查看！！\nFOODTRUST®\n让健康和友善触手可及"
     else
         #remark = "常见订单问答请点查看详情\nFOODTRUST® 让健康和友善触手可及"
-        remark = "【调整提示】点击详情，查看疫情期间服务的调整公告！!\nFOODTRUST® 让健康和友善触手可及"
+        remark = "【重要提示】点击详情查看疫情期间服务调整公告！以及新客服通道!\nFOODTRUST®\n让健康和友善触手可及"
     end
 
     return {:info => info, :remark => remark, :ship=> ship }
