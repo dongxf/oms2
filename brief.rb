@@ -134,21 +134,18 @@ merged_orders = 0
     puts show_content
     puts "-- line #{line} total amount: #{sprintf('%02d',routes_sum[line])}\n"
 
-    #生成派线单
+    #当指定-s时候不生成分线单和派线单
     if !silence_mode
-
         fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"
         File.open(fn_name,"w:UTF-8") { |f| f.write print_content }
-
         save_line_excel line[1], line_data[line] if line!='[Z]' && line !='[X]'
-
         #send work wechat bot message
         msg_content = "#{rday} 分线单#{line} #{rtime}\n"
         list = []
         msg_content += "#{body_content}"
         send_bot_message msg_content,list
-
     end
+
   end 
  
 end
