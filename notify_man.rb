@@ -40,7 +40,7 @@ end
 #get estimated ship time and estimated arrive time
 def get_esat order
 
-    est = '下一工作日' #'今天'
+    est = '订单提交后的下一工作日' #'今天'
     eat = '隔日' #'当天'
     order_time = order[:order_time]
     zone_code = order[:zone_code]
@@ -51,9 +51,9 @@ def get_esat order
     ship =  {'ZB'=>'周边小区','ZT'=>'补拍或自提','ZPP'=>'番禺城区','ZPG'=>'广州城区','KD1'=>'珠三角周边','KD2'=>'广东省内','SW'=>'省外到付'}[zone_code] #如果用 {'a':'b'}, 则要用[:a]
 
     if is_holiday the_day
-        est = '下一工作日'
+        est = '订单提交后的下一工作日'
     else
-        est = order_time > time_2 ? '下一工作日' : '下单当天'
+        est = order_time > time_2 ? '订单提交后的下一工作日' : '下单当天'
     end
     eat = '发货次日'
 
@@ -86,9 +86,10 @@ def get_delivery_info order
     end
 
     if order[:order_times] == 1
-        remark = "【首单提醒】保质期内品质问题无障碍退换，点查看详情了解更多\nFOODTRUST® 让健康和友善触手可及"
+        remark = "【首单提醒】保质期内品质问题无障碍退换，点击详情查看！！\nFOODTRUST® 让健康和友善触手可及"
     else
-        remark = "常见订单问答请点查看详情\nFOODTRUST® 让健康和友善触手可及"
+        #remark = "常见订单问答请点查看详情\nFOODTRUST® 让健康和友善触手可及"
+        remark = "【调整提示】点击详情，查看疫情期间服务的调整公告！!\nFOODTRUST® 让健康和友善触手可及"
     end
 
     return {:info => info, :remark => remark, :ship=> ship }
@@ -115,7 +116,7 @@ def confirm_orders orders
         notification = "#{now} oid##{order_id} 订单配送提示"
         text += "O##{order_id} #{order[:line]} #{order[:zone_code]} #{order[:order_time]} #{order[:addr]}\n"
         text += " #{info[:info]}\n"
-        send_confirm_notice openid, info_body, "#{order[:order_id]} #{sprintf('%.2f',order[:amount])}\n#{order[:addr]}\n#{order[:tel]}", info[:ship], info[:remark], "https://foodtrust.cn/first-order-qna/", order[:order_times]
+        send_confirm_notice openid, info_body, "#{order[:order_id]} #{sprintf('%.2f',order[:amount])}\n#{order[:addr]}\n#{order[:tel]}", info[:ship], info[:remark], "https://foodtrust.cn/sla-3-3-1/", order[:order_times]
 
         #send work wechat bot message
         content = "老板们，来单咯~\n"

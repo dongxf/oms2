@@ -158,7 +158,11 @@ def send_confirm_notice openid, info, order_number, order_type, remark, url, fla
     wat = wechat_access_token
 
     notice.store(:touser,openid) #注意，如果是'touser' 就不工作了
-    notice.store(:url,url)
+    if flag == 1
+        notice.store(:url,'https://foodtrust.cn/first-order-qna/')
+    else
+        notice.store(:url,url)
+    end
 
     notice[:data].store(:first, {value: info, color: '#173177'})
     notice[:data].store(:keyword1, {value: order_number, color: '#173177'})
