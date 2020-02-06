@@ -44,7 +44,7 @@ LINES.each do |line|
 
         #merge all lines into one line[A] except line[X] and line[Z]
         actual_line = line
-        actual_line = '[A]' if line != '[X]' and line != '[Z]'
+        actual_line = '[A]' if line != '[X]' and line != '[Z]' and line != '[T]'
 
         line_data[actual_line] = {}
         routes[actual_line] = {} 
@@ -106,7 +106,7 @@ end
 
 #遍历路线集合，生产各条线路的可打印信息及EXCEL表
 merged_orders = 0
-['[A]','[Z]','[X]'].each do  |line|
+['[A]','[Z]','[X]', '[T]'].each do  |line|
 
   rday =Date.today.strftime('%Y-%m-%d')
   rtime=Time.now.strftime("%H%M%S")
@@ -136,9 +136,14 @@ merged_orders = 0
 
     #当指定-s时候不生成分线单和派线单
     if !silence_mode
+        #
+        #生成派线单
         fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"
         File.open(fn_name,"w:UTF-8") { |f| f.write print_content }
+        #
+        #生成顺丰及京东数据
         save_line_excel line[1], line_data[line] if line!='[Z]' && line !='[X]'
+
         #send work wechat bot message
         msg_content = "#{rday} 分线单#{line} #{rtime}\n"
         list = []
