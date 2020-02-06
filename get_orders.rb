@@ -356,10 +356,10 @@ END
         jorder[:order_times] = r['order_times']
         jorder[:total_times] = r['total_times']
         new_str = sprintf(" #%d",r['order_times'])
-        eopl = "缺货24小时内原路退款，售后请联系客服企业微信（关注微信公号FOODTRUST，点击服务）\n　　　　　　　　foodtrust.cn 让健康和友善随手可及\n"
+        eopl = "缺货24小时内原路退款，售后请联系客服企业微信（关注微信公号FOODTRUST，点击服务）\n　　　　foodtrust.cn 让健康和友善随手可及\n"
         if r['order_times'] == 1
             new_str = " !!!!!!!!" 
-            eopl = "       【首单提示】感谢选择丰巢有机，和我们一起促进健康和友善！所有的产品禁用化学保鲜及防腐剂，保质期内任何品质问题，请联系客服企业微信（关注微信公号FOODTRUST，点击服务），不满意无障碍退换\n　　　　　　　　foodtrust.cn 让健康和友善随手可及\n" 
+            eopl = "       【首单提示】感谢选择丰巢有机，和我们一起促进健康和友善！所有的产品禁用化学保鲜及防腐剂，保质期内任何品质问题，请联系客服企业微信（关注微信公号FOODTRUST，点击服务），不满意无障碍退换\n　　　　　foodtrust.cn 让健康和友善随手可及\n" 
         end
         jorder[:plain_text] = r['plain_text'].gsub('<<<<<<<<<',new_str).gsub('END_OF_PICKUP_LIST',eopl)
         jorder[:plain_text] += "\n#{r['tips']}" if r['tips'] != ''

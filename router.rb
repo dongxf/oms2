@@ -143,7 +143,7 @@ def get_plain_text order
 
     #add header twice
     #全角空格字符 (　) (_) (﹏)
-    content ="#{line_mark} #{zone_code}　　　　　让健康和友善触手可及　　　　﹏ of 2 ﹏\n"
+    content ="#{line_mark} #{zone_code}　　　让健康和友善触手可及　　　　﹏ of 2 ﹏\n"
 
     # remove '104' from the tail
     content  += "#{get_short_no order}　　#{order['orderDateTime']}\n"
@@ -156,7 +156,7 @@ def get_plain_text order
       content  += "　　　　-　　　　　-　　　　　-　　　　　-　　　　-　　　　\n"
     end
 
-    content += "#{get_short_no order}　　#{order['customerNumber']}　　　　　﹏ of 2 ﹏\n"
+    content += "#{get_short_no order}　　#{order['customerNumber']}　　　﹏ of 2 ﹏\n"
 
     content += "#{slim_addr}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
