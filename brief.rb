@@ -39,19 +39,21 @@ end
 LINES = ["[A]", "[B]", "[C]", "[D]", "[E]", "[F]", "[G]", "[H]", "[I]", "[J]", "[K]", "[L]", "[M]", "[N]", "[O]", "[P]", "[Q]", "[R]", "[S]", "[T]", "[U]", "[V]", "[W]", "[X]", "[Y]","[Z]"]
 routes = {}
 routes_sum = {} #记录每条线路的订单金额小计
-line_data = {}
+line_data_sf = {}
+line_data_jd = {}
 LINES.each do |line| 
 
         #merge all lines into one line[A] except line[X] and line[Z]
         actual_line = line
         actual_line = '[A]' if line != '[X]' and line != '[Z]' and line != '[T]'
 
-        line_data[actual_line] = {}
+        line_data_sf[actual_line] = {}
+        line_data_jd[actual_line] = {}
         routes[actual_line] = {} 
         routes_sum[actual_line] = 0
 end
 
-# 遍历订单集合，生成各条线路的打印(routes)及统计数据(line_data)
+# 遍历订单集合，生成各条线路的打印(routes)及统计数据(line_data_sf, line_data_jd)
 amt = 0.0
 oorders.each do |oorder|
     raw_data = oorder[:raw_data].gsub("\n","").gsub("\t","")
@@ -94,13 +96,17 @@ oorders.each do |oorder|
     #]
 
     #顺丰的格式
-    csv = ['',oorder[:number],'','','','',
+    csv_sf = ['',oorder[:number],'','','','',
            'FOODTRUST丰巢有机','黄冲','18998382701','广州市番禺区汉溪村汉溪路6号201',
            '',oorder[:name],oorder[:tel],oorder[:addr],
            '有机食品','','','','','',
            1,'顺丰即日','寄付月结','0207375546']
 
-    line_data[line].store(oorder[:tel],csv) #if want to avoid duplicate use tel, otherwise using oorder[:number]
+    #京东的格式
+    csv_jd = [oorder[:number],'',oorder[:name],oorder[:tel],'',oorder[:addr],'','有机食品','水果生鲜',oorder[:items_count],1,'','','特惠送','','寄付月结',oorder[:amount],'否','','','','','','']
+
+    line_data_sf[line].store(oorder[:tel],csv_sf) #if want to avoid duplicate use tel, otherwise using oorder[:number]
+    line_data_jd[line].store(oorder[:tel],csv_jd) #if want to avoid duplicate use tel, otherwise using oorder[:number]
 
 end
 
@@ -142,13 +148,14 @@ merged_orders = 0
         File.open(fn_name,"w:UTF-8") { |f| f.write print_content }
         #
         #生成顺丰及京东数据
-        save_line_excel line[1], line_data[line] if line!='[Z]' && line !='[X]'
+        save_line_excel_in_sf line[1], line_data_sf[line] if line!='[Z]' && line !='[X]'
+        save_line_excel_in_jd line[1], line_data_jd[line] if line!='[Z]' && line !='[X]'
 
         #send work wechat bot message
         msg_content = "#{rday} 分线单#{line} #{rtime}\n"
         list = []
         msg_content += "#{body_content}"
-        send_bot_message msg_content,list
+        #send_bot_message msg_content,list
     end
 
   end 

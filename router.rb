@@ -86,7 +86,41 @@ def decide_route order
  
 end
 
-def save_line_excel line_name, line_items
+def save_line_excel_in_jd line_name, line_items
+    #
+    #设置表格的编码为utf-8
+    Spreadsheet.client_encoding="utf-8"
+    #创建表格对象
+    book=Spreadsheet::Workbook.new
+    #创建工作表
+    sheet1=book.create_worksheet :name => "sheet1"
+
+    #生成表头
+    col_names=['商家订单号','平台订单号','收件人姓名','收件人手机','收件人座机','收件人地址','收件人公司','物品内容','托寄物类型','托寄物数量','包裹数量','商家箱号','参考重量','业务类型','生鲜温层','付费方式','保价金额（元）','签单返还','代收货款金额（元）','京尊达','防撕码收集','特殊签收方式','鸡毛信','备注']
+    sheet1.row(0)[0]=Time.now.to_s
+    sheet1.row(1)[0]='京东模板'
+    col_index=0
+    col_names.each do |cname|
+        sheet1.row(2)[col_index]=cname
+        col_index += 1
+    end
+
+    line_index = 2
+    line_items.each do |key, item_cells|
+            col_index=0
+            item_cells.each do |cell|
+                sheet1.row(line_index+1)[col_index]=cell
+                col_index += 1
+            end
+            line_index += 1
+    end
+    rday =Date.today.strftime('%Y-%m-%d')
+    rtime=Time.now.strftime("%H%M%S")
+    fn_name = ".\\incoming\\" + rday + "-jd-summary-" + line_name + '-' + rtime + ".xls"
+    book.write fn_name
+end
+
+def save_line_excel_in_sf line_name, line_items
     #设置表格的编码为utf-8
     Spreadsheet.client_encoding="utf-8"
     #创建表格对象
@@ -114,7 +148,7 @@ def save_line_excel line_name, line_items
     end
     rday =Date.today.strftime('%Y-%m-%d')
     rtime=Time.now.strftime("%H%M%S")
-    fn_name = ".\\incoming\\" + rday + "-summary-" + line_name + '-' + rtime + ".xls"
+    fn_name = ".\\incoming\\" + rday + "-sf-summary-" + line_name + '-' + rtime + ".xls"
     book.write fn_name
 end
 
