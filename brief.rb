@@ -155,7 +155,7 @@ merged_orders = 0
         msg_content = "#{rday} 分线单#{line} #{rtime}\n"
         list = []
         msg_content += "#{body_content}"
-        #send_bot_message msg_content,list
+        send_bot_message msg_content,list
     end
 
   end 
