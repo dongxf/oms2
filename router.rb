@@ -177,7 +177,7 @@ def get_plain_text order
 
     #add header twice
     #全角空格字符 (　) (_) (﹏)
-    content ="#{line_mark} #{zone_code}　　　让健康和友善触手可及　　　　﹏ of 2 ﹏\n"
+    content ="#{line_mark} #{zone_code}　　　　让健康和友善触手可及　　　　﹏ of 2 ﹏\n"
 
     # remove '104' from the tail
     content  += "#{get_short_no order}　　#{order['orderDateTime']}\n"
@@ -187,10 +187,10 @@ def get_plain_text order
     if odrmk != ''
       content += "> #{odrmk}   -----\n"
     else
-      content  += "　　　　-　　　　　-　　　　　-　　　　　-　　　　-　　　　\n"
+      content  += "\n　　　　-　　　　　-　　　　　-　　　　　-　　　　-　　　　\n"
     end
 
-    content += "#{get_short_no order}　　#{order['customerNumber']}　　　﹏ of 2 ﹏\n"
+    content += "#{get_short_no order}　　#{order['customerNumber']}　﹏ of 2 ﹏\n"
 
     content += "#{slim_addr}\n"
     content += "#{order['contactName']}    #{order['contactTel']}\n"
@@ -207,7 +207,7 @@ def get_plain_text order
     else
       content += "--------------------------------------------------<<<<<<<<<\n"
     end
-    content += " 数量     商品名及规格\n"
+    content += " 数量     商品名及规格\n\n"
     items = order['items']
     items.each do |item|
         if item['productQuantity']>1 
@@ -222,7 +222,7 @@ def get_plain_text order
     content += "\n"
 
     #add footer
-    content += "--------------------------------------------------------------------\n"
+    content += "---------------------------------------------------\n"
     content += "END_OF_PICKUP_LIST"
 
     return content
