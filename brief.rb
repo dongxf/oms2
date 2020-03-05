@@ -26,22 +26,22 @@ end
 
 if day_count == 0
    the_day = Date.today.next_day
-   oorders = get_ogoods_orders_by_shipdate the_day
+   oorders = get_ogoods_orders_by_day the_day
 else
    the_day = Date.today
    day_count.times do 
-        oorders += get_ogoods_orders_by_shipdate the_day
+        oorders += get_ogoods_orders_by_day the_day
         the_day = the_day.prev_day
    end
 end
 
-#temp
+=begin # used when ship datetime migration
 sday = Date.today.prev_day
 eday = Date.today
 s_time = sday.strftime('%Y-%m-%d') + ' 15:00:00'
 e_time = eday.strftime('%Y-%m-%d') + ' 23:59:59'
 oorders =  get_ogoods_orders_within s_time, e_time
-
+=end
 
 #Z: 自提 C: 承诺达 G:广州 Q:祈福 P:番禺自送 K：快递 T:团购 X:问题单
 LINES = ["[A]", "[B]", "[C]", "[D]", "[E]", "[F]", "[G]", "[H]", "[I]", "[J]", "[K]", "[L]", "[M]", "[N]", "[O]", "[P]", "[Q]", "[R]", "[S]", "[T]", "[U]", "[V]", "[W]", "[X]", "[Y]","[Z]"]
