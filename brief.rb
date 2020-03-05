@@ -35,6 +35,14 @@ else
    end
 end
 
+#temp
+sday = Date.today.prev_day
+eday = Date.today
+s_time = sday.strftime('%Y-%m-%d') + ' 15:00:00'
+e_time = eday.strftime('%Y-%m-%d') + ' 23:59:59'
+oorders =  get_ogoods_orders_within s_time, e_time
+
+
 #Z: 自提 C: 承诺达 G:广州 Q:祈福 P:番禺自送 K：快递 T:团购 X:问题单
 LINES = ["[A]", "[B]", "[C]", "[D]", "[E]", "[F]", "[G]", "[H]", "[I]", "[J]", "[K]", "[L]", "[M]", "[N]", "[O]", "[P]", "[Q]", "[R]", "[S]", "[T]", "[U]", "[V]", "[W]", "[X]", "[Y]","[Z]"]
 routes = {}
