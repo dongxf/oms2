@@ -152,7 +152,7 @@ def send_confirm_notice openid, info, order_number, order_type, remark, url, fla
             first:  { value:  "【客户名】您好，订单已收到，我们将按团购商品说明为您如期安排配送或产地直发。", color:  '#173177' },
             keyword1:  { value:   "订单号", color:  '#173177' },
             keyword2:  { value:  '配送类型', color:  '#ff0000' },
-            remark:  { value: "任何问题请联系商店客服的企业微信。\nFOODTRUST® 丰巢有机\n让健康和友善触手可及", color:  '#88b04b' },
+            remark:  { value: "任何问题请联系丰巢小蜜18998382701，微信同号。\nFOODTRUST® 丰巢有机\n让健康和友善触手可及", color:  '#88b04b' },
         }
     }
     wat = wechat_access_token
