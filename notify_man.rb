@@ -40,20 +40,21 @@ end
 #get estimated ship time and estimated arrive time
 def get_esat order
 
-    est = '订单提交后的下一工作日' #'今天'
-    eat = '隔日' #'当天'
+    est = '下单后的下一工作日' #'今天'
     order_time = order[:order_time]
     zone_code = order[:zone_code]
     the_day = Date.parse(order_time.strftime('%Y-%m-%d'))
-    time_1 = Time.parse(order_time.strftime('%Y-%m-%d 09:00:00'))
-    time_2 = Time.parse(order_time.strftime('%Y-%m-%d 15:00:00'))
+    time_1 = Time.parse(order_time.strftime('%Y-%m-%d 18:00:00'))
 
     ship =  {'ZB'=>'周边小区','ZT'=>'补拍或自提','ZPP'=>'番禺城区','ZPG'=>'广州城区','KD1'=>'珠三角周边','KD2'=>'广东省内','SW'=>'省外到付'}[zone_code] #如果用 {'a':'b'}, 则要用[:a]
 
     if is_holiday the_day
-        est = '订单提交后的下一工作日'
+        est = '下单后的下一工作日'
     else
-        est = order_time > time_2 ? '订单提交后的下一工作日' : '下单当天'
+        est = '下单当天'
+        if zone_code == 'KD1' || zone_code = 'KD2' || zone_code = 'SW'
+            est = '下单后的下一工作日' if order_time > time_1
+        end
     end
     eat = '发货次日'
 
