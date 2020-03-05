@@ -117,7 +117,7 @@ def confirm_orders orders
         notification = "#{now} oid##{order_id} 订单配送提示"
         text += "O##{order_id} #{order[:line]} #{order[:zone_code]} #{order[:order_time]} #{order[:addr]}\n"
         text += " #{info[:info]}\n"
-        send_confirm_notice openid, info_body, "#{order[:order_id]} #{sprintf('%.2f',order[:amount])}\n#{order[:addr]}\n#{order[:tel]}", info[:ship], info[:remark], "https://foodtrust.cn/sla-3-3-1/", order[:order_times]
+        send_confirm_notice openid, info_body, "#{order[:order_id]} #{sprintf('%.2f',order[:amount])}\n#{order[:addr]}\n#{order[:tel]}", info[:ship], info[:remark], "https://foodtrust.cn/sla/", order[:order_times]
 
         #send work wechat bot message
         content = "老板们，来单咯~\n"
