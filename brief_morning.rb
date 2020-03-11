@@ -15,7 +15,6 @@ load 'wechat_api.rb'
 oorders = []
 
 #days count backward from today, defualt is 1, if count==0 then use tomrrow as shipdate
-#if count==-1 then use yesterday as shipdate
 day_count = 1
 silence_mode = false
 if ARGV[0] == '-s' || ARGV[1] == '-s'
@@ -34,16 +33,15 @@ else
         oorders += get_ogoods_orders_by_day the_day
         the_day = the_day.prev_day
    end
-   oorders = get_ogoods_orders_by_day Date.today.prev_day if day_count == -1 
 end
 
-=begin # used when ship datetime migration
+begin # used when ship datetime migration
 sday = Date.today.prev_day
 eday = Date.today
-s_time = sday.strftime('%Y-%m-%d') + ' 15:00:00'
+s_time = sday.strftime('%Y-%m-%d') + ' 00:00:00'
 e_time = eday.strftime('%Y-%m-%d') + ' 23:59:59'
 oorders =  get_ogoods_orders_within s_time, e_time
-=end
+end
 
 #Z: 自提 C: 承诺达 G:广州 Q:祈福 P:番禺自送 K：快递 T:团购 X:问题单
 LINES = ["[A]", "[B]", "[C]", "[D]", "[E]", "[F]", "[G]", "[H]", "[I]", "[J]", "[K]", "[L]", "[M]", "[N]", "[O]", "[P]", "[Q]", "[R]", "[S]", "[T]", "[U]", "[V]", "[W]", "[X]", "[Y]","[Z]"]
@@ -55,7 +53,7 @@ LINES.each do |line|
 
         #merge all lines into one line[A] except line[X] and line[Z]
         actual_line = line
-        #actual_line = '[A]' if line != '[X]' and line != '[Z]' and line != '[T]'
+        actual_line = '[A]' if line != '[X]' and line != '[Z]' and line != '[T]'
 
         line_data_sf[actual_line] = {}
         line_data_jd[actual_line] = {}
@@ -77,7 +75,7 @@ oorders.each do |oorder|
     end
 
     line = oorder[:line]
-    #line = '[A]' if oorder[:line] != '[X]' and oorder[:line] != '[Z]'
+    line = '[A]' if oorder[:line] != '[X]' and oorder[:line] != '[Z]'
 
     comment = oorder[:comment]
     comment = "#{oorder[:first_item]} #{oorder[:comment]}"  if line == '[T]'
@@ -122,7 +120,7 @@ end
 
 #遍历路线集合，生产各条线路的可打印信息及EXCEL表
 merged_orders = 0
-['[K]','[P]','[G]','[Z]','[X]', '[T]'].each do  |line|
+['[A]','[Z]','[X]', '[T]'].each do  |line|
 
   rday =Date.today.strftime('%Y-%m-%d')
   rtime=Time.now.strftime("%H%M%S")
