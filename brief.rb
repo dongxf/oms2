@@ -1,5 +1,6 @@
 ﻿#encoding: utf-8
 #this file shows all orders
+#usage: brief.rb [day_count] [using_ship_day_mode_flag]
 
 require 'digest/md5'
 require 'net/http'
@@ -17,24 +18,31 @@ oorders = []
 #days count backward from today, defualt is 1, if count==0 then use tomrrow as shipdate
 #if count==-1 then use yesterday as shipdate
 day_count = 1
-silence_mode = false
+ship_day_mode = false
+
+def get_oorders sdm, td
+    return get_ogoods_orders_by_shipdate td if sdm
+    return get_ogoods_orders_by_day td
+end
+
+#only support "brief.rb -s" and "brief.rb 2 -s"
 if ARGV[0] == '-s' || ARGV[1] == '-s'
-    day_count = ARGV[0].to_i if ARGV[0] != '-s'
-    silence_mode = true 
+    day_count = ARGV[0].to_i if ARGV[1] == '-s'
+    ship_day_mode = true 
 else
     day_count = ARGV[0].nil? ? 1 : ARGV[0].to_i
 end
 
 if day_count == 0
    the_day = Date.today.next_day
-   oorders = get_ogoods_orders_by_day the_day
+   oorders = get_oorders ship_day_mode, the_day
 else
    the_day = Date.today
    day_count.times do 
-        oorders += get_ogoods_orders_by_day the_day
+        oorders += get_oorders(ship_day_mode, the_day)
         the_day = the_day.prev_day
    end
-   oorders = get_ogoods_orders_by_day Date.today.prev_day if day_count == -1 
+   oorders = get_oorders(ship_day_mode, Date.today.prev_day) if day_count == -1
 end
 
 =begin # used when ship datetime migration
@@ -150,8 +158,6 @@ merged_orders = 0
     puts show_content
     puts "-- line #{line} total amount: #{sprintf('%02d',routes_sum[line])}\n"
 
-    #当指定-s时候不生成分线单和派线单
-    if !silence_mode
         #
         #生成派线单
         fn_name = ".\\incoming\\" + rday + "-line-" + line[1] + "-" + rtime + ".txt"
@@ -166,7 +172,6 @@ merged_orders = 0
         list = []
         msg_content += "#{body_content}"
         send_bot_message msg_content,list
-    end
 
   end 
  
