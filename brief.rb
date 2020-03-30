@@ -1,6 +1,9 @@
 ﻿#encoding: utf-8
 #this file shows all orders
-#usage: brief.rb [day_count] [using_ship_day_mode_flag]
+#usage: brief.rb [backward_days [-m|-e]]
+#   -m: start from morning 09:00:01
+#   -e: start from evening 18:00:01
+#   otherwise start from 00:00:00
 
 require 'digest/md5'
 require 'net/http'
@@ -15,43 +18,24 @@ load 'wechat_api.rb'
 
 oorders = []
 
-#days count backward from today, defualt is 1, if count==0 then use tomrrow as shipdate
-#if count==-1 then use yesterday as shipdate
-day_count = 1
-ship_day_mode = false
+#days count backward from today
 
-def get_oorders sdm, td
-    return get_ogoods_orders_by_shipdate td if sdm
-    return get_ogoods_orders_by_day td
-end
+day_count = ARGV[0].nil? ? 0 : ARGV[0].to_i
+stime = ' 00:00:00'
+stime = ' 09:00:01' if ARGV[1] == '-m'
+stime = ' 18:00:01' if ARGV[1] == '-e'
 
-#only support "brief.rb -s" and "brief.rb 2 -s"
-if ARGV[0] == '-s' || ARGV[1] == '-s'
-    day_count = ARGV[0].to_i if ARGV[1] == '-s'
-    ship_day_mode = true 
-else
-    day_count = ARGV[0].nil? ? 1 : ARGV[0].to_i
-end
-
-if day_count == 0
-   the_day = Date.today.next_day
-   oorders = get_oorders ship_day_mode, the_day
-else
-   the_day = Date.today
-   day_count.times do 
-        oorders += get_oorders(ship_day_mode, the_day)
-        the_day = the_day.prev_day
-   end
-   oorders = get_oorders(ship_day_mode, Date.today.prev_day) if day_count == -1
-end
-
-=begin # used when ship datetime migration
-sday = Date.today.prev_day
 eday = Date.today
-s_time = sday.strftime('%Y-%m-%d') + ' 15:00:00'
-e_time = eday.strftime('%Y-%m-%d') + ' 23:59:59'
+etime = ' 23:59:59'
+sday = Date.today
+day_count.times do
+    sday = sday.prev_day
+end
+
+s_time = sday.strftime('%Y-%m-%d') + stime
+e_time = eday.strftime('%Y-%m-%d') + etime
+
 oorders =  get_ogoods_orders_within s_time, e_time
-=end
 
 #Z: 自提 C: 承诺达 G:广州 Q:祈福 P:番禺自送 K：快递 T:团购 X:问题单
 LINES = ["[A]", "[B]", "[C]", "[D]", "[E]", "[F]", "[G]", "[H]", "[I]", "[J]", "[K]", "[L]", "[M]", "[N]", "[O]", "[P]", "[Q]", "[R]", "[S]", "[T]", "[U]", "[V]", "[W]", "[X]", "[Y]","[Z]"]
