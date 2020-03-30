@@ -43,7 +43,7 @@ orders.each do |order|
     next if order[:first_item].include?('产地直发') && order[:line]==['T'] #所有标注了产地直发的团购订单，并不打印, 这里有个bug，如果一张单是状态3已支付正好又包含直发商品
     if !silence_mode
         oday = order[:odate]
-        fn_name = ".\\incoming\\" + oday + "-order-" + order[:line][1] + '-' + order[:number] + "-c" + order[:customer_id] + ".txt"
+        fn_name = ".\\incoming\\" + oday + '-' + order[:number] + "-order-" + order[:line][1] +  "-c" + order[:customer_id] + ".txt"
         printf "w"
         File.open(fn_name,"w:UTF-8") do |f|
             f.write order[:plain_text]

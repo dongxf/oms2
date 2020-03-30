@@ -78,7 +78,7 @@ oorders.each do |oorder|
     attention = "##{oorder[:order_times]}"
     attention = "!!!!!!!" if oorder[:order_times] == 1
 
-    info =  " #{oorder[:addr]} [#{oorder[:short_number]}]LFCR  #{otime} #{oorder[:name]} #{oorder[:tel]} #{comment} #{attention}LFCR"
+    info =  " #{oorder[:addr]} [#{oorder[:short_number]} #{otime}]LFCR  #{oorder[:name]} #{oorder[:tel]} #{comment} #{attention}LFCR"
     info += "  #{oorder[:tips]}\n" if oorder[:tips]!= ''
     info += "  :::#{oorder[:date_time]} #{oorder[:number]} #{sprintf("%.2f",oorder[:amount])}\n" # " :::" 用于生成派线表时作为分割识别
     routes_sum[line] += oorder[:amount]
