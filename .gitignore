@@ -1,6 +1,8 @@
 tmp/
 converted/
 incoming/
+processed/
+staging/
 mailed/
 auto_import/
 goods_exported/
