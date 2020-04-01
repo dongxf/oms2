@@ -121,6 +121,41 @@ def save_line_excel_in_jd line_name, line_items
 end
 
 def save_line_excel_in_sf line_name, line_items
+    #save_line_excel_in_sf_sufa line_name, line_items
+    save_line_excel_in_sf_suda line_name, line_items
+end
+
+def save_line_excel_in_sf_suda line_name, line_items
+    #设置表格的编码为utf-8
+    Spreadsheet.client_encoding="utf-8"
+    #创建表格对象
+    book=Spreadsheet::Workbook.new
+    #创建工作表
+    sheet1=book.create_worksheet :name => "sheet1"
+    col_names=['用户订单号','寄件公司','寄件人','寄件电话','寄件详细地址','收件公司','收件人','收件电话','收件手机','收件详细地址','托寄物内容','托寄物数量','包裹重量','寄方备注','运费付款方式','业务类型','件数','代收金额','保价金额','个性化包装','签回单','自取件','电子验收','是否超长超重','超长超重服务费','保鲜服务','保单配送','拍照验证','票据专送','口令签收','是否定时派送','派送日期','派送时段','长（cm）','宽（cm）','高（cm）','体积（cm³）','扩展字段1','扩展字段2','扩展字段3','扩展字段4','扩展字段5']
+
+    col_index=0
+    col_names.each do |cname|
+        sheet1.row(0)[col_index]=cname
+        col_index += 1
+    end
+
+    line_index = 1
+    line_items.each do |key, item_cells|
+            col_index=0
+            item_cells.each do |cell|
+                sheet1.row(line_index)[col_index]=cell
+                col_index += 1
+            end
+            line_index += 1
+    end
+    rday =Date.today.strftime('%Y-%m-%d')
+    rtime=Time.now.strftime("%H%M%S")
+    fn_name = ".\\incoming\\" + rday + "-sf-summary-" + line_name + '-' + rtime + ".xls"
+    book.write fn_name
+end
+
+def save_line_excel_in_sf_sufa line_name, line_items
     #设置表格的编码为utf-8
     Spreadsheet.client_encoding="utf-8"
     #创建表格对象
