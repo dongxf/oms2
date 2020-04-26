@@ -36,7 +36,9 @@ def pospal_api api_name, request_body
     :updateBiPi => 'customerOpenApi/updateBalancePointByIncrement',
     :queryCustomerPages => 'customerOpenApi/queryCustomerPages',
     :queryCustomerUid => 'customerOpenApi/queryByNumber',
-    :queryCustomerByUuid => 'customerOpenApi/queryByUid'
+    :queryCustomerByUuid => 'customerOpenApi/queryByUid',
+    :queryProductByBarcode => 'productOpenApi/queryProductByBarcode',
+    :queryProductImagePages => 'productOpenApi/queryProductImagePages'
   }
 
   #please set POSPAL_APPID and APPKEY in .bashrc
