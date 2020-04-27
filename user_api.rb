@@ -65,7 +65,7 @@ def update_userinfo_in_orders
     condition = order_id_list[0..order_id_list.size-2]+')'
     return if condition.size < 10 #no order need to update
     sqlu = "UPDATE ogoods.pospal_orders o, ogoods.pospal_users u SET o.uid = u.uid, o.openid = u.openid WHERE o.order_id in #{condition} AND o.customer_id = u.number"
-    resu = rds.query(sqlu)
+    resu = @rds.query(sqlu)
 end
 
 def update_userdb pusers
