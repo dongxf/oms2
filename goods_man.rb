@@ -53,19 +53,19 @@ def getGoodsCodeHash
 
         sql1 = 'select * from ogoods.pospal_goods'
         res1 = @rds.query(sql1)
-        idx = 0
+        idx = 1
         res1.each do |tgr|
             cd = tgr['code']
             nm = tgr['name']
             sp = tgr['sale_price']
             dcr = tgr['description']
             img = tgr['img_url']
-            codes.store(idx,cd)
+            codes.store(cd,idx)
             names.store(cd,nm)
             prices.store(cd,sp)
             descriptions.store(cd,dcr)
             images.store(cd,img)
-            idx += 1
+			idx += 1
         end
         puts "goods before synced: #{names.size}"
         return {codes: codes, names: names, prices: prices, descriptions: descriptions, images: images}
@@ -311,7 +311,7 @@ def overwriteOgoodsByExcel xlsx
 end
 
 # pospal will only retrun some frame html code, real content is supposed to be grab by js
-# 银豹的商品详情页shi是动态身材和生产的，午饭抓取，亲请自行打开一下链接查看,或者请再za在后台复制替换
+# 银豹的商品详情页是动态生产的，无法自动抓取，亲请自行打开一下链接查看，在后台复制替换
 def getPospalPage code
     url = 'https://v3xg5-24.pospal.cn/m#/details/'+code
 	html = open('https://v3xg5-24.pospal.cn/m#/details/'+code){|f| f.read}
@@ -320,16 +320,17 @@ def getPospalPage code
 end
 
 def genPageContent code
-
     page='&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;抱歉，此商品详情内容尚未完成迁移，&lt;/p&gt;&lt;p&gt;产品管理人员正在快马加鞭复制黏贴。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;点击&lt;a href=&quot;https://shop.foodtrust.cn/m#/details/GOODS_CODE&quot; style=&quot;&quot; target=&quot;_self&quot; title=&quot;银豹系统商品详情页&quot;&gt;&lt;span style=&quot;color:#ff0000&quot;&gt;此处链接&lt;/span&gt;&lt;/a&gt;查看原系统商品描述&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color:#88b04b&quot;&gt;温馨提示：右划屏幕或回退&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;br/&gt;&lt;/p&gt;&lt;hr/&gt;&lt;p&gt;后台产品管理者参考链接&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://undefined&quot;&gt;https://shop.foodtrust.cn/m#/details/GOODS_CODE&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;'
     return page.gsub('GOODS_CODE',code)
-
 end
 
 #please download excel from pospal
 #update_goods = overwrite_mode ?  overwriteOgoodsByExcel(xls) : updateOgoodsByExcel(xls)
 
 #please export json file using immigrate-products.rb
-updateImgPage
+#update image & pages content link from pospal server
+# updateImgPage
 
-#update pages content from pospal server
+
+
+
