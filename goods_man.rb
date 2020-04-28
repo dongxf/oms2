@@ -24,15 +24,9 @@ if args=='-f'
 end
 
 def cleanOgoodsTable
-        sqlu = 'delete from ogoods.pospal_goods where 1=1'
-        puts "overwrite mode: #{sqlu}"
-        @rds.query(sqlu)
-end
-
-if overwrite_mode
-    cleanOgoodsTable 
-    puts 'ogoods.pospal_goods table cleaned, please sync again'
-    return
+    sqlu = 'delete from ogoods.pospal_goods where 1=1'
+    puts "overwrite mode: #{sqlu}"
+    @rds.query(sqlu)
 end
 
 # get current name and price list from ogoods db
@@ -51,7 +45,7 @@ def getGoodsCodeHash
             prices.store(cd,sp)
             descriptions.store(cd,dcr)
         end
-        #puts "goods before synced: #{names.size}"
+        puts "goods before synced: #{names.size}"
         return {names: names, prices: prices, descriptions: descriptions}
 end
 
@@ -80,6 +74,7 @@ def breakLines text
 end
 
 def quoteChars descrp
+    #actually if '/' in the string, also sucks 
     return descrp.gsub("'",%q(\\\'));
 end
 
@@ -96,8 +91,12 @@ def getPospalJson
     return {image: productsImages}
 end
 
-def updateOgoodsbyExcel xlsx
-    begin
+def updateOgoodsByExcel xlsx
+
+        gtch = getGoodsCodeHash
+        oNames = gtch[:names]
+        oPrices = gtch[:prices]
+
         s = SimpleSpreadsheet::Workbook.read xlsx
         s.selected_sheet = s.sheets.first
         line_idx = 0
@@ -111,10 +110,12 @@ def updateOgoodsbyExcel xlsx
             descrp = quoteChars descrp
             #will remove all links in description here
 
-            gtch = getGoodsCodeHash
-            oNames = gtch[:names]
-            oPrices = gtch[:prices]
-            oDescription = gtch[:descriptions]
+            sale_price = s.cell(line,7)
+            bulk_price = s.cell(line,10)
+            member_price = s.cell(line,11)
+
+            bulk_price = sale_price if bulk_price == '' || bulk_price.nil?
+            member_price = sale_price if member_price == '' || member_price.nil?
 
             if oNames[code].nil?
                 sqlu = "insert into ogoods.pospal_goods( 
@@ -126,37 +127,49 @@ def updateOgoodsbyExcel xlsx
                             status,description
                         ) values( 
                             '#{s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
-                            #{s.cell(line,6)},#{s.cell(line,7)},#{s.cell(line,8)},'#{s.cell(line,9)}',#{s.cell(line,10)},#{s.cell(line,11)},
+                            #{s.cell(line,6)},#{s.cell(line,7)},#{s.cell(line,8)},'#{s.cell(line,9)}',#{bulk_price},#{member_price},
                             '#{s.cell(line,12)}','#{s.cell(line,13)}','#{s.cell(line,14)}','#{s.cell(line,15)}',
                             '#{s.cell(line,16)}','#{s.cell(line,17)}','#{s.cell(line,18)}','#{s.cell(line,19)}','#{s.cell(line,20)}','#{s.cell(line,21)}',
                             '#{s.cell(line,22)}','#{s.cell(line,23)}','#{s.cell(line,24)}','#{s.cell(line,25)}',
                             '#{s.cell(line,26)}','#{descrp}'
                         );"
-                resu = @rds.query(sqlu)
-                print "insert #{s.cell(line,3)} #{s.cell(line,1)}\r"
+                begin
+                    resu = @rds.query(sqlu)
+                    print "insert #{s.cell(line,3)} #{s.cell(line,1)}\r"
+                rescue => e
+                    puts ">>>ERROR: #{e}"
+                    puts sqlu
+                    puts "#{s.cell(line,10)},#{s.cell(line,11)} #{sale_price} #{sale_price}"
+                    puts "<<<"
+                end
             else
-                #if name / price /description not changed, skip update
-                if oNames[code]!= s.cell(line,2) || oPrices[code]!= s.cell(line,9) || oDescription[code]!= descrp
+                #if name / price not changed, skip update
+                if oNames[code]!= s.cell(line,1) || oPrices[code]!= s.cell(line,8)
                     sqlu = "update ogoods.pospal_goods set
                         name='#{s.cell(line,1)}',catalog='#{s.cell(line,2)}',code='#{s.cell(line,3)}',size='#{s.cell(line,4)}',unit='#{s.cell(line,5)}',
-                        balance=#{s.cell(line,6)},purchase_price=#{s.cell(line,7)},sale_price=#{s.cell(line,8)},gross_profit='#{s.cell(line,9)}',bulk_price=#{s.cell(line,10)},member_price=#{s.cell(line,11)},
+                        balance=#{s.cell(line,6)},purchase_price=#{s.cell(line,7)},sale_price=#{s.cell(line,8)},gross_profit='#{s.cell(line,9)}',bulk_price=#{bulk_price},member_price=#{member_price},
                         member_discount='#{s.cell(line,12)}',points='#{s.cell(line,13)}',max_stock='#{s.cell(line,14)}',minimal_stock='#{s.cell(line,15)}',brand='#{s.cell(line,16)}'
                         ,supplier='#{s.cell(line,17)}',manufacture_date='#{s.cell(line,18)}',baozhiqi_date='#{s.cell(line,19)}',py_code='#{s.cell(line,20)}',huo_number='#{s.cell(line,21)}',
                         producer_memo='#{s.cell(line,22)}',security_memo='#{s.cell(line,23)}',keep_memo='#{s.cell(line,24)}',scale_code='#{s.cell(line,25)}',
                         status='#{s.cell(line,26)}',description='#{descrp}'
                         where code = '#{s.cell(line,3)}'
                     "
-                    resu = @rds.query(sqlu)
-                    print "update #{s.cell(line,3)} #{s.cell(line,1)}\r"
-               else
-                    print "skip #{s.cell(line,3)} #{s.cell(line,1)}\r"
+                    begin
+                        resu = @rds.query(sqlu)
+                        #print "update #{s.cell(line,3)} #{s.cell(line,1)}\r"
+                        puts "updating #{code}: #{oNames[code]} vs #{s.cell(line,1)} || #{oPrices[code]} vs #{s.cell(line,8)}"
+                    rescue => e
+                        puts ">>>ERROR: #{e}"
+                        puts sqlu
+                        puts "#{s.cell(line,10)},#{s.cell(line,11)} #{sale_price} #{sale_price}"
+                        puts "<<<"
+                    end
+               #else
+                    #print "skip #{s.cell(line,3)} #{s.cell(line,1)}\r"
                end
             end
         end
         puts "\ndone. #{line_idx}"
-    rescue => e
-        puts ">>>ERROR: #{e}"
-    end
 
 end
 
@@ -214,5 +227,63 @@ def exportNoneZeroProducts
 
 end
 
-#ap getPospalJson
-updateOgoodsbyExcel xls
+def overwriteOgoodsByExcel xlsx
+
+        cleanOgoodsTable 
+
+        s = SimpleSpreadsheet::Workbook.read xlsx
+        s.selected_sheet = s.sheets.first
+        line_idx = 0
+        s.first_row.upto(s.last_row) do |line|
+            line_idx += 1
+            next if line_idx == 1
+            code = s.cell(line,3)
+            descrp = s.cell(line,27)
+            descrp = '' if descrp.nil?  #to prevent bugs caused by nil != nil when compring database record with excel data
+            descrp = breakLines descrp
+            descrp = quoteChars descrp
+            #will remove all links in description here
+
+            sale_price = s.cell(line,7)
+            bulk_price = s.cell(line,10)
+            member_price = s.cell(line,11)
+
+            bulk_price = sale_price if bulk_price == '' || bulk_price.nil?
+            member_price = sale_price if member_price == '' || member_price.nil?
+
+            sqlu = "insert into ogoods.pospal_goods( 
+                        name,catalog,code,size,unit,
+                        balance,purchase_price,sale_price,gross_profit,bulk_price,member_price,
+                        member_discount, points, max_stock,minimal_stock,
+                        brand,supplier,manufacture_date,baozhiqi_date,py_code,huo_number,
+                        producer_memo,security_memo,keep_memo,scale_code,
+                        status,description
+                    ) values( 
+                        '#{s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
+                        #{s.cell(line,6)},#{s.cell(line,7)},#{s.cell(line,8)},'#{s.cell(line,9)}',#{bulk_price},#{member_price},
+                        '#{s.cell(line,12)}','#{s.cell(line,13)}','#{s.cell(line,14)}','#{s.cell(line,15)}',
+                        '#{s.cell(line,16)}','#{s.cell(line,17)}','#{s.cell(line,18)}','#{s.cell(line,19)}','#{s.cell(line,20)}','#{s.cell(line,21)}',
+                        '#{s.cell(line,22)}','#{s.cell(line,23)}','#{s.cell(line,24)}','#{s.cell(line,25)}',
+                        '#{s.cell(line,26)}','#{descrp}'
+                    );"
+            begin
+                resu = @rds.query(sqlu)
+                print "insert #{s.cell(line,3)} #{s.cell(line,1)}\r"
+            rescue => e
+                puts ">>>ERROR: #{e}"
+                puts sqlu
+                puts "#{s.cell(line,10)},#{s.cell(line,11)} #{sale_price} #{sale_price}"
+                puts "<<<"
+            end
+
+        end
+        puts "\ndone. #{line_idx}"
+
+end
+
+# ap getPospalJson
+if overwrite_mode
+    overwriteOgoodsByExcel xls
+else
+    updateOgoodsByExcel xls
+end
