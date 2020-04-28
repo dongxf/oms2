@@ -8,6 +8,8 @@ require 'json'
 require 'awesome_print'
 require 'spreadsheet' #用于写xls文件
 require 'simple-spreadsheet' #用于读取xlsx文件，spreadsheet gem读xlsx会报签名错误
+require 'open-uri'
+require 'nokogiri'
 
 @rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 
@@ -307,8 +309,19 @@ def overwriteOgoodsByExcel xlsx
 
 end
 
+# pospal will only retrun some frame html code, real content is supposed to be grab by js
+# 银豹的商品详情页shi是动态身材和生产的，午饭抓取，亲请自行打开一下链接查看,或者请再za在后台复制替换
+def getPospalPage code
+    url = 'https://v3xg5-24.pospal.cn/m#/details/'+code
+	html = open('https://v3xg5-24.pospal.cn/m#/details/'+code){|f| f.read}
+	text = Nokogiri::HTML(html).text
+	return text
+end
+
 #please download excel from pospal
 #update_goods = overwrite_mode ?  overwriteOgoodsByExcel(xls) : updateOgoodsByExcel(xls)
 
 #please export json file using immigrate-products.rb
-updateImgUrl
+#updateImgUrl
+
+#update pages content from pospal server
