@@ -29,11 +29,24 @@ def cleanOgoodsTable
     @rds.query(sqlu)
 end
 
+def getPospalJson
+    images = {}
+    pospal_products=JSON.parse IO.readlines(".//export//pospal-products.json")[0]
+    pospal_products.each do |product|
+        name = product['productName']
+        barcode = product['productBarcode']
+        imageUrl = product['imageUrl']
+        images.store(barcode,imageUrl)
+    end
+    return images
+end
+
 # get current name and price list from ogoods db
 def getGoodsCodeHash
         codes = {};
         names = {};
         prices = {};
+        images = {};
         descriptions = {};
 
         sql1 = 'select * from ogoods.pospal_goods'
@@ -44,13 +57,33 @@ def getGoodsCodeHash
             nm = tgr['name']
             sp = tgr['sale_price']
             dcr = tgr['description']
+            img = tgr['img_url']
             codes.store(idx,cd)
             names.store(cd,nm)
             prices.store(cd,sp)
             descriptions.store(cd,dcr)
+            images.store(cd,img)
+            idx += 1
         end
         puts "goods before synced: #{names.size}"
-        return {codes: codes, names: names, prices: prices, descriptions: descriptions}
+        return {codes: codes, names: names, prices: prices, descriptions: descriptions, images: images}
+end
+
+def updateImgUrl
+    puts "update img_url in ogoods using json file"
+    images = getPospalJson
+    images.each do |code, url|
+        url = 'https://oss.foodtrust.cn//8322720200425033706535.jpg' if url.nil?
+        sqlu = "update ogoods.pospal_goods set img_url = '" + url + "' where code = '" + code + "'";
+        begin
+            resu = @rds.query(sqlu)
+        rescue => e
+            puts ">>>ERROR: #{e}"
+            puts sqlu 
+        end
+        print "update image for #{code}                \r"
+    end
+    puts "done"
 end
 
 #to let description can be line changed when using by cloud label printing
@@ -82,18 +115,6 @@ def escp str
     return str.gsub("'",%q(\\\'));
 end
 
-def getPospalJson
-    productsImages = {}
-    pospal_products=JSON.parse IO.readlines(".//export//pospal-products.json")[0]
-    pospal_products.each do |product|
-        name = product['productName']
-        barcode = product['productBarcode']
-        imageUrl = product['imageUrl']
-        puts "#{name} #{barcode} #{imageUrl}"
-        productsImages.store(barcode,imageUrl)
-    end
-    return {image: productsImages}
-end
 
 def updateOgoodsByExcel xlsx
 
@@ -262,14 +283,14 @@ def overwriteOgoodsByExcel xlsx
                         member_discount, points, max_stock,minimal_stock,
                         brand,supplier,manufacture_date,baozhiqi_date,py_code,huo_number,
                         producer_memo,security_memo,keep_memo,scale_code,
-                        status,description
+                        status,description,img_url,page
                     ) values( 
                         '#{escp s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
                         #{s.cell(line,6)},#{s.cell(line,7)},#{s.cell(line,8)},'#{s.cell(line,9)}',#{bulk_price},#{member_price},
                         '#{s.cell(line,12)}','#{s.cell(line,13)}','#{s.cell(line,14)}','#{s.cell(line,15)}',
                         '#{s.cell(line,16)}','#{s.cell(line,17)}','#{s.cell(line,18)}','#{s.cell(line,19)}','#{s.cell(line,20)}','#{s.cell(line,21)}',
                         '#{s.cell(line,22)}','#{s.cell(line,23)}','#{s.cell(line,24)}','#{s.cell(line,25)}',
-                        '#{s.cell(line,26)}','#{descrp}'
+                        '#{s.cell(line,26)}','#{descrp}','https://oss.foodtrust.cn//8322720200425033706535.jpg',''
                     );"
             begin
                 resu = @rds.query(sqlu)
@@ -286,9 +307,8 @@ def overwriteOgoodsByExcel xlsx
 
 end
 
-# ap getPospalJson
-if overwrite_mode
-    overwriteOgoodsByExcel xls
-else
-    updateOgoodsByExcel xls
-end
+#please download excel from pospal
+#update_goods = overwrite_mode ?  overwriteOgoodsByExcel(xls) : updateOgoodsByExcel(xls)
+
+#please export json file using immigrate-products.rb
+updateImgUrl
