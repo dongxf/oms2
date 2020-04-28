@@ -326,30 +326,43 @@ def genCrmebProductSQL
     res = @rds.query(inq)
 
     idx = 1
-    sql = ""
-
+    sql = "delete from crmeb.eb_store_product where 1=1;\n"
+	sql += "delete from crmeb.eb_store_product_attr where 1=1;\n" 
+	sql += "delete from crmeb.eb_store_product_attr_value where 1=1;\n"
+	sql += "delete from crmeb.eb_store_product_attr_result where 1=1;\n"
+	sql += "delete from crmeb.eb_store_product_cate where 1=1;\n"
+	sql += "delete from crmeb.eb_store_product_description where 1=1;\n"
+	
     res.each do |r|
         code = r['code']
-        #sql += "select * from crmeb.eb_store_product where id = #{idx} \n"
+=begin
+                            name,catalog,code,size,unit,
+                            balance,purchase_price,sale_price,gross_profit,bulk_price,member_price,
+                            member_discount, points, max_stock,minimal_stock,
+                            brand,supplier,manufacture_date,baozhiqi_date,py_code,huo_number,
+                            producer_memo,security_memo,keep_memo,scale_code,
+                            status,description,img_url,page
+=end
+		#line 9 对应目录，可以再优化
         sql += "insert into crmeb.eb_store_product values (
             #{idx},
             0,
             '#{@rds.escape r['img_url']}',
             '#{@rds.escape [r['img_url']].to_json}',
-            '单规格商品名称',
-            '简介一',
+            '#{@rds.escape r['name']}',
+            '#{@rds.escape r['description']}',
             '关键一',
-            '',
-            '2,3',
-            99.00,
+            '#{r['code']}',
+            '1,2,3,4,5',
+            #{r['sale_price']},
+            #{r['sale_price']},
+            #{r['sale_price']},
             0.00,
-            199.00,
-            0.00,
-            '份一',
+            '#{r['unit']}',
             0,
             0,
-            1000,
-            1,
+            #{r['balance']},
+            #{r['status']=='禁用' ? 0 : 1},
             0,
             0,
             0,
@@ -358,13 +371,13 @@ def genCrmebProductSQL
             0,
             0,
             0,
-            99.00,
-            19.00,
+            #{(r['sale_price'].to_f*0.9).to_i},
+            #{r['purchase_price']},
             0,
             NULL,
             0,
             0,
-            22,
+            0,
             0,
             '',
             '',
@@ -373,8 +386,61 @@ def genCrmebProductSQL
             0,
             '1,2,3' 
         );\n"
-        idx += 1
-        break if idx > 2
+		sql += "INSERT INTO crmeb.eb_store_product_attr VALUES (
+			#{idx},
+			 '规格', 
+			 '默认', 
+			 0
+		);\n"
+		#line 4 is sales history
+		sql += "INSERT INTO crmeb.eb_store_product_attr_value
+		VALUES(
+				#{idx},
+				'默认',
+				#{r['balance']},
+				0,
+				#{r['sale_price']},
+				'#{@rds.escape [r['img_url']].to_json}',
+				LEFT(md5(uuid()),8),
+				#{r['purchase_price']},
+				'#{r['code']}',
+				#{r['sale_price']},
+				0.4,
+				0.08,
+				0.00,
+				0.00,
+				0,
+				0,
+				0 
+		);\n"
+		sql += "INSERT INTO crmeb.eb_store_product_cate (product_id,cate_id,add_time) VALUES (
+			#{idx},
+			 2, 
+			 1588026008
+			 );\n	
+		"
+		va = {}
+		attr = [ {value: '规格', detailValue: '', attrHidden: '', detail: ['默认']} ]
+		va.store(:attr, attr )
+		
+		value = [ { pic: r['img_url'],  price:	r['sale_price'], cost: r['purchase_price'], ot_price: r['sale_price'], stock: r['balance'], bar_code: r['code'], volume: "0.4", weight: "0.08", brokerage: 0, brokerage_two: 0, value: "规格", detail: {unit: "默认"} } ]
+		va.store(:value, value)
+		
+		sql += "insert into crmeb.eb_store_product_attr_result values(
+			#{idx},
+			'#{@rds.escape(va.to_json)}',
+			1588026008,
+			0
+		);\n"
+		
+		sql += "insert into crmeb.eb_store_product_description values(
+			#{idx},
+			'#{@rds.escape r['page']}',
+			0
+		);\n"
+
+		idx += 1
+		#break if idx > 20 #for demo usage
     end
     return sql
 end
