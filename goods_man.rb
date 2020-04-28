@@ -330,11 +330,52 @@ def genCrmebProductSQL
 
     res.each do |r|
         code = r['code']
-        sql += "select * from crmeb.eb_store_product where id = #{idx} \n"
+        #sql += "select * from crmeb.eb_store_product where id = #{idx} \n"
+        sql += "insert into crmeb.eb_store_product values (
+            #{idx},
+            0,
+            '#{@rds.escape r['img_url']}',
+            '#{@rds.escape [r['img_url']].to_json}',
+            '单规格商品名称',
+            '简介一',
+            '关键一',
+            '',
+            '2,3',
+            99.00,
+            0.00,
+            199.00,
+            0.00,
+            '份一',
+            0,
+            0,
+            1000,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1588026008,
+            0,
+            0,
+            0,
+            99.00,
+            19.00,
+            0,
+            NULL,
+            0,
+            0,
+            22,
+            0,
+            '',
+            '',
+            '',
+            1,
+            0,
+            '1,2,3' 
+        );\n"
         idx += 1
         break if idx > 2
     end
-
     return sql
 end
 
