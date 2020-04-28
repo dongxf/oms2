@@ -31,22 +31,26 @@ end
 
 # get current name and price list from ogoods db
 def getGoodsCodeHash
+        codes = {};
         names = {};
         prices = {};
         descriptions = {};
+
         sql1 = 'select * from ogoods.pospal_goods'
         res1 = @rds.query(sql1)
+        idx = 0
         res1.each do |tgr|
             cd = tgr['code']
             nm = tgr['name']
             sp = tgr['sale_price']
             dcr = tgr['description']
+            codes.store(idx,cd)
             names.store(cd,nm)
             prices.store(cd,sp)
             descriptions.store(cd,dcr)
         end
         puts "goods before synced: #{names.size}"
-        return {names: names, prices: prices, descriptions: descriptions}
+        return {codes: codes, names: names, prices: prices, descriptions: descriptions}
 end
 
 #to let description can be line changed when using by cloud label printing
@@ -73,9 +77,9 @@ def breakLines text
     return result
 end
 
-def quoteChars descrp
-    #actually if '/' in the string, also sucks 
-    return descrp.gsub("'",%q(\\\'));
+def escp str
+    # '\' can't be correctly processed yet, :(
+    return str.gsub("'",%q(\\\'));
 end
 
 def getPospalJson
@@ -107,7 +111,7 @@ def updateOgoodsByExcel xlsx
             descrp = s.cell(line,27)
             descrp = '' if descrp.nil?  #to prevent bugs caused by nil != nil when compring database record with excel data
             descrp = breakLines descrp
-            descrp = quoteChars descrp
+            descrp = escp descrp
             #will remove all links in description here
 
             sale_price = s.cell(line,7)
@@ -126,7 +130,7 @@ def updateOgoodsByExcel xlsx
                             producer_memo,security_memo,keep_memo,scale_code,
                             status,description
                         ) values( 
-                            '#{s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
+                            '#{escp s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
                             #{s.cell(line,6)},#{s.cell(line,7)},#{s.cell(line,8)},'#{s.cell(line,9)}',#{bulk_price},#{member_price},
                             '#{s.cell(line,12)}','#{s.cell(line,13)}','#{s.cell(line,14)}','#{s.cell(line,15)}',
                             '#{s.cell(line,16)}','#{s.cell(line,17)}','#{s.cell(line,18)}','#{s.cell(line,19)}','#{s.cell(line,20)}','#{s.cell(line,21)}',
@@ -145,8 +149,9 @@ def updateOgoodsByExcel xlsx
             else
                 #if name / price not changed, skip update
                 if oNames[code]!= s.cell(line,1) || oPrices[code]!= s.cell(line,8)
+
                     sqlu = "update ogoods.pospal_goods set
-                        name='#{s.cell(line,1)}',catalog='#{s.cell(line,2)}',code='#{s.cell(line,3)}',size='#{s.cell(line,4)}',unit='#{s.cell(line,5)}',
+                        name='#{escp s.cell(line,1)}',catalog='#{s.cell(line,2)}',code='#{s.cell(line,3)}',size='#{s.cell(line,4)}',unit='#{s.cell(line,5)}',
                         balance=#{s.cell(line,6)},purchase_price=#{s.cell(line,7)},sale_price=#{s.cell(line,8)},gross_profit='#{s.cell(line,9)}',bulk_price=#{bulk_price},member_price=#{member_price},
                         member_discount='#{s.cell(line,12)}',points='#{s.cell(line,13)}',max_stock='#{s.cell(line,14)}',minimal_stock='#{s.cell(line,15)}',brand='#{s.cell(line,16)}'
                         ,supplier='#{s.cell(line,17)}',manufacture_date='#{s.cell(line,18)}',baozhiqi_date='#{s.cell(line,19)}',py_code='#{s.cell(line,20)}',huo_number='#{s.cell(line,21)}',
@@ -156,8 +161,8 @@ def updateOgoodsByExcel xlsx
                     "
                     begin
                         resu = @rds.query(sqlu)
-                        #print "update #{s.cell(line,3)} #{s.cell(line,1)}\r"
-                        puts "updating #{code}: #{oNames[code]} vs #{s.cell(line,1)} || #{oPrices[code]} vs #{s.cell(line,8)}"
+                        print "update #{s.cell(line,3)} #{s.cell(line,1)}\r"
+                        #puts "updating #{code}: #{oNames[code]} vs #{s.cell(line,1)} || #{oPrices[code]} vs #{s.cell(line,8)}"
                     rescue => e
                         puts ">>>ERROR: #{e}"
                         puts sqlu
@@ -241,7 +246,7 @@ def overwriteOgoodsByExcel xlsx
             descrp = s.cell(line,27)
             descrp = '' if descrp.nil?  #to prevent bugs caused by nil != nil when compring database record with excel data
             descrp = breakLines descrp
-            descrp = quoteChars descrp
+            descrp = escp descrp
             #will remove all links in description here
 
             sale_price = s.cell(line,7)
@@ -259,7 +264,7 @@ def overwriteOgoodsByExcel xlsx
                         producer_memo,security_memo,keep_memo,scale_code,
                         status,description
                     ) values( 
-                        '#{s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
+                        '#{escp s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
                         #{s.cell(line,6)},#{s.cell(line,7)},#{s.cell(line,8)},'#{s.cell(line,9)}',#{bulk_price},#{member_price},
                         '#{s.cell(line,12)}','#{s.cell(line,13)}','#{s.cell(line,14)}','#{s.cell(line,15)}',
                         '#{s.cell(line,16)}','#{s.cell(line,17)}','#{s.cell(line,18)}','#{s.cell(line,19)}','#{s.cell(line,20)}','#{s.cell(line,21)}',
