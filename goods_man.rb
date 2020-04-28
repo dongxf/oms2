@@ -55,16 +55,12 @@ def getGoodsCodeHash
         res1 = @rds.query(sql1)
         idx = 1
         res1.each do |tgr|
-            cd = tgr['code']
-            nm = tgr['name']
-            sp = tgr['sale_price']
-            dcr = tgr['description']
-            img = tgr['img_url']
-            codes.store(cd,idx)
-            names.store(cd,nm)
-            prices.store(cd,sp)
-            descriptions.store(cd,dcr)
-            images.store(cd,img)
+            code = tgr['code']
+            codes.store(code,idx)
+            names.store(code,tgr['name'])
+            prices.store(code,tgr['sale_price'])
+            descriptions.store(code,tgr['description'])
+            images.store(code,tgr['img_url'])
 			idx += 1
         end
         puts "goods before synced: #{names.size}"
@@ -324,13 +320,32 @@ def genPageContent code
     return page.gsub('GOODS_CODE',code)
 end
 
+def genCrmebProductSQL 
+
+    inq = 'select * from ogoods.pospal_goods'
+    res = @rds.query(inq)
+
+    idx = 1
+    sql = ""
+
+    res.each do |r|
+        code = r['code']
+        sql += "select * from crmeb.eb_store_product where id = #{idx} \n"
+        idx += 1
+        break if idx > 2
+    end
+
+    return sql
+end
+
+=begin  
 #please download excel from pospal
-#update_goods = overwrite_mode ?  overwriteOgoodsByExcel(xls) : updateOgoodsByExcel(xls)
+update_goods = overwrite_mode ?  overwriteOgoodsByExcel(xls) : updateOgoodsByExcel(xls)
 
 #please export json file using immigrate-products.rb
 #update image & pages content link from pospal server
-# updateImgPage
+updateImgPage
+=end
 
-
-
-
+sql = genCrmebProductSQL
+puts sql
