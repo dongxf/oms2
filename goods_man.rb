@@ -71,19 +71,20 @@ def getGoodsCodeHash
         return {codes: codes, names: names, prices: prices, descriptions: descriptions, images: images}
 end
 
-def updateImgUrl
-    puts "update img_url in ogoods using json file"
+def updateImgPage
+    puts "update img_url & page in ogoods using json file"
     images = getPospalJson
     images.each do |code, url|
         url = 'https://oss.foodtrust.cn//8322720200425033706535.jpg' if url.nil?
-        sqlu = "update ogoods.pospal_goods set img_url = '" + url + "' where code = '" + code + "'";
+        page = genPageContent code
+        sqlu = "update ogoods.pospal_goods set img_url = '" + url + "' , page = '" + page + "' where code = '" + code + "'";
         begin
             resu = @rds.query(sqlu)
         rescue => e
             puts ">>>ERROR: #{e}"
             puts sqlu 
         end
-        print "update image for #{code}                \r"
+        print "update image & page content for #{code}                \r"
     end
     puts "done"
 end
@@ -318,10 +319,17 @@ def getPospalPage code
 	return text
 end
 
+def genPageContent code
+
+    page='&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;抱歉，此商品详情内容尚未完成迁移，&lt;/p&gt;&lt;p&gt;产品管理人员正在快马加鞭复制黏贴。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;点击&lt;a href=&quot;https://shop.foodtrust.cn/m#/details/GOODS_CODE&quot; style=&quot;&quot; target=&quot;_self&quot; title=&quot;银豹系统商品详情页&quot;&gt;&lt;span style=&quot;color:#ff0000&quot;&gt;此处链接&lt;/span&gt;&lt;/a&gt;查看原系统商品描述&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color:#88b04b&quot;&gt;温馨提示：右划屏幕或回退&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;br/&gt;&lt;/p&gt;&lt;hr/&gt;&lt;p&gt;后台产品管理者参考链接&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://undefined&quot;&gt;https://shop.foodtrust.cn/m#/details/GOODS_CODE&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;'
+    return page.gsub('GOODS_CODE',code)
+
+end
+
 #please download excel from pospal
 #update_goods = overwrite_mode ?  overwriteOgoodsByExcel(xls) : updateOgoodsByExcel(xls)
 
 #please export json file using immigrate-products.rb
-#updateImgUrl
+updateImgPage
 
 #update pages content from pospal server
