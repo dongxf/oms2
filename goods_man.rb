@@ -320,12 +320,41 @@ def genPageContent code
     return page.gsub('GOODS_CODE',code)
 end
 
+def genCategories cat, idx
+
+	list = {}
+	list.store('个人护理', 21 )
+	list.store('产地直发', 3)
+	list.store('加工菜肴', 10)
+	list.store('南北特产', 7)
+	list.store('增值服务', 2)
+	list.store('干果零食', 11)
+	list.store('当季水果', 5)
+	list.store('时令蔬菜', 4)
+	list.store('更多好物', 13)
+	list.store('母婴专区', 31)
+	list.store('环保日用', 21)
+	list.store('环保福利', 20)
+	list.store('禽蛋鱼肉', 6)
+	list.store('粮油调料', 9)
+	list.store('系统保留', 49)
+	list.store('线下专用', 49)
+	list.store('茶饮冲调', 12)
+	list.store('补拍运费', 2)
+	list.store('面点乳品', 8)
+	
+	cats = "#{list[cat]}"
+	cats = cats + ',2' if idx%4  && list[cat] != 2
+	return cats
+	
+end
+
 def genCrmebProductSQL 
 
     inq = 'select * from ogoods.pospal_goods'
     res = @rds.query(inq)
 
-    idx = 1
+    idx = 3 #id 1 & 2 leave for demo
     sql = "delete from crmeb.eb_store_product where 1=1;\n"
 	sql += "delete from crmeb.eb_store_product_attr where 1=1;\n" 
 	sql += "delete from crmeb.eb_store_product_attr_value where 1=1;\n"
@@ -343,7 +372,7 @@ def genCrmebProductSQL
                             producer_memo,security_memo,keep_memo,scale_code,
                             status,description,img_url,page
 =end
-		#line 9 对应目录，可以再优化
+		#line 9 对应目录，可以再优化 #关键字 应该可以用来做 生产者和保存条件的说明
         sql += "insert into crmeb.eb_store_product values (
             #{idx},
             0,
@@ -351,9 +380,9 @@ def genCrmebProductSQL
             '#{@rds.escape [r['img_url']].to_json}',
             '#{@rds.escape r['name']}',
             '#{@rds.escape r['description']}',
-            '关键一',
+            '#{r['producer_memo']} #{r['keep_memo']}',
             '#{r['code']}',
-            '1,2,3,4,5',
+            '#{genCategories r['catalog'], idx}',
             #{r['sale_price']},
             #{r['sale_price']},
             #{r['sale_price']},
@@ -413,12 +442,15 @@ def genCrmebProductSQL
 				0,
 				0 
 		);\n"
+		
+		genCategories(r['catalog'], idx).split(',').each do |cat|
 		sql += "INSERT INTO crmeb.eb_store_product_cate (product_id,cate_id,add_time) VALUES (
 			#{idx},
-			 2, 
+			 #{cat}, 
 			 1588026008
 			 );\n	
 		"
+		end
 		va = {}
 		attr = [ {value: '规格', detailValue: '', attrHidden: '', detail: ['默认']} ]
 		va.store(:attr, attr )
