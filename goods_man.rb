@@ -11,6 +11,8 @@ require 'simple-spreadsheet' #用于读取xlsx文件，spreadsheet gem读xlsx会
 require 'open-uri'
 require 'nokogiri'
 
+load 'export_goods.rb'
+
 @rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 
 overwrite_mode = false
@@ -82,7 +84,7 @@ def updateImgPage
         end
         print "update image & page content for #{code}                \r"
     end
-    puts "done"
+    puts "\ndone. #{images.size}"
 end
 
 #to let description can be line changed when using by cloud label printing
@@ -109,12 +111,6 @@ def breakLines text
     return result
 end
 
-def escp str
-    # '\' can't be correctly processed yet, :(
-    return str.gsub("'",%q(\\\'));
-end
-
-
 def updateOgoodsByExcel xlsx
 
         gtch = getGoodsCodeHash
@@ -130,8 +126,8 @@ def updateOgoodsByExcel xlsx
             code = s.cell(line,3)
             descrp = s.cell(line,27)
             descrp = '' if descrp.nil?  #to prevent bugs caused by nil != nil when compring database record with excel data
-            descrp = breakLines descrp
-            descrp = escp descrp
+            #descrp = breakLines descrp
+            descrp = @rds.escape(descrp)
             #will remove all links in description here
 
             sale_price = s.cell(line,7)
@@ -150,7 +146,7 @@ def updateOgoodsByExcel xlsx
                             producer_memo,security_memo,keep_memo,scale_code,
                             status,description
                         ) values( 
-                            '#{escp s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
+                            '#{@rds.escape s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
                             #{s.cell(line,6)},#{s.cell(line,7)},#{s.cell(line,8)},'#{s.cell(line,9)}',#{bulk_price},#{member_price},
                             '#{s.cell(line,12)}','#{s.cell(line,13)}','#{s.cell(line,14)}','#{s.cell(line,15)}',
                             '#{s.cell(line,16)}','#{s.cell(line,17)}','#{s.cell(line,18)}','#{s.cell(line,19)}','#{s.cell(line,20)}','#{s.cell(line,21)}',
@@ -171,7 +167,7 @@ def updateOgoodsByExcel xlsx
                 if oNames[code]!= s.cell(line,1) || oPrices[code]!= s.cell(line,8)
 
                     sqlu = "update ogoods.pospal_goods set
-                        name='#{escp s.cell(line,1)}',catalog='#{s.cell(line,2)}',code='#{s.cell(line,3)}',size='#{s.cell(line,4)}',unit='#{s.cell(line,5)}',
+                        name='#{@rds.escape s.cell(line,1)}',catalog='#{s.cell(line,2)}',code='#{s.cell(line,3)}',size='#{s.cell(line,4)}',unit='#{s.cell(line,5)}',
                         balance=#{s.cell(line,6)},purchase_price=#{s.cell(line,7)},sale_price=#{s.cell(line,8)},gross_profit='#{s.cell(line,9)}',bulk_price=#{bulk_price},member_price=#{member_price},
                         member_discount='#{s.cell(line,12)}',points='#{s.cell(line,13)}',max_stock='#{s.cell(line,14)}',minimal_stock='#{s.cell(line,15)}',brand='#{s.cell(line,16)}'
                         ,supplier='#{s.cell(line,17)}',manufacture_date='#{s.cell(line,18)}',baozhiqi_date='#{s.cell(line,19)}',py_code='#{s.cell(line,20)}',huo_number='#{s.cell(line,21)}',
@@ -265,8 +261,8 @@ def overwriteOgoodsByExcel xlsx
             code = s.cell(line,3)
             descrp = s.cell(line,27)
             descrp = '' if descrp.nil?  #to prevent bugs caused by nil != nil when compring database record with excel data
-            descrp = breakLines descrp
-            descrp = escp descrp
+            #descrp = breakLines descrp #used in open lable printing
+
             #will remove all links in description here
 
             sale_price = s.cell(line,7)
@@ -284,12 +280,12 @@ def overwriteOgoodsByExcel xlsx
                         producer_memo,security_memo,keep_memo,scale_code,
                         status,description,img_url,page
                     ) values( 
-                        '#{escp s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
+                        '#{@rds.escape s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
                         #{s.cell(line,6)},#{s.cell(line,7)},#{s.cell(line,8)},'#{s.cell(line,9)}',#{bulk_price},#{member_price},
                         '#{s.cell(line,12)}','#{s.cell(line,13)}','#{s.cell(line,14)}','#{s.cell(line,15)}',
                         '#{s.cell(line,16)}','#{s.cell(line,17)}','#{s.cell(line,18)}','#{s.cell(line,19)}','#{s.cell(line,20)}','#{s.cell(line,21)}',
                         '#{s.cell(line,22)}','#{s.cell(line,23)}','#{s.cell(line,24)}','#{s.cell(line,25)}',
-                        '#{s.cell(line,26)}','#{descrp}','https://oss.foodtrust.cn//8322720200425033706535.jpg',''
+                        '#{s.cell(line,26)}','#{@rds.escape descrp}','https://oss.foodtrust.cn//8322720200425033706535.jpg',''
                     );"
             begin
                 resu = @rds.query(sqlu)
@@ -363,6 +359,7 @@ def genCrmebProductSQL
 	sql += "delete from crmeb.eb_store_product_description where 1=1;\n"
 	
     res.each do |r|
+        print(".")
         code = r['code']
 =begin
                             name,catalog,code,size,unit,
@@ -475,17 +472,38 @@ def genCrmebProductSQL
 		idx += 1
 		#break if idx > 20 #for demo usage
     end
+
+    #saving sql cmd into files
+    rtime = Time.now.strftime('%Y-%m-%d-%H%M%S')
+    puts "saving sql cmd into files..."
+    fn = ".//export//create-crmeb-products-" + rtime + ".json"
+    File.open(fn,"w:UTF-8") { |f| f.write sql }
+    fn = ".//export//create-crmeb-products.json"
+    File.open(fn,"w:UTF-8") { |f| f.write sql }
+
+    puts "\ndone. #{res.size}"
+
     return sql
 end
 
 =begin  
-#please download excel from pospal
-update_goods = overwrite_mode ?  overwriteOgoodsByExcel(xls) : updateOgoodsByExcel(xls)
-
-#please export json file using immigrate-products.rb
-#update image & pages content link from pospal server
-updateImgPage
 =end
 
+#update ogoods.pospal_goods from download excel
+#please use '高级搜索' to get all products in pospal '商品资料'panel
+puts "update ogoods.pospal_goods from download excel..."
+update_goods = overwrite_mode ?  overwriteOgoodsByExcel(xls) : updateOgoodsByExcel(xls)
+
+#export json file from pospal_api to get image url , this function write in export_goods.rb
+puts "export json file from pospal_api to get image url..."
+get_all_pospal_goods
+
+#update ogoods.pospal_goods image url & pages content link provided according to json file
+puts "update ogoods.pospal_goods image url & pages content link..."
+updateImgPage
+
+#generating crmeb db sql cmd 
+puts "generating crmeb db sql cmd"
 sql = genCrmebProductSQL
-puts sql
+
+#puts "codes need DIY"
