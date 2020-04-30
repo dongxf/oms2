@@ -33,7 +33,7 @@ end
 
 def getPospalJson
     images = {}
-    pospal_products=JSON.parse IO.readlines(".//export//pospal-products.json")[0]
+    pospal_products=JSON.parse IO.readlines(".//export//pospal-goods.json")[0]
     pospal_products.each do |product|
         name = product['productName']
         barcode = product['productBarcode']
@@ -354,7 +354,7 @@ def genCrmebProductSQL
     inq = 'select * from ogoods.pospal_goods'
     res = @rds.query(inq)
 
-    idx = 3 #id 1 & 2 leave for demo
+    idx = 101 #id 1~100 leave to system test
     sql = "delete from crmeb.eb_store_product where 1=1;\n"
 	sql += "delete from crmeb.eb_store_product_attr where 1=1;\n" 
 	sql += "delete from crmeb.eb_store_product_attr_value where 1=1;\n"
@@ -372,6 +372,7 @@ def genCrmebProductSQL
                             producer_memo,security_memo,keep_memo,scale_code,
                             status,description,img_url,page
 =end
+        keywords = {brand: r['brand'], supplier: r['supplier'], producer: r['producer_memo'], security: r['security_memo'] ,conditions: r['keep_memo']}
 		#line 9 对应目录，可以再优化 #关键字 应该可以用来做 生产者和保存条件的说明
         sql += "insert into crmeb.eb_store_product values (
             #{idx},
@@ -380,7 +381,7 @@ def genCrmebProductSQL
             '#{@rds.escape [r['img_url']].to_json}',
             '#{@rds.escape r['name']}',
             '#{@rds.escape r['description']}',
-            '#{r['producer_memo']} #{r['keep_memo']}',
+            '#{@rds.escape keywords.to_json}',
             '#{r['code']}',
             '#{genCategories r['catalog'], idx}',
             #{r['sale_price']},
