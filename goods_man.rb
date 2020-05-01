@@ -320,27 +320,27 @@ def genCategories cat, idx
 
 	list = {}
 	list.store('个人护理', 21 )
-	list.store('产地直发', 3)
-	list.store('加工菜肴', 10)
-	list.store('南北特产', 7)
-	list.store('增值服务', 2)
-	list.store('干果零食', 11)
-	list.store('当季水果', 5)
-	list.store('时令蔬菜', 4)
-	list.store('更多好物', 13)
-	list.store('母婴专区', 31)
-	list.store('环保日用', 21)
-	list.store('环保福利', 20)
-	list.store('禽蛋鱼肉', 6)
-	list.store('粮油调料', 9)
-	list.store('系统保留', 49)
-	list.store('线下专用', 49)
-	list.store('茶饮冲调', 12)
 	list.store('补拍运费', 2)
+	list.store('产地直发', 3)
+	list.store('时令蔬菜', 4)
+	list.store('当季水果', 5)
+	list.store('禽蛋鱼肉', 6)
+	list.store('加工菜肴', 7)
 	list.store('面点乳品', 8)
+	list.store('粮油调料', 9)
+	list.store('南北特产', 10)
+	list.store('干果零食', 11)
+	list.store('茶饮冲调', 12)
+	list.store('更多好物', 13)
+	list.store('环保日用', 21)
+	list.store('环保福利', 23)
+	list.store('母婴专区', 31)
+	list.store('增值服务', 41)
+	list.store('系统保留', 45)
+	list.store('线下专用', 45)
 	
 	cats = "#{list[cat]}"
-	cats = cats + ',2' if idx%4  && list[cat] != 2
+	#cats = cats + ',2' if idx%4  && list[cat] != 2 #模拟多个目录
 	return cats
 	
 end
@@ -351,12 +351,6 @@ def genCrmebProductSQL
     res = @rds.query(inq)
 
     idx = 101 #id 1~100 leave to system test
-    sql = "delete from crmeb.eb_store_product where 1=1;\n"
-	sql += "delete from crmeb.eb_store_product_attr where 1=1;\n" 
-	sql += "delete from crmeb.eb_store_product_attr_value where 1=1;\n"
-	sql += "delete from crmeb.eb_store_product_attr_result where 1=1;\n"
-	sql += "delete from crmeb.eb_store_product_cate where 1=1;\n"
-	sql += "delete from crmeb.eb_store_product_description where 1=1;\n"
 	
     res.each do |r|
         print(".")
@@ -476,9 +470,9 @@ def genCrmebProductSQL
     #saving sql cmd into files
     rtime = Time.now.strftime('%Y-%m-%d-%H%M%S')
     puts "saving sql cmd into files..."
-    fn = ".//export//create-crmeb-products-" + rtime + ".sql"
+    fn = ".//export//import-pospal-goods-" + rtime + ".sql"
     File.open(fn,"w:UTF-8") { |f| f.write sql }
-    fn = ".//export//create-crmeb-products.sql"
+    fn = ".//export//import-pospal-goods.sql"
     File.open(fn,"w:UTF-8") { |f| f.write sql }
 
     puts "\ndone. #{res.size}"
@@ -487,7 +481,6 @@ def genCrmebProductSQL
 end
 
 =begin  
-=end
 
 #update ogoods.pospal_goods from download excel
 #please use '高级搜索' to get all products in pospal '商品资料'panel
@@ -501,6 +494,7 @@ get_all_pospal_goods
 #update ogoods.pospal_goods image url & pages content link provided according to json file
 puts "update ogoods.pospal_goods image url & pages content link..."
 updateImgPage
+=end
 
 #generating crmeb db sql cmd 
 puts "generating crmeb db sql cmd"
