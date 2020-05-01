@@ -316,7 +316,7 @@ def genPageContent code
     return page.gsub('GOODS_CODE',code)
 end
 
-def genCategories cat, idx
+def genCategories cat, idx, name
 
 	list = {}
 	list.store('个人护理', 21 )
@@ -340,8 +340,11 @@ def genCategories cat, idx
 	list.store('线下专用', 45)
 	
 	cats = "#{list[cat]}"
-	#cats = cats + ',2' if idx%4  && list[cat] != 2 #模拟多个目录
-	return cats
+    cats += ',2' if name.include?('份额')
+    cats += ',3' if name.include?('产地直发')
+    cats += ',2' if name.include?('预售')
+
+    return cats.split(',').uniq.join(',')
 	
 end
 
@@ -351,6 +354,7 @@ def genCrmebProductSQL
     res = @rds.query(inq)
 
     idx = 101 #id 1~100 leave to system test
+    sql = ''
 	
     res.each do |r|
         print(".")
@@ -374,7 +378,7 @@ def genCrmebProductSQL
             '#{@rds.escape r['description']}',
             '#{@rds.escape keywords.to_json}',
             '#{r['code']}',
-            '#{genCategories r['catalog'], idx}',
+            '#{genCategories r['catalog'], idx, r['name']}',
             #{r['sale_price']},
             #{r['sale_price']},
             #{r['sale_price']},
@@ -435,7 +439,7 @@ def genCrmebProductSQL
 				0 
 		);\n"
 		
-		genCategories(r['catalog'], idx).split(',').each do |cat|
+		genCategories(r['catalog'], idx, r['name']).split(',').each do |cat|
 		sql += "INSERT INTO crmeb.eb_store_product_cate (product_id,cate_id,add_time) VALUES (
 			#{idx},
 			 #{cat}, 
