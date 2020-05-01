@@ -476,9 +476,9 @@ def genCrmebProductSQL
     #saving sql cmd into files
     rtime = Time.now.strftime('%Y-%m-%d-%H%M%S')
     puts "saving sql cmd into files..."
-    fn = ".//export//create-crmeb-products-" + rtime + ".json"
+    fn = ".//export//create-crmeb-products-" + rtime + ".sql"
     File.open(fn,"w:UTF-8") { |f| f.write sql }
-    fn = ".//export//create-crmeb-products.json"
+    fn = ".//export//create-crmeb-products.sql"
     File.open(fn,"w:UTF-8") { |f| f.write sql }
 
     puts "\ndone. #{res.size}"
