@@ -75,10 +75,14 @@ def update_userdb pusers
     pusers.each do |user|
         openid=''
         openid=user['weixinOpenIds'][0]['openId'] if user['weixinOpenIds']
-        raw_data=user.to_json.gsub("'","''") 
+        #raw_data=user.to_json.gsub("'","''") 
+        raw_data = @rds.escape user.to_json
         number=user['number']
-        uname=user['name'].gsub("'","''")
-        phone=user['phone'].gsub("'","''")
+        #uname=user['name'].gsub("'","''")
+        #phone=user['phone'].gsub("'","''")
+        uname = @rds.escape user['name']
+        phone = @rds.escape user['phone']
+
         printf "."
         discount=user['discount']
 
