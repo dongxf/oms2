@@ -20,27 +20,8 @@ def read_pospal_users
     res.each do | r |
         rec = {}
         #basic fields
-        fields = ['uid','number','name','phone','openid','discount','raw_data']
+        fields = ['uid', 'number', 'name', 'phone', 'openid', 'unionid', 'avatar', 'discount', 'raw_data', 'points', 'discount', 'balance', 'address', 'created']
         fields.each { |f| rec[f]=r[f] }
-
-        #raw_data fields
-        keys = ['point','discount','balance','address','createdDate']
-        json = JSON.parse r['raw_data']
-        keys.each do |k|  #raw_data
-
-            rec[k]=json[k]
-
-            #check unionid and openid again
-            rec['unionid']=''
-            if json['weixinOpenIds']
-                if json['weixinOpenIds'][0]
-                    rec['openid'] = json['weixinOpenIds'][0]['openId'] 
-                end
-                rec['unionid'] = json['weixinOpenIds'][1]['openId'] if json['weixinOpenIds'][1]
-            end
-
-        end
-
         #ap rec if rec['phone'].include? '136000600'  #just check
         recs += [rec]
     end
@@ -78,7 +59,7 @@ end
 
 puts "reading all recs from pospal..."
 recs = read_pospal_users
-names = ['uid','number','name','phone','openid','unionid','discount', 'point','balance','address','createdDate']
+fields = ['uid', 'number', 'name', 'phone', 'openid', 'unionid', 'avatar', 'discount', 'raw_data', 'points', 'discount', 'balance', 'address', 'created']
 
 puts "writing excel file..."
-save_to_excel names, recs, './export/pospal-users-all.xls'
+save_to_excel fields, recs, './export/pospal-users-all.xls'

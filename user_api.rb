@@ -90,21 +90,26 @@ def update_userdb pusers
         balance = user['balance']
         points = user['point']
         created = user['createdDate']
+        address = @rds.escape user['address']
 
         #p "updating user[#{ucount}] number #{number}..."
         ucount += 1
 
         #next if ucount<832 #to debug question rec_no 833 debug only 
 
-        sqlu = "INSERT INTO ogoods.pospal_users ( raw_data, uid, number, name, phone, openid, unionid, avatar, discount, balance, points, created) 
-                    VALUES 
-                        ( '#{raw_data}', '#{uid}', '#{number}', '#{name}', '#{phone}', '#{openid}', '#{unionid}', '#{avatar}', #{discount}, #{balance}, #{points}, '#{created}' )
+        sqlu = "INSERT INTO ogoods.pospal_users ( raw_data, uid, number, name, phone, openid, unionid, avatar, discount, balance, points, created, address) VALUES 
+                        ( '#{raw_data}', '#{uid}', '#{number}', '#{name}', '#{phone}', '#{openid}', '#{unionid}', '#{avatar}', #{discount}, #{balance}, #{points}, '#{created}' , '#{address}')
                     ON DUPLICATE KEY
                     UPDATE 
-				        raw_data = '#{raw_data}', uid = '#{uid}', number = '#{number}', name = '#{name}', phone = '#{phone}', openid = '#{openid}', unionid = '#{unionid}', avatar = '#{avatar}', discount = #{discount}, balance = #{balance}, points = #{points}, created = '#{created}'
+				        raw_data = '#{raw_data}', uid = '#{uid}', number = '#{number}', name = '#{name}', phone = '#{phone}', openid = '#{openid}', unionid = '#{unionid}', avatar = '#{avatar}', discount = #{discount}, balance = #{balance}, points = #{points}, created = '#{created}', address = '#{address}'
         "
-        print('.')
-        resu = @rds.query(sqlu)
+        begin
+            resu = @rds.query(sqlu)
+            print('.')
+        rescue => e
+            puts ">>>ERROR: #{e}"
+            puts sqlu 
+        end
     end
     printf " ]done\n"
 
@@ -158,6 +163,8 @@ end
 
 ##get_all_pospal_users will generate an json file under .\\auto_import\\, such as puser-20190601123011.json
 #pusers = get_all_pospal_users
+
 #pusers=JSON.parse IO.readlines("user-api.json")[0]
 #update_userdb pusers
+
 #p get_uid_by_number '136000600440'
