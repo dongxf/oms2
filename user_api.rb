@@ -86,7 +86,7 @@ def update_userdb pusers
         openid = user['weixinOpenIds'] && user['weixinOpenIds'][0] ? user['weixinOpenIds'][0]['openId'] : '' 
         unionid = user['weixinOpenIds'] && user['weixinOpenIds'][1] ? user['weixinOpenIds'][1]['openId'] : '' 
         discount = user['discount']
-        avatar='https://oss.foodtrust.cn//9c9c2202004250136523040.png' #default avatar, can be updated by aonther programes
+        #avatar='https://oss.foodtrust.cn//9c9c2202004250136523040.png' #default avatar, can be updated by aonther programes
         balance = user['balance']
         points = user['point']
         created = user['createdDate']
@@ -97,11 +97,11 @@ def update_userdb pusers
 
         #next if ucount<832 #to debug question rec_no 833 debug only 
 
-        sqlu = "INSERT INTO ogoods.pospal_users ( raw_data, uid, number, name, phone, openid, unionid, avatar, discount, balance, points, created, address) VALUES 
-                        ( '#{raw_data}', '#{uid}', '#{number}', '#{name}', '#{phone}', '#{openid}', '#{unionid}', '#{avatar}', #{discount}, #{balance}, #{points}, '#{created}' , '#{address}')
+        sqlu = "INSERT INTO ogoods.pospal_users ( raw_data, uid, number, name, phone, openid, unionid, discount, balance, points, created, address) VALUES 
+                        ( '#{raw_data}', '#{uid}', '#{number}', '#{name}', '#{phone}', '#{openid}', '#{unionid}', #{discount}, #{balance}, #{points}, '#{created}' , '#{address}')
                     ON DUPLICATE KEY
                     UPDATE 
-				        raw_data = '#{raw_data}', uid = '#{uid}', number = '#{number}', name = '#{name}', phone = '#{phone}', openid = '#{openid}', unionid = '#{unionid}', avatar = '#{avatar}', discount = #{discount}, balance = #{balance}, points = #{points}, created = '#{created}', address = '#{address}'
+				        raw_data = '#{raw_data}', uid = '#{uid}', number = '#{number}', name = '#{name}', phone = '#{phone}', openid = '#{openid}', unionid = '#{unionid}', discount = #{discount}, balance = #{balance}, points = #{points}, created = '#{created}', address = '#{address}'
         "
         begin
             resu = @rds.query(sqlu)
