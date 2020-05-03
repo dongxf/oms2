@@ -158,7 +158,6 @@ end
 
 ##get_all_pospal_users will generate an json file under .\\auto_import\\, such as puser-20190601123011.json
 #pusers = get_all_pospal_users
-
-pusers=JSON.parse IO.readlines("user-api.json")[0]
-update_userdb pusers
+#pusers=JSON.parse IO.readlines("user-api.json")[0]
+#update_userdb pusers
 #p get_uid_by_number '136000600440'
