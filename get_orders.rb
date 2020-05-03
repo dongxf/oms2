@@ -291,8 +291,8 @@ end
 def update_order_by_json jorder
 
     userinfo = get_userinfo_by_customer_number jorder[:customer_id]
-    escaped_order_json = jorder[:order].to_json.gsub("\n","").gsub("'","''") #用于SQL语句中的转义
-    escaped_plain_text = jorder[:plain_text].gsub("'","''") #千万不要在这里将换行符去掉
+    escaped_order_json = @rds.escape jorder[:order].to_json
+    escaped_plain_text = @rds.escape jorder[:plain_text]
 
     sqlu = "INSERT INTO ogoods.pospal_orders
             (
