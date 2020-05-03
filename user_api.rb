@@ -35,8 +35,12 @@ def get_all_pospal_users
     end while recs.size == page_size
 
     rtime = Time.now.strftime('%Y-%m-%d-%H%M%S')
-    fn = ".\\auto_import\\pusers\\pusers-" + rtime + ".json"
+    fn = "user-api-" + rtime + ".json"
     File.open(fn,"w:UTF-8") { |f| f.write pusers.to_json }
+    fn = "user-api.json"
+    File.open(fn,"w:UTF-8") { |f| f.write pusers.to_json }
+
+    puts "done. #{pusers.size}"
     return pusers
 
 end 
@@ -73,30 +77,33 @@ def update_userdb pusers
     ucount=0
     printf "updating userdb ["
     pusers.each do |user|
-        openid=''
-        openid=user['weixinOpenIds'][0]['openId'] if user['weixinOpenIds']
-        #raw_data=user.to_json.gsub("'","''") 
-        raw_data = @rds.escape user.to_json
-        number=user['number']
-        #uname=user['name'].gsub("'","''")
-        #phone=user['phone'].gsub("'","''")
-        uname = @rds.escape user['name']
-        phone = @rds.escape user['phone']
 
-        printf "."
-        discount=user['discount']
+        raw_data = @rds.escape user.to_json
+        uid = user['customerUid']
+        number = user['number']
+        name = @rds.escape user['name']
+        phone = @rds.escape user['phone']
+        openid = user['weixinOpenIds'] && user['weixinOpenIds'][0] ? user['weixinOpenIds'][0]['openId'] : '' 
+        unionid = user['weixinOpenIds'] && user['weixinOpenIds'][1] ? user['weixinOpenIds'][1]['openId'] : '' 
+        discount = user['discount']
+        avatar='https://oss.foodtrust.cn//9c9c2202004250136523040.png' #default avatar, can be updated by aonther programes
+        balance = user['balance']
+        points = user['point']
+        created = user['createdDate']
 
         #p "updating user[#{ucount}] number #{number}..."
         ucount += 1
 
         #next if ucount<832 #to debug question rec_no 833 debug only 
 
-        sqlu = "INSERT INTO ogoods.pospal_users
-                    ( uid,number,name,openid,phone,discount,raw_data) VALUES 
-                    ( #{user['customerUid']}, '#{number}','#{uname}','#{openid}', '#{phone}', #{discount},'#{raw_data}')
+        sqlu = "INSERT INTO ogoods.pospal_users ( raw_data, uid, number, name, phone, openid, unionid, avatar, discount, balance, points, created) 
+                    VALUES 
+                        ( '#{raw_data}', '#{uid}', '#{number}', '#{name}', '#{phone}', '#{openid}', '#{unionid}', '#{avatar}', #{discount}, #{balance}, #{points}, '#{created}' )
                     ON DUPLICATE KEY
-                    UPDATE uid=#{user['customerUid']}, number='#{number}',name='#{uname}', openid='#{openid}', phone='#{phone}', discount=#{discount}, raw_data='#{raw_data}'
+                    UPDATE 
+				        raw_data = '#{raw_data}', uid = '#{uid}', number = '#{number}', name = '#{name}', phone = '#{phone}', openid = '#{openid}', unionid = '#{unionid}', avatar = '#{avatar}', discount = #{discount}, balance = #{balance}, points = #{points}, created = '#{created}'
         "
+        print('.')
         resu = @rds.query(sqlu)
     end
     printf " ]done\n"
@@ -151,6 +158,7 @@ end
 
 ##get_all_pospal_users will generate an json file under .\\auto_import\\, such as puser-20190601123011.json
 #pusers = get_all_pospal_users
-#pusers=JSON.parse IO.readlines(".\\auto_import\\pusers.json")[0]
-#update_userdb pusers
+
+pusers=JSON.parse IO.readlines("user-api.json")[0]
+update_userdb pusers
 #p get_uid_by_number '136000600440'
