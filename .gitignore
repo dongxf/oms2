@@ -9,3 +9,9 @@ mailed/
 auto_import/
 goods_exported/
 export/
+*.xlsx
+*.xls
+*.json
+export/*.xlsx
+export/*.xls
+export/*.json

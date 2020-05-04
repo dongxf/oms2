@@ -132,7 +132,7 @@ def gen_sql_cmd users
   end
   sql += "COMMIT;"
 
-  fn = "export-users.sql"
+  fn = "import-pospal-users.sql"
   File.open(fn,"w:UTF-8") { |f| f.write sql }
   
   puts ("done #{users.size}")
@@ -144,8 +144,10 @@ puts "reading all recs from pospal..."
 users = read_pospal_users
 fields = ['uid', 'number', 'name', 'phone', 'openid', 'unionid', 'avatar', 'discount', 'raw_data', 'points', 'discount', 'balance', 'address', 'created']
 
-puts "writing excel file..."
+=begin
+#puts "writing excel file..."
 save_to_excel fields, users, './export/pospal-users-all.xls'
+=end
 
 puts "generating sql file..."
 sql = gen_sql_cmd users
