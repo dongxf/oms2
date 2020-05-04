@@ -6,6 +6,14 @@ load 'get_orders.rb'
 
 #puts 'Usage: ruby order_man.rb [start_date backward_counter] [-s]'
 #put 'eg: ruby order_man.rb 2019-07-09 2'
+=begin
+  典型用法： 
+  1) 日常调用 ruby order_man.rb
+    相当于ruby order_man.rb current_day 1, 从现在倒推的24小时之内
+  2) 节假日调用 ruby order_man.rb 2020-05-04 2 #从今天开始，到昨天零点
+  3) -s 选项始终在最后
+=end
+
 
 the_day = Date.today
 counter = 1
