@@ -22,8 +22,9 @@ oorders = []
 
 day_count = ARGV[0].nil? ? 0 : ARGV[0].to_i
 stime = ' 00:00:00'
-stime = ' 09:00:01' if ARGV[1] == '-m'
-stime = ' 18:00:01' if ARGV[1] == '-e'
+stime = ' 09:00:01' if ARGV[1] == '-m' #start from morning
+stime = ' 18:00:01' if ARGV[1] == '-e' #start from evening
+stime = ' 00:00:01' if ARGV[1] == '-z' #start from midnight
 
 eday = Date.today
 etime = ' 23:59:59'
