@@ -72,39 +72,65 @@ def gen_user_sql user, idx
   memberships = { 1 => '百花蜜', 2 => '椴树蜜' , 3 => '藿香蜜', 4 => '党参蜜', 5 => '藏岩蜜', 6 => '生活家', 9 => '小伙伴', 16 => '在职工' }
   member = memberships [ grade ]
 
-  sql += "INSERT INTO `eb_user` VALUES (
-    #{idx}, '#{user['phone']}', 'e10adc3949ba59abbe56e057f20f883e', '#{@rds.escape user['name']}', 0, '', '', 0, 0, '#{@rds.escape user['name']}', '#{user['avatar']}', '#{user['phone']}', 1588339658, '119.33.194.224', 1588339658, '119.33.194.224', #{sprintf('%2f',user['balance'])}, 0.00, #{sprintf('%2f',user['points'])}, 0, 1, #{level}, 0, 0, 'wechat', 0, 0, 0, 0, '#{@rds.escape user['address']}', 0, ''
-  );"
-  sql += "INSERT INTO `eb_wechat_user` VALUES (
-    #{idx}, '#{user['unionid']}', '#{user['openid']}', NULL, '#{@rds.escape user['name']}', '#{user['avatar']}', 0, '广州', 'zh_CN', '广东', '中国', NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'wechat'
-  );"
-  sql +=  "INSERT INTO `eb_user_level` VALUES (#{idx}, #{idx}, #{level}, #{grade}, 1588552526, 1, 0, 1, '#用户#{user['name']}在#{rtime}由系统赠送会员等级成为#{member}会员', 0, 0, 1588552526, #{user['discount']});
-  "
+  #注意sql中的field需要保持在同一列中
   sql += "
-    INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (1, #{idx}, 1, 1588552526);
-    INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (2, #{idx}, 1, 1588552526);
+INSERT INTO `eb_user` (uid, account, pwd, real_name, birthday, card_id, mark, partner_id, group_id, nickname, avatar, phone, add_time, add_ip, last_time, last_ip, now_money, brokerage_price, integral, sign_num, status, level, spread_uid, spread_time, user_type, is_promoter, pay_count, spread_count, clean_time, addres, adminid, login_type ) VALUES (
+  #{idx}, '#{user['phone']}', 'e10adc3949ba59abbe56e057f20f883e', '#{@rds.escape user['name']}', 0, '', '', 
+  0, 0, '#{@rds.escape user['name']}', '#{user['avatar']}', '#{user['phone']}', 1588339658, '128.0.0.1', 1588339658, '128.0.0.1', 
+  #{sprintf('%2f',user['balance'])}, 0.00, #{sprintf('%2f',user['points'])}, 0, 1, #{level}, 
+  0, 0, 'wechat', 0, 0, 0, 0, '#{@rds.escape user['address']}', 0, ''
+);"
+
+  sql += "
+INSERT INTO `eb_wechat_user` VALUES (
+  #{idx}, '#{user['unionid']}', '#{user['openid']}', NULL, '#{@rds.escape user['name']}', '#{user['avatar']}', 0, '广州', 'zh_CN', '广东', '中国', NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'wechat'
+);"
+
+  sql +=  "
+INSERT INTO `eb_user_level` VALUES (#{idx}, #{idx}, #{level}, #{grade}, 1588552526, 1, 0, 1, '#用户#{user['name']}在#{rtime}由系统赠送会员等级成为#{member}会员', 0, 0, 1588552526, #{user['discount']});"
+
+  sql += "
+INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (1, #{idx}, 1, 1588552526);
+INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (2, #{idx}, 1, 1588552526);
   " if level > 1
+
   sql += "
-    INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (3, #{idx}, 1, 1588552526);
-    INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (4, #{idx}, 1, 1588552526);
+INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (3, #{idx}, 1, 1588552526);
+INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (4, #{idx}, 1, 1588552526);
   " if level > 1
+
   sql += "
-    INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (5, #{idx}, 1, 1588552526);
-    INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (6, #{idx}, 1, 1588552526);
+INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (5, #{idx}, 1, 1588552526);
+INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (6, #{idx}, 1, 1588552526);
   " if level > 2
+
   sql += "
-    INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (7, #{idx}, 1, 1588552526);
-    INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (8, #{idx}, 1, 1588552526);
+INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (7, #{idx}, 1, 1588552526);
+INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (8, #{idx}, 1, 1588552526);
   " if level > 3
+
   sql += "
-    INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (9, #{idx}, 1, 1588552526);
-    INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (10, #{idx}, 1, 1588552526);
+INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (9, #{idx}, 1, 1588552526);
+INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (10, #{idx}, 1, 1588552526);
   " if level > 4
+
   sql += "
-    INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (11, #{idx}, 1, 1588552526);
-    INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (12, #{idx}, 1, 1588552526);
+INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (11, #{idx}, 1, 1588552526);
+INSERT INTO `eb_user_task_finish` (task_id, uid, status, add_time) VALUES (12, #{idx}, 1, 1588552526);
   " if level > 5
   
+  # 这里的link_id就这么填‘1’，不知状况
+  sql += "
+INSERT INTO `eb_user_bill` (uid, link_id, pm, title, category, type, number, balance, mark, add_time, status, take ) VALUES (
+  #{idx}, '1', 1, 'FC4.0系统初始导入', 'now_money', 'system_add', #{sprintf('%2f', user['balance'])}, #{sprintf('%2f', user['balance'])}, 
+  'FC3.0系统余额平移', 1588583622, 1, 0);" if user['balance'] >= 0.01
+
+  sql += "
+INSERT INTO `eb_user_bill` (uid, link_id, pm, title, category, type, number, balance, mark, add_time, status, take ) VALUES (
+  #{idx}, '1', 1, 'FC4.0系统初始导入', 'integral', 'system_add', #{sprintf('%2f',user['points'])}, #{sprintf('%2f', user['points'])}, 
+  'FC3.0系统积分平移', 1588583622, 1, 0);" if user['points'] >= 0.01
+
+
   print('.')
   sql += "\n"
   return sql
@@ -114,11 +140,12 @@ end
 def gen_sql_cmd users
 
   sql = "
-    delete from crmeb.eb_user where 1=1;
-    delete from crmeb.eb_wechat_user where 1=1;
-    delete from crmeb.eb_user_level where 1=1;
-    delete from crmeb.eb_user_task_finish where 1=1;
-    BEGIN;
+delete from crmeb.eb_user where 1=1;
+delete from crmeb.eb_wechat_user where 1=1;
+delete from crmeb.eb_user_level where 1=1;
+delete from crmeb.eb_user_task_finish where 1=1;
+delete from crmeb.eb_user_bill where 1=1;
+BEGIN;
   "
 
   idx = 1
