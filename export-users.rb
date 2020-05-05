@@ -74,11 +74,11 @@ def gen_user_sql user, idx
 
   #注意sql中的field需要保持在同一列中
   sql += "
-INSERT INTO `eb_user` (uid, account, pwd, real_name, birthday, card_id, mark, partner_id, group_id, nickname, avatar, phone, add_time, add_ip, last_time, last_ip, now_money, brokerage_price, integral, sign_num, status, level, spread_uid, spread_time, user_type, is_promoter, pay_count, spread_count, clean_time, addres, adminid, login_type ) VALUES (
-  #{idx}, '#{user['phone']}', 'e10adc3949ba59abbe56e057f20f883e', '#{@rds.escape user['name']}', 0, '', '', 
+INSERT INTO `eb_user` (uid, account, pwd, real_name, birthday, card_id, mark, partner_id, group_id, nickname, avatar, phone, add_time, add_ip, last_time, last_ip, now_money, brokerage_price, integral, sign_num, status, level, spread_uid, spread_time, user_type, is_promoter, pay_count, spread_count, clean_time, addres, adminid, login_type, pospal_number ) VALUES (
+  #{idx}, '#{user['phone']}', '9cf9542772e8a5904acd419e51d2011d', '#{@rds.escape user['name']}', 0, '', '', 
   0, 0, '#{@rds.escape user['name']}', '#{user['avatar']}', '#{user['phone']}', 1588339658, '128.0.0.1', 1588339658, '128.0.0.1', 
   #{sprintf('%2f',user['balance'])}, 0.00, #{sprintf('%2f',user['points'])}, 0, 1, #{level}, 
-  0, 0, 'wechat', 0, 0, 0, 0, '#{@rds.escape user['address']}', 0, ''
+  0, 0, 'wechat', 0, 0, 0, 0, '#{@rds.escape user['address']}', 0, '', '#{user['number']}'
 );"
 
   sql += "

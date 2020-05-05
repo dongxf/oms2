@@ -11,8 +11,6 @@ require 'simple-spreadsheet' #用于读取xlsx文件，spreadsheet gem读xlsx会
 require 'open-uri'
 require 'nokogiri'
 
-load 'export_goods.rb'
-
 @rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 
 overwrite_mode = false
@@ -409,7 +407,8 @@ def genCrmebProductSQL
             '',
             1,
             0,
-            '1,2,3' 
+            '1,2,3',
+            '#{r['code']}'
         );\n"
 		sql += "INSERT INTO crmeb.eb_store_product_attr VALUES (
 			#{idx},
@@ -474,8 +473,6 @@ def genCrmebProductSQL
     #saving sql cmd into files
     rtime = Time.now.strftime('%Y-%m-%d-%H%M%S')
     puts "saving sql cmd into files..."
-    fn = "import-pospal-goods-" + rtime + ".sql"
-    File.open(fn,"w:UTF-8") { |f| f.write sql }
     fn = "import-pospal-goods.sql"
     File.open(fn,"w:UTF-8") { |f| f.write sql }
 
@@ -484,6 +481,163 @@ def genCrmebProductSQL
     return sql
 end
 
+def createCrmebProducts
+
+    inq = 'select * from ogoods.pospal_goods'
+    pid = 101 #id 1~100 reserved to system
+    res = @rds.query(inq)
+    res.each do |product|
+      created = newCrmebProduct product, pid
+      updatePidForGoods(pid, product['code']) if created
+      pid += 1
+    end
+end
+
+def updatePidForGoods pid, code
+  sql = "update ogoods.pospal_goods set crmeb_pid = #{pid} where code = '#{code}'"
+  begin   
+    @rds.query(sql)
+  rescue => e
+    puts ">>>ERROR: #{e}"
+    return false
+  end
+  return true
+end
+
+def newCrmebProduct r, idx
+
+    # rds.query 不支持分号分开的sql语句
+    sqls = []
+    code = r['code']
+
+=begin
+    name,catalog,code,size,unit,
+    balance,purchase_price,sale_price,gross_profit,bulk_price,member_price,
+    member_discount, points, max_stock,minimal_stock,
+    brand,supplier,manufacture_date,baozhiqi_date,py_code,huo_number,
+    producer_memo,security_memo,keep_memo,scale_code,
+    status,description,img_url,page
+=end
+    keywords = {brand: r['brand'], supplier: r['supplier'], producer: r['producer_memo'], security: r['security_memo'] ,conditions: r['keep_memo']}
+		#line 9 对应目录，可以再优化 #关键字 应该可以用来做 生产者和保存条件的说明
+        sqls += ["insert into crmeb.eb_store_product values (
+            #{idx},
+            0,
+            '#{@rds.escape r['img_url']}',
+            '#{@rds.escape [r['img_url']].to_json}',
+            '#{@rds.escape r['name']}',
+            '#{@rds.escape r['description']}',
+            '#{@rds.escape keywords.to_json}',
+            '#{r['code']}',
+            '#{genCategories r['catalog'], idx, r['name']}',
+            #{r['sale_price']},
+            #{r['sale_price']},
+            #{r['sale_price']},
+            0.00,
+            '#{r['unit']}',
+            0,
+            0,
+            #{r['balance']},
+            #{r['status']=='禁用' ? 0 : 1},
+            0,
+            0,
+            0,
+            0,
+            1588026008,
+            0,
+            0,
+            0,
+            #{(r['sale_price'].to_f*0.9).to_i},
+            #{r['purchase_price']},
+            0,
+            NULL,
+            0,
+            0,
+            0,
+            0,
+            '',
+            '',
+            '',
+            1,
+            0,
+            '1,2,3',
+            '#{r['code']}'
+        );\n"]
+
+		sqls += ["INSERT INTO crmeb.eb_store_product_attr VALUES (
+			#{idx},
+			 '规格', 
+			 '默认', 
+			 0
+		);\n"]
+
+		#line 4 is sales history
+		sqls += ["INSERT INTO crmeb.eb_store_product_attr_value
+		VALUES(
+				#{idx},
+				'默认',
+				#{r['balance']},
+				0,
+				#{r['sale_price']},
+				'#{@rds.escape [r['img_url']].to_json}',
+				LEFT(md5(uuid()),8),
+				#{r['purchase_price']},
+				'#{r['code']}',
+				#{r['sale_price']},
+				0.4,
+				0.08,
+				0.00,
+				0.00,
+				0,
+				0,
+				0 
+		);\n"]
+		
+		genCategories(r['catalog'], idx, r['name']).split(',').each do |cat|
+		sqls += ["INSERT INTO crmeb.eb_store_product_cate (product_id,cate_id,add_time) VALUES (
+			#{idx},
+			 #{cat}, 
+			 1588026008
+			 );\n"]
+		end
+
+		va = {}
+		attr = [ {value: '规格', detailValue: '', attrHidden: '', detail: ['默认']} ]
+		va.store(:attr, attr )
+		
+		value = [ { pic: r['img_url'],  price:	r['sale_price'], cost: r['purchase_price'], ot_price: r['sale_price'], stock: r['balance'], bar_code: r['code'], volume: "0.4", weight: "0.08", brokerage: 0, brokerage_two: 0, value: "规格", detail: {unit: "默认"} } ]
+		va.store(:value, value)
+		
+		sqls += ["insert into crmeb.eb_store_product_attr_result values(
+			#{idx},
+			'#{@rds.escape(va.to_json)}',
+			1588026008,
+			0
+		);\n"]
+		
+		sqls += ["insert into crmeb.eb_store_product_description values(
+			#{idx},
+			'#{@rds.escape r['page']}',
+			0
+		);\n"]
+
+    @rds.query('begin')
+    sqls.each do |sql|
+      begin
+        @rds.query(sql)
+      rescue => e
+        @rds.query('rollback')
+        puts ">>>ERROR: #{e}"
+        exit
+      end
+    end
+    @rds.query('commit')
+
+  return true
+
+end
+
+#puts "codes need DIY"
 =begin  
 
 #update ogoods.pospal_goods from download excel
@@ -498,10 +652,10 @@ get_all_pospal_goods
 #update ogoods.pospal_goods image url & pages content link provided according to json file
 puts "update ogoods.pospal_goods image url & pages content link..."
 updateImgPage
-=end
 
 #generating crmeb db sql cmd 
 puts "generating crmeb db sql cmd"
 sql = genCrmebProductSQL
+=end
 
-#puts "codes need DIY"
+createCrmebProducts
