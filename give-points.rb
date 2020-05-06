@@ -108,6 +108,13 @@ def verify_json
   list_all = JSON.parse IO.readlines("give200506-all.json")[0]
   list_remained = JSON.parse IO.readlines("give200506-remained.json")[0]
   puts list_all.size, list_remained.size, list_all.size - list_remained.size #numer of users already gave
+  list_given = list_all - list_remained
+  ap list_given
 end
 
-verify_json
+def tst_message
+  openid = 'owHN1t0ETyOD1p_J324Gcb9twHuk'
+  send_specific_points_notice openid, "100", "纯测试", "纯测试", "这是假的余额变动，详情如下", 1000
+end
+
+tst_message
