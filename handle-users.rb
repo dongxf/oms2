@@ -7,6 +7,7 @@ require 'awesome_print'
 load 'get_orders.rb'
 load 'user_api.rb'
 load 'wechat_api.rb'
+load 'rds_api.rb'
 
 #p 'usage: ruby give-points.rb'
 
@@ -23,7 +24,7 @@ def get_rebate_list
     return list
 end
 
-def prepare_list conditions
+def prepare_users_list conditions
     list=[]
     sqlu = "select openid, uid, name, phone from ogoods.pospal_users #{conditions}"
     res = @rds.query sqlu
@@ -37,20 +38,24 @@ def give_points list, points, reason, url
 
   list.each do |el|
 
-      uid = el[:uid]
-      openid = el[:openid]
-      name = el[:name]
-      phone = el[:phone]
+      uid = el["uid"]
+      openid = el["openid"]
+      name = el["name"]
+      phone = el["phone"]
 
-      #puts "give #{points} points to #{name} with openid as #{openid}"
-      #next if el[:phone] != '13600060044'
+      #puts "give #{points} points to uid #{uid} #{name} with openid# #{openid}"
+      #next if phone != '13600060044'
 
-      p "give #{points} points to #{name} openid = #{openid}"
       req = { 'customerUid' => uid, 'balanceIncrement' => 0.0, 'pointIncrement' => points, 'dataChangeTime' => Time.now }
       res = pospal_api :updateBiPi, req
       if res['status'] == 'success'
           puts "sending notice"
-          send_specific_points_notice openid, "#{points}分", reason, url, "您的账户余额有变动，详情如下", res['data']['pointAfterUpdate'].to_s
+          res = send_specific_points_notice openid, "#{points}分", reason, url, "您的账户余额有变动，详情如下", res['data']['pointAfterUpdate'].to_s
+          if res["errmsg"].include? 'subscribe'
+            ap res
+            puts "#{openid} #{name}"
+            unsubscribeOpenid openid 
+          end
           sqlu = "update ogoods.pospal_orders 
                   set rebate_comment='#{reason} at #{Time.now}', point_rebated=#{sprintf('%.2f',points)}  
                   where uid = #{uid} and need_rebate > 0 and point_rebated = 0 and order_time < '2019-07-11 00:00:00'"
@@ -91,7 +96,7 @@ end
 #丰巢5周年庆，每个有效客户送500积分
 def give_20200506
 
-  list = prepare_list "where openid != '' and openid is not NULL and ignored = 0"
+  list = prepare_users_list "where openid != '' and openid is not NULL and ignored = 0 and unsubscribed = 0"
   fn = "give-points.json"
   File.open(fn,"w:UTF-8") { |f| f.write list.to_json }
   ap list
@@ -100,7 +105,7 @@ def give_20200506
   #give200506-all.json
   #give200506-remained.json
 
-  #give_points list, 500, '共贺丰巢五周年赠送积分', 'https://foodtrust.cn/wx/5A-1'
+  #give_points list, 500, '共贺丰巢五周年赠送积分, 6-8日订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
 end
 
 #为失误验证json数据
@@ -112,9 +117,35 @@ def verify_json
   ap list_given
 end
 
-def tst_message
-  openid = 'owHN1t0ETyOD1p_J324Gcb9twHuk'
-  send_specific_points_notice openid, "100", "纯测试", "纯测试", "这是假的余额变动，详情如下", 1000
+def unsubscribeOpenid openid
+  sql = "update ogoods.pospal_users set unsubscribed = 1 where openid='#{openid}'"
+  queryRds sql
 end
 
-tst_message
+def tst_message
+  openid = 'owHN1t0ETyOD1p_J324Gcb9twHuk'
+  res = JSON.parse send_specific_points_notice openid, "100", "纯测试", "纯测试", "这是假的余额变动，详情如下", 1000
+  if res["errmsg"].include? 'subscribe'
+    ap res
+    unsubscribeOpenid openid 
+  end
+  #send_text_message openid, '昨天推送的消息格式有误，请点这里<a href="https://foodtrust.cn/wx/5A-1">查看详情</a>'
+end
+
+#读取未发送数据
+def patch_20200506
+  list_remained = JSON.parse IO.readlines("give200506-remained.json")[0]
+  list_a = list_remained[0..499]
+  list_b = list_remained[500..list_remained.size-1]
+  p list_remained.size
+  p list_a.size
+  p list_b.size
+end
+
+def patch_20200506_A
+  list_remained = JSON.parse IO.readlines("give200506-remained.json")[0]
+  list_a = list_remained[0..599]
+  give_points list_a, 500, '共贺丰巢五周年赠送积分, 6-8日随订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
+end
+
+patch_20200506_A
