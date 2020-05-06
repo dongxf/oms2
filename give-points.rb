@@ -106,10 +106,8 @@ end
 #为失误验证json数据
 def verify_json
   list_all = JSON.parse IO.readlines("give200506-all.json")[0]
-  puts list_all.size
   list_remained = JSON.parse IO.readlines("give200506-remained.json")[0]
-  puts list_all.size - list_remained.size #numer of users already gave
-  ap list_remained[0..10]
+  puts list_all.size, list_remained.size, list_all.size - list_remained.size #numer of users already gave
 end
 
 verify_json
