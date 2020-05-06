@@ -84,7 +84,7 @@ def send_specific_points_notice openid, points, reason, url, content, newPoints
             keyword2:  { value:  '200分', color:  '#ff0000' },
             keyword3:  { value:  "见证诚信，传播友善，记录真实。\n积分规则：\n参与平台每篇文章讨论最多可获一次积分\n *单项正常留言50分\n *全平台首次留言200积分\n *关联购买顾客留言200分\n *按最高分值项计算", color:  '#173177' },
             keyword4:  { value:  newPoints, color:  '#0000ff' },
-            remark:  { value: "点击详情进入【邀请有礼】领取更多积分\nFOODTRUST® 让健康和友善触手可及", color:  '#88b04b' },
+            remark:  { value: "点击详情获得更多分享\nFOODTRUST® 让健康和友善触手可及", color:  '#88b04b' },
         }
     }
     wat = wechat_access_token
