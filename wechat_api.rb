@@ -27,9 +27,10 @@ def wechat_api api_name, wat, data
   url = base + apiURLs[api_name]
 
   res = RestClient.post url, data.to_json
-  ap res.body
-  return true if JSON.parse(res.body)['errcode'] == 0
-  return false
+  return res.body
+  #ap res.body
+  #return true if JSON.parse(res.body)['errcode'] == 0
+  #return false
 end
 
 #
@@ -65,11 +66,11 @@ def send_balance_notice openids
     }
     openids.each do |openid|
         notice.store(:touser,openid) #注意，如果是'touser' 就不工作了
-        wechat_api :sendTemplateMessage, wechat_access_token, notice
-        notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
-        wechat_api :sendTemplateMessage, wechat_access_token, notice
-        notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
-        wechat_api :sendTemplateMessage, wechat_access_token, notice
+        res = wechat_api :sendTemplateMessage, wechat_access_token, notice
+        #notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
+        #wechat_api :sendTemplateMessage, wechat_access_token, notice
+        #notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
+        #wechat_api :sendTemplateMessage, wechat_access_token, notice
     end
 end
 
@@ -93,12 +94,12 @@ def send_specific_points_notice openid, points, reason, url, content, newPoints
     notice[:data].store(:first, {value: content, color: '#173177'})
     notice[:data].store(:keyword2, {value: points, color: '#ff0000'})
     notice[:data].store(:keyword3, {value: reason, color: '#173177'})
-    wechat_api :sendTemplateMessage, wechat_access_token, notice
-
+    res = wechat_api :sendTemplateMessage, wechat_access_token, notice
     #notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
     #wechat_api :sendTemplateMessage, wechat_access_token, notice
     #notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
     #wechat_api :sendTemplateMessage, wechat_access_token, notice
+    return res
 end
 
 def send_text_message openid, content
@@ -111,7 +112,8 @@ def send_text_message openid, content
     }
     notice.store(:touser,openid) #注意，如果是'touser' 就不工作了
     notice[:text].store(:content,content)
-    wechat_api :sendTextMessage, wechat_access_token, notice
+    res = wechat_api :sendTextMessage, wechat_access_token, notice
+    return res
 end
 
 def send_specific_balance_notice openid, balance, reason, url, content
@@ -135,12 +137,14 @@ def send_specific_balance_notice openid, balance, reason, url, content
     notice[:data].store(:first, {value: content, color: '#173177'})
     notice[:data].store(:keyword3, {value: reason, color: '#173177'})
     notice[:data].store(:keyword4, {value: balance, color: '#0000ff'})
-    wechat_api :sendTemplateMessage, wechat_access_token, notice
+    res = wechat_api :sendTemplateMessage, wechat_access_token, notice
 
-    notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
-    wechat_api :sendTemplateMessage, wechat_access_token, notice
-    notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
-    wechat_api :sendTemplateMessage, wechat_access_token, notice
+    #notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
+    #wechat_api :sendTemplateMessage, wechat_access_token, notice
+    #notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
+    #wechat_api :sendTemplateMessage, wechat_access_token, notice
+
+    return res
 end
 
 def send_confirm_notice openid, info, order_number, order_type, remark, url, flag
@@ -169,15 +173,16 @@ def send_confirm_notice openid, info, order_number, order_type, remark, url, fla
     notice[:data].store(:keyword2, {value: order_type, color: '#ff0000'})
     notice[:data].store(:remark, {value: remark, color: '#88b04b'})
 
-    wechat_api :sendTemplateMessage, wechat_access_token, notice
+    res = wechat_api :sendTemplateMessage, wechat_access_token, notice
 
-    notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
-    wechat_api :sendTemplateMessage, wechat_access_token, notice
-
-    if flag == 1 # only send 1st order to foodcherry
+    if flag == 1 # only send 1st order to foodcherry, usually use order[:order_times]
+        notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
+        wechat_api :sendTemplateMessage, wechat_access_token, notice
         notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
         wechat_api :sendTemplateMessage, wechat_access_token, notice
         notice.store(:touser,'owHN1t3GUvWYmKsxbwZdSpQDo4O4') #CC to 庞建全
         wechat_api :sendTemplateMessage, wechat_access_token, notice
     end
+
+    return res
 end
