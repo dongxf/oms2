@@ -95,10 +95,10 @@ def send_specific_points_notice openid, points, reason, url, content, newPoints
     notice[:data].store(:keyword3, {value: reason, color: '#173177'})
     wechat_api :sendTemplateMessage, wechat_access_token, notice
 
-    notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
-    wechat_api :sendTemplateMessage, wechat_access_token, notice
-    notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
-    wechat_api :sendTemplateMessage, wechat_access_token, notice
+    #notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
+    #wechat_api :sendTemplateMessage, wechat_access_token, notice
+    #notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
+    #wechat_api :sendTemplateMessage, wechat_access_token, notice
 end
 
 def send_text_message openid, content

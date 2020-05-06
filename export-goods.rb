@@ -10,8 +10,7 @@ require 'spreadsheet' #用于写xls文件
 require 'simple-spreadsheet' #用于读取xlsx文件，spreadsheet gem读xlsx会报签名错误
 require 'open-uri'
 require 'nokogiri'
-
-@rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
+load 'rds_api.rb'
 
 overwrite_mode = false
 #xls=".\\auto_import\\pospal_goods.xls"
@@ -658,4 +657,7 @@ puts "generating crmeb db sql cmd"
 sql = genCrmebProductSQL
 =end
 
-createCrmebProducts
+puts "creating crmeb products..."
+sqls = createCrmebProducts
+fn = "import-pospal-goods-2.sql"
+File.open(fn,"w:UTF-8") { |f| f.write sqls.join("\n") }
