@@ -651,13 +651,15 @@ get_all_pospal_goods
 #update ogoods.pospal_goods image url & pages content link provided according to json file
 puts "update ogoods.pospal_goods image url & pages content link..."
 updateImgPage
+=end
 
 #generating crmeb db sql cmd 
 puts "generating crmeb db sql cmd"
 sql = genCrmebProductSQL
-=end
 
+=begin
 puts "creating crmeb products..."
 sqls = createCrmebProducts
-fn = "import-pospal-goods-2.sql"
+fn = "import-pospal-goods.sql"
 File.open(fn,"w:UTF-8") { |f| f.write sqls.join("\n") }
+=end
