@@ -13,9 +13,6 @@ require 'nokogiri'
 load 'rds_api.rb'
 
 overwrite_mode = false
-#xls=".\\auto_import\\pospal_goods.xls"
-xls=".\\export\\pospal-all.xlsx"
-xls="export/pospal-all.xlsx"
 
 args = ''
 ARGV.each { |arg| args+=arg }
@@ -60,7 +57,7 @@ def getGoodsCodeHash
             prices.store(code,tgr['sale_price'])
             descriptions.store(code,tgr['description'])
             images.store(code,tgr['img_url'])
-			idx += 1
+            idx += 1
         end
         puts "goods before synced: #{names.size}"
         return {codes: codes, names: names, prices: prices, descriptions: descriptions, images: images}
@@ -120,71 +117,16 @@ def updateOgoodsByExcel xlsx
         s.first_row.upto(s.last_row) do |line|
             line_idx += 1
             next if line_idx == 1
+
             code = s.cell(line,3)
-            descrp = s.cell(line,27)
-            descrp = '' if descrp.nil?  #to prevent bugs caused by nil != nil when compring database record with excel data
-            #descrp = breakLines descrp
-            descrp = @rds.escape(descrp)
-            #will remove all links in description here
-
-            sale_price = s.cell(line,7)
-            bulk_price = s.cell(line,10)
-            member_price = s.cell(line,11)
-
-            bulk_price = sale_price if bulk_price == '' || bulk_price.nil?
-            member_price = sale_price if member_price == '' || member_price.nil?
-
+            #如果是新商品则创建
             if oNames[code].nil?
-                sqlu = "insert into ogoods.pospal_goods( 
-                            name,catalog,code,size,unit,
-                            balance,purchase_price,sale_price,gross_profit,bulk_price,member_price,
-                            member_discount, points, max_stock,minimal_stock,
-                            brand,supplier,manufacture_date,baozhiqi_date,py_code,huo_number,
-                            producer_memo,security_memo,keep_memo,scale_code,
-                            status,description
-                        ) values( 
-                            '#{@rds.escape s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
-                            #{s.cell(line,6)},#{s.cell(line,7)},#{s.cell(line,8)},'#{s.cell(line,9)}',#{bulk_price},#{member_price},
-                            '#{s.cell(line,12)}','#{s.cell(line,13)}','#{s.cell(line,14)}','#{s.cell(line,15)}',
-                            '#{s.cell(line,16)}','#{s.cell(line,17)}','#{s.cell(line,18)}','#{s.cell(line,19)}','#{s.cell(line,20)}','#{s.cell(line,21)}',
-                            '#{s.cell(line,22)}','#{s.cell(line,23)}','#{s.cell(line,24)}','#{s.cell(line,25)}',
-                            '#{s.cell(line,26)}','#{descrp}'
-                        );"
-                begin
-                    resu = @rds.query(sqlu)
-                    print "insert #{s.cell(line,3)} #{s.cell(line,1)}\r"
-                rescue => e
-                    puts ">>>ERROR: #{e}"
-                    puts sqlu
-                    puts "#{s.cell(line,10)},#{s.cell(line,11)} #{sale_price} #{sale_price}"
-                    puts "<<<"
-                end
+                print "creating #{s.cell(line,3)} #{s.cell(line,1)} in ogoods.popsal_goods...\r"
+                insertSingleProduct s, line
             else
                 #if name / price not changed, skip update
-                if oNames[code]!= s.cell(line,1) || oPrices[code]!= s.cell(line,8)
-
-                    sqlu = "update ogoods.pospal_goods set
-                        name='#{@rds.escape s.cell(line,1)}',catalog='#{s.cell(line,2)}',code='#{s.cell(line,3)}',size='#{s.cell(line,4)}',unit='#{s.cell(line,5)}',
-                        balance=#{s.cell(line,6)},purchase_price=#{s.cell(line,7)},sale_price=#{s.cell(line,8)},gross_profit='#{s.cell(line,9)}',bulk_price=#{bulk_price},member_price=#{member_price},
-                        member_discount='#{s.cell(line,12)}',points='#{s.cell(line,13)}',max_stock='#{s.cell(line,14)}',minimal_stock='#{s.cell(line,15)}',brand='#{s.cell(line,16)}'
-                        ,supplier='#{s.cell(line,17)}',manufacture_date='#{s.cell(line,18)}',baozhiqi_date='#{s.cell(line,19)}',py_code='#{s.cell(line,20)}',huo_number='#{s.cell(line,21)}',
-                        producer_memo='#{s.cell(line,22)}',security_memo='#{s.cell(line,23)}',keep_memo='#{s.cell(line,24)}',scale_code='#{s.cell(line,25)}',
-                        status='#{s.cell(line,26)}',description='#{descrp}'
-                        where code = '#{s.cell(line,3)}'
-                    "
-                    begin
-                        resu = @rds.query(sqlu)
-                        print "update #{s.cell(line,3)} #{s.cell(line,1)}\r"
-                        #puts "updating #{code}: #{oNames[code]} vs #{s.cell(line,1)} || #{oPrices[code]} vs #{s.cell(line,8)}"
-                    rescue => e
-                        puts ">>>ERROR: #{e}"
-                        puts sqlu
-                        puts "#{s.cell(line,10)},#{s.cell(line,11)} #{sale_price} #{sale_price}"
-                        puts "<<<"
-                    end
-               #else
-                    #print "skip #{s.cell(line,3)} #{s.cell(line,1)}\r"
-               end
+                print "updating #{s.cell(line,3)} #{s.cell(line,1)} in ogoods.pospal_goods...\r"
+                updateSingleProduct s, line
             end
         end
         puts "\ndone. #{line_idx}"
@@ -255,61 +197,87 @@ def overwriteOgoodsByExcel xlsx
         s.first_row.upto(s.last_row) do |line|
             line_idx += 1
             next if line_idx == 1
-            code = s.cell(line,3)
-            descrp = s.cell(line,27)
-            descrp = '' if descrp.nil?  #to prevent bugs caused by nil != nil when compring database record with excel data
-            #descrp = breakLines descrp #used in open lable printing
-
-            #will remove all links in description here
-
-            sale_price = s.cell(line,7)
-            bulk_price = s.cell(line,10)
-            member_price = s.cell(line,11)
-
-            bulk_price = sale_price if bulk_price == '' || bulk_price.nil?
-            member_price = sale_price if member_price == '' || member_price.nil?
-
-            sqlu = "insert into ogoods.pospal_goods( 
-                        name,catalog,code,size,unit,
-                        balance,purchase_price,sale_price,gross_profit,bulk_price,member_price,
-                        member_discount, points, max_stock,minimal_stock,
-                        brand,supplier,manufacture_date,baozhiqi_date,py_code,huo_number,
-                        producer_memo,security_memo,keep_memo,scale_code,
-                        status,description,img_url,page
-                    ) values( 
-                        '#{@rds.escape s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
-                        #{s.cell(line,6)},#{s.cell(line,7)},#{s.cell(line,8)},'#{s.cell(line,9)}',#{bulk_price},#{member_price},
-                        '#{s.cell(line,12)}','#{s.cell(line,13)}','#{s.cell(line,14)}','#{s.cell(line,15)}',
-                        '#{s.cell(line,16)}','#{s.cell(line,17)}','#{s.cell(line,18)}','#{s.cell(line,19)}','#{s.cell(line,20)}','#{s.cell(line,21)}',
-                        '#{s.cell(line,22)}','#{s.cell(line,23)}','#{s.cell(line,24)}','#{s.cell(line,25)}',
-                        '#{s.cell(line,26)}','#{@rds.escape descrp}','https://oss.foodtrust.cn//8322720200425033706535.jpg',''
-                    );"
-            begin
-                resu = @rds.query(sqlu)
-                print "insert #{s.cell(line,3)} #{s.cell(line,1)}\r"
-            rescue => e
-                puts ">>>ERROR: #{e}"
-                puts sqlu
-                puts "#{s.cell(line,10)},#{s.cell(line,11)} #{sale_price} #{sale_price}"
-                puts "<<<"
-            end
-
+            print "creating #{s.cell(line,3)} #{s.cell(line,1)} in ogoods.popsal_goods...\r"
+            insertSingleProduct s, line
         end
         puts "\ndone. #{line_idx}"
+
+end
+
+def insertSingleProduct s, line
+
+  descrp = s.cell(line,27)
+  descrp = '' if descrp.nil?  #to prevent bugs caused by nil != nil when compring database record with excel data
+  #descrp = breakLines descrp #used in open lable printing
+
+  #will remove all links in description here
+
+  sale_price = s.cell(line,7)
+  bulk_price = s.cell(line,10)
+  member_price = s.cell(line,11)
+
+  bulk_price = sale_price if bulk_price == '' || bulk_price.nil?
+  member_price = sale_price if member_price == '' || member_price.nil?
+
+  sqlu = "insert into ogoods.pospal_goods( 
+          name,catalog,code,size,unit,
+          balance,purchase_price,sale_price,gross_profit,bulk_price,member_price,
+          member_discount, points, max_stock,minimal_stock,
+          brand,supplier,manufacture_date,baozhiqi_date,py_code,huo_number,
+          producer_memo,security_memo,keep_memo,scale_code,
+          status,description,img_url,page,crmeb_pid
+      ) values( 
+          '#{@rds.escape s.cell(line,1)}','#{s.cell(line,2)}','#{s.cell(line,3)}','#{s.cell(line,4)}','#{s.cell(line,5)}',
+          #{s.cell(line,6)},#{s.cell(line,7)},#{s.cell(line,8)},'#{s.cell(line,9)}',#{bulk_price},#{member_price},
+          '#{s.cell(line,12)}','#{s.cell(line,13)}','#{s.cell(line,14)}','#{s.cell(line,15)}',
+          '#{s.cell(line,16)}','#{s.cell(line,17)}','#{s.cell(line,18)}','#{s.cell(line,19)}','#{s.cell(line,20)}','#{s.cell(line,21)}',
+          '#{s.cell(line,22)}','#{s.cell(line,23)}','#{s.cell(line,24)}','#{s.cell(line,25)}',
+          '#{s.cell(line,26)}','#{@rds.escape descrp}','https://oss.foodtrust.cn//8322720200425033706535.jpg','',0
+      );"
+
+  queryRds sqlu
+
+end
+
+def updateSingleProduct s, line
+
+  descrp = s.cell(line,27)
+  descrp = '' if descrp.nil?  #to prevent bugs caused by nil != nil when compring database record with excel data
+  #descrp = breakLines descrp #used in open lable printing
+
+  sale_price = s.cell(line,7)
+  bulk_price = s.cell(line,10)
+  member_price = s.cell(line,11)
+
+  bulk_price = sale_price if bulk_price == '' || bulk_price.nil?
+  member_price = sale_price if member_price == '' || member_price.nil?
+
+  #update should remain imgurl and crmeb_pid unchanged
+  sqlu = "update ogoods.pospal_goods set
+      name='#{@rds.escape s.cell(line,1)}',catalog='#{s.cell(line,2)}',code='#{s.cell(line,3)}',size='#{s.cell(line,4)}',unit='#{s.cell(line,5)}',
+      balance=#{s.cell(line,6)},purchase_price=#{s.cell(line,7)},sale_price=#{s.cell(line,8)},gross_profit='#{s.cell(line,9)}',bulk_price=#{bulk_price},member_price=#{member_price},
+      member_discount='#{s.cell(line,12)}',points='#{s.cell(line,13)}',max_stock='#{s.cell(line,14)}',minimal_stock='#{s.cell(line,15)}',brand='#{s.cell(line,16)}'
+      ,supplier='#{s.cell(line,17)}',manufacture_date='#{s.cell(line,18)}',baozhiqi_date='#{s.cell(line,19)}',py_code='#{s.cell(line,20)}',huo_number='#{s.cell(line,21)}',
+      producer_memo='#{s.cell(line,22)}',security_memo='#{s.cell(line,23)}',keep_memo='#{s.cell(line,24)}',scale_code='#{s.cell(line,25)}',
+      status='#{s.cell(line,26)}',description='#{@rds.escape descrp}'
+      where code = '#{s.cell(line,3)}';"
+
+  queryRds sqlu
 
 end
 
 # pospal will only retrun some frame html code, real content is supposed to be grab by js
 # 银豹的商品详情页是动态生产的，无法自动抓取，亲请自行打开一下链接查看，在后台复制替换
 def getPospalPage code
-    url = 'https://v3xg5-24.pospal.cn/m#/details/'+code
+  url = 'https://v3xg5-24.pospal.cn/m#/details/'+code
 	html = open('https://v3xg5-24.pospal.cn/m#/details/'+code){|f| f.read}
 	text = Nokogiri::HTML(html).text
 	return text
 end
 
 def genPageContent code
-    page='&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;抱歉，此商品详情内容尚未完成迁移，&lt;/p&gt;&lt;p&gt;产品管理人员正在快马加鞭复制黏贴。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;点击&lt;a href=&quot;https://shop.foodtrust.cn/m#/details/GOODS_CODE&quot; style=&quot;&quot; target=&quot;_self&quot; title=&quot;银豹系统商品详情页&quot;&gt;&lt;span style=&quot;color:#ff0000&quot;&gt;此处链接&lt;/span&gt;&lt;/a&gt;查看原系统商品描述&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color:#88b04b&quot;&gt;温馨提示：右划屏幕或回退&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;br/&gt;&lt;/p&gt;&lt;hr/&gt;&lt;p&gt;后台产品管理者参考链接&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://undefined&quot;&gt;https://shop.foodtrust.cn/m#/details/GOODS_CODE&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;'
+    #page='&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;抱歉，此商品详情内容尚未完成迁移，&lt;/p&gt;&lt;p&gt;产品管理人员正在快马加鞭复制黏贴。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;点击&lt;a href=&quot;https://v3xg5-24.pospal.cn/m#/details/GOODS_CODE&quot; style=&quot;&quot; target=&quot;_self&quot; title=&quot;银豹系统商品详情页&quot;&gt;&lt;span style=&quot;color:#ff0000&quot;&gt;此处链接&lt;/span&gt;&lt;/a&gt;查看原系统商品描述&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color:#88b04b&quot;&gt;温馨提示：右划屏幕或回退&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;br/&gt;&lt;/p&gt;&lt;hr/&gt;&lt;p&gt;后台产品管理者参考链接&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://undefined&quot;&gt;https://shop.foodtrust.cn/m#/details/GOODS_CODE&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;'
+    page='&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;抱歉，此商品详情内容尚未完成迁移，&lt;/p&gt;&lt;p&gt;产品管理人员正在快马加鞭。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;点击&lt;a href=&quot;https://v3xg5-24.pospal.cn/m#/details/GOODS_CODE&quot; style=&quot;&quot; target=&quot;_self&quot; title=&quot;银豹系统商品详情页&quot;&gt;&lt;span style=&quot;color:#ff0000&quot;&gt;此处链接&lt;/span&gt;&lt;/a&gt;查看原系统商品描述&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color:#88b04b&quot;&gt;温馨提示：右划屏幕或回退&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;br/&gt;&lt;/p&gt;&lt;hr/&gt;&lt;p&gt;后台产品管理者参考链接&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://v3xg5-24.pospal.cn/m#/details/GOODS_CODE&quot;&gt;https://v3xg5-24.pospal.cn/m#/details/GOODS_CODE&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;'
     return page.gsub('GOODS_CODE',code)
 end
 
@@ -345,162 +313,21 @@ def genCategories cat, idx, name
 	
 end
 
-def genCrmebProductSQL 
-
-    inq = 'select * from ogoods.pospal_goods'
-    res = @rds.query(inq)
-
-    idx = 101 #id 1~100 leave to system test
-    sql = ''
-	
-    res.each do |r|
-        print(".")
-        code = r['code']
-=begin
-                            name,catalog,code,size,unit,
-                            balance,purchase_price,sale_price,gross_profit,bulk_price,member_price,
-                            member_discount, points, max_stock,minimal_stock,
-                            brand,supplier,manufacture_date,baozhiqi_date,py_code,huo_number,
-                            producer_memo,security_memo,keep_memo,scale_code,
-                            status,description,img_url,page
-=end
-        keywords = {brand: r['brand'], supplier: r['supplier'], producer: r['producer_memo'], security: r['security_memo'] ,conditions: r['keep_memo']}
-		#line 9 对应目录，可以再优化 #关键字 应该可以用来做 生产者和保存条件的说明
-        sql += "insert into crmeb.eb_store_product values (
-            #{idx},
-            0,
-            '#{@rds.escape r['img_url']}',
-            '#{@rds.escape [r['img_url']].to_json}',
-            '#{@rds.escape r['name']}',
-            '#{@rds.escape r['description']}',
-            '#{@rds.escape keywords.to_json}',
-            '#{r['code']}',
-            '#{genCategories r['catalog'], idx, r['name']}',
-            #{r['sale_price']},
-            #{r['sale_price']},
-            #{r['sale_price']},
-            0.00,
-            '#{r['unit']}',
-            0,
-            0,
-            #{r['balance']},
-            #{r['status']=='禁用' ? 0 : 1},
-            0,
-            0,
-            0,
-            0,
-            1588026008,
-            0,
-            0,
-            0,
-            #{(r['sale_price'].to_f*0.9).to_i},
-            #{r['purchase_price']},
-            0,
-            NULL,
-            0,
-            0,
-            0,
-            0,
-            '',
-            '',
-            '',
-            1,
-            0,
-            '1,2,3',
-            '#{r['code']}'
-        );\n"
-		sql += "INSERT INTO crmeb.eb_store_product_attr VALUES (
-			#{idx},
-			 '规格', 
-			 '默认', 
-			 0
-		);\n"
-		#line 4 is sales history
-		sql += "INSERT INTO crmeb.eb_store_product_attr_value
-		VALUES(
-				#{idx},
-				'默认',
-				#{r['balance']},
-				0,
-				#{r['sale_price']},
-				'#{@rds.escape [r['img_url']].to_json}',
-				LEFT(md5(uuid()),8),
-				#{r['purchase_price']},
-				'#{r['code']}',
-				#{r['sale_price']},
-				0.4,
-				0.08,
-				0.00,
-				0.00,
-				0,
-				0,
-				0 
-		);\n"
-		
-		genCategories(r['catalog'], idx, r['name']).split(',').each do |cat|
-		sql += "INSERT INTO crmeb.eb_store_product_cate (product_id,cate_id,add_time) VALUES (
-			#{idx},
-			 #{cat}, 
-			 1588026008
-			 );\n	
-		"
-		end
-		va = {}
-		attr = [ {value: '规格', detailValue: '', attrHidden: '', detail: ['默认']} ]
-		va.store(:attr, attr )
-		
-		value = [ { pic: r['img_url'],  price:	r['sale_price'], cost: r['purchase_price'], ot_price: r['sale_price'], stock: r['balance'], bar_code: r['code'], volume: "0.4", weight: "0.08", brokerage: 0, brokerage_two: 0, value: "规格", detail: {unit: "默认"} } ]
-		va.store(:value, value)
-		
-		sql += "insert into crmeb.eb_store_product_attr_result values(
-			#{idx},
-			'#{@rds.escape(va.to_json)}',
-			1588026008,
-			0
-		);\n"
-		
-		sql += "insert into crmeb.eb_store_product_description values(
-			#{idx},
-			'#{@rds.escape r['page']}',
-			0
-		);\n"
-
-		idx += 1
-		#break if idx > 20 #for demo usage
-    end
-
-    #saving sql cmd into files
-    rtime = Time.now.strftime('%Y-%m-%d-%H%M%S')
-    puts "saving sql cmd into files..."
-    fn = "import-pospal-goods.sql"
-    File.open(fn,"w:UTF-8") { |f| f.write sql }
-
-    puts "\ndone. #{res.size}"
-
-    return sql
-end
-
 def createCrmebProducts
-
+    sqls = []
     inq = 'select * from ogoods.pospal_goods'
     pid = 101 #id 1~100 reserved to system
     res = @rds.query(inq)
     res.each do |product|
-      created = newCrmebProduct product, pid
-      updatePidForGoods(pid, product['code']) if created
+      sqls += newCrmebProduct product, pid
+      sqls += updatePidForGoods(pid, product['code'])
       pid += 1
     end
+    return sqls
 end
 
 def updatePidForGoods pid, code
-  sql = "update ogoods.pospal_goods set crmeb_pid = #{pid} where code = '#{code}'"
-  begin   
-    @rds.query(sql)
-  rescue => e
-    puts ">>>ERROR: #{e}"
-    return false
-  end
-  return true
+  return ["update ogoods.pospal_goods set crmeb_pid = #{pid} where code = '#{code}';\n"]
 end
 
 def newCrmebProduct r, idx
@@ -515,7 +342,7 @@ def newCrmebProduct r, idx
     member_discount, points, max_stock,minimal_stock,
     brand,supplier,manufacture_date,baozhiqi_date,py_code,huo_number,
     producer_memo,security_memo,keep_memo,scale_code,
-    status,description,img_url,page
+    status,description,img_url,page,crmeb_pid
 =end
     keywords = {brand: r['brand'], supplier: r['supplier'], producer: r['producer_memo'], security: r['security_memo'] ,conditions: r['keep_memo']}
 		#line 9 对应目录，可以再优化 #关键字 应该可以用来做 生产者和保存条件的说明
@@ -620,29 +447,18 @@ def newCrmebProduct r, idx
 			0
 		);\n"]
 
-    @rds.query('begin')
-    sqls.each do |sql|
-      begin
-        @rds.query(sql)
-      rescue => e
-        @rds.query('rollback')
-        puts ">>>ERROR: #{e}"
-        exit
-      end
-    end
-    @rds.query('commit')
-
-  return true
+  return sqls
 
 end
 
-#puts "codes need DIY"
-=begin  
+#=begin  
 
-#update ogoods.pospal_goods from download excel
 #please use '高级搜索' to get all products in pospal '商品资料'panel
 puts "update ogoods.pospal_goods from download excel..."
-update_goods = overwrite_mode ?  overwriteOgoodsByExcel(xls) : updateOgoodsByExcel(xls)
+xlsx = "all-pospal-goods.xlsx"
+update_goods = overwrite_mode ?  overwriteOgoodsByExcel(xlsx) : updateOgoodsByExcel(xlsx)
+
+=begin
 
 #export json file from pospal_api to get image url , this function write in export_goods.rb
 puts "export json file from pospal_api to get image url..."
@@ -651,15 +467,18 @@ get_all_pospal_goods
 #update ogoods.pospal_goods image url & pages content link provided according to json file
 puts "update ogoods.pospal_goods image url & pages content link..."
 updateImgPage
-=end
 
-#generating crmeb db sql cmd 
-puts "generating crmeb db sql cmd"
-sql = genCrmebProductSQL
+#=end
 
-=begin
+#generating crmeb db sql cdm
 puts "creating crmeb products..."
 sqls = createCrmebProducts
-fn = "import-pospal-goods.sql"
-File.open(fn,"w:UTF-8") { |f| f.write sqls.join("\n") }
+File.open("impot-pospal-goods.sql","w:UTF-8") { |f| f.write sqls.join("\n") }
+
+#=begin
+
+commitTrans sqls #there's performance issue. Please run sql file in naviCat instead. with love.
+
+#=end
+
 =end
