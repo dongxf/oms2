@@ -58,8 +58,7 @@ def give_points list, points, reason, url
           puts "sending notice"
           res = send_specific_points_notice openid, "#{points}分", reason, url, "#{name}, 您的账户余额有变动，详情如下", res['data']['pointAfterUpdate'].to_s
           if res["errmsg"].include? 'subscribe'
-            ap res
-            puts "#{openid} #{name}"
+            puts "#{openid} #{name} has been left"
             unsubscribeOpenid openid 
           end
           sqlu = "update ogoods.pospal_orders 
@@ -87,7 +86,8 @@ def rebate_20190710
       res = pospal_api :updateBiPi, req
       if res['status'] == 'success'
           puts "sending notice"
-          send_specific_points_notice openid, "#{points}分", reason, "https://foodtrust.cn/a20190711/", "您的账户余额有变动，详情如下", res['data']['pointAfterUpdate'].to_s
+          res = send_specific_points_notice openid, "#{points}分", reason, "https://foodtrust.cn/a20190711/", "您的账户余额有变动，详情如下", res['data']['pointAfterUpdate'].to_s
+          unsubscribeOpenid openid if res["errmsg"].include? 'subscribe'
           sqlu = "update ogoods.pospal_orders 
                   set rebate_comment='#{reason} at #{Time.now}', point_rebated=#{sprintf('%.2f',points)}  
                   where uid = #{uid} and need_rebate > 0 and point_rebated = 0 and order_time < '2019-07-11 00:00:00'"
@@ -98,20 +98,19 @@ def rebate_20190710
   end
 end
 
-
-#丰巢5周年庆，每个有效客户送500积分
+=begin
+  丰巢5周年庆，每个有效客户送500积分
+  因未考虑到银豹接口限制次数的问题，暂时只发到出去了一部分会员，分别保存为
+  give200506-all.json
+  give200506-remained.json
+=end
 def give_20200506
 
   list = prepare_users_list "where openid != '' and openid is not NULL and ignored = 0 and unsubscribed = 0"
   fn = "give-points.json"
   File.open(fn,"w:UTF-8") { |f| f.write list.to_json }
   ap list
-
-  #因未考虑到银豹接口限制次数的问题，暂时只发到出去了一部分会员，分别保存为
-  #give200506-all.json
-  #give200506-remained.json
-
-  #give_points list, 500, '共贺丰巢五周年赠送积分, 6-8日订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
+  give_points list, 500, '共贺丰巢五周年赠送积分, 6-8日订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
 end
 
 #为失误验证json数据
@@ -125,18 +124,10 @@ end
 
 def unsubscribeOpenid openid
   sql = "update ogoods.pospal_users set unsubscribed = 1 where openid='#{openid}'"
+  puts "setting openid# #{openid} in pospal_users as unsubscribed..."
   queryRds sql
 end
 
-def tst_message
-  openid = 'owHN1t0ETyOD1p_J324Gcb9twHuk'
-  res = JSON.parse send_specific_points_notice openid, "100", "纯测试", "纯测试", "这是假的余额变动，详情如下", 1000
-  if res["errmsg"].include? 'subscribe'
-    ap res
-    unsubscribeOpenid openid 
-  end
-  #send_text_message openid, '昨天推送的消息格式有误，请点这里<a href="https://foodtrust.cn/wx/5A-1">查看详情</a>'
-end
 
 #读取未发送数据
 def patch_20200506
@@ -162,20 +153,39 @@ def patch_20200506_B
 end
 
 #测试直接发送
-def give_points_test_a
-
-  list = prepare_users_list "where openid != '' and phone like '13600060044%' and openid is not NULL and ignored = 0"# and unsubscribed = 0"
+def test_give_points
+  list = prepare_users_list "where openid != '' and phone like '13600060044%'"
   fn = "give-points-test.json"
   File.open(fn,"w:UTF-8") { |f| f.write list.to_json }
+  list = JSON.parse IO.readlines("give-points-test.json")[0]
   ap list
-
   give_points list, 500, '共贺丰巢五周年赠送积分, 6-8日订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
 end
 
-#测试从文件发送
-def give_points_test_b
-  list = JSON.parse IO.readlines("give-points-test.json")[0]
-  give_points list, 500, '共贺丰巢五周年赠送积分, 6-8日随订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
+# 测试微信消息
+def test_wechat_message
+  openid = 'owHN1t0ETyOD1p_J324Gcb9twHuk'
+  res = send_specific_points_notice openid, "123分", "原因", "https://foodtrust.cn/wx/5A-1", "纯测试, 您的账户余额有变动，详情如下", "456分"
+  ap res
+  unsubscribeOpenid openid if res["errmsg"].include? 'subscribe'
+  res = send_text_message openid, '昨天推送的消息格式有误，请点这里<a href="https://foodtrust.cn/wx/5A-1">查看详情</a>'
+  ap res
+end
+
+# 补发节庆通知
+def send_notice_I
+  openids = []
+  list = prepare_users_list "where openid != '' and openid is not NULL and ignored = 0"# and unsubscribed = 0"
+  list.each do |li|
+    openids += [li["openid"]]
+  end
+  openids.each do |openid|
+    if openid == 'owHN1t0ETyOD1p_J324Gcb9twHuk'
+      res = send_text_message openid, '如果没有补上一条推文的坑：<a href="https://foodtrust.cn/wx/5A-1">详情</a> :)'
+      #ap res # "errmsg" => "response out of time limit or subscription is canceled hint: [5g.OGa0139d437]"
+      puts( (res["errmsg"].include? 'subscription' ) ? 'x' : '.')
+    end
+  end
 end
 
 #待处理
@@ -184,6 +194,3 @@ def patch_5A_III
   puts send_list.size
   #give_points send_list, 500, '共贺丰巢五周年赠送积分, 6-8日随订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
 end
-
-give_points_test_a
-

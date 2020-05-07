@@ -27,10 +27,7 @@ def wechat_api api_name, wat, data
   url = base + apiURLs[api_name]
 
   res = RestClient.post url, data.to_json
-  return res.body
-  #ap res.body
-  #return true if JSON.parse(res.body)['errcode'] == 0
-  #return false
+  return JSON.parse res.body
 end
 
 #
@@ -45,8 +42,7 @@ def send_bot_message content, list
     }
 
     res = RestClient.post ENV['WWBOT_WC'], data.to_json
-    return true if JSON.parse(res.body)['errcode'] == 0
-    return false
+    return JSON.parse res.body
 end
 
 def send_balance_notice openids
@@ -99,14 +95,13 @@ def send_specific_points_notice openid, points, reason, url, content, newPoints
 end
 
 def ccNotice notice
-
-    notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
-    wechat_api :sendTemplateMessage, wechat_access_token, notice
-    notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
-    wechat_api :sendTemplateMessage, wechat_access_token, notice
-    notice.store(:touser,'owHN1t3GUvWYmKsxbwZdSpQDo4O4') #CC to 庞建全
-    wechat_api :sendTemplateMessage, wechat_access_token, notice
-
+  return
+  notice.store(:touser,'owHN1tzPJOSQ2qlnbRCSo-Ke6G9k') #CC to 丰巢小蜜
+  wechat_api :sendTemplateMessage, wechat_access_token, notice
+  notice.store(:touser,'owHN1t0ETyOD1p_J324Gcb9twHuk') #CC to 董学锋
+  wechat_api :sendTemplateMessage, wechat_access_token, notice
+  notice.store(:touser,'owHN1t3GUvWYmKsxbwZdSpQDo4O4') #CC to 庞建全
+  wechat_api :sendTemplateMessage, wechat_access_token, notice
 end
 
 def send_text_message openid, content
@@ -147,8 +142,8 @@ def send_specific_balance_notice openid, balance, reason, url, content
     res = wechat_api :sendTemplateMessage, wechat_access_token, notice
 
     ccNotice notice
-
     return res
+
 end
 
 def send_confirm_notice openid, info, order_number, order_type, remark, url, flag
@@ -177,7 +172,6 @@ def send_confirm_notice openid, info, order_number, order_type, remark, url, fla
     notice[:data].store(:remark, {value: remark, color: '#88b04b'})
 
     res = wechat_api :sendTemplateMessage, wechat_access_token, notice
-
     ccNotice notice if flag == 1 # only send 1st order to foodcherry, usually use order[:order_times]
 
     return res
