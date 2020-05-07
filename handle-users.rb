@@ -43,7 +43,7 @@ def give_points list, points, reason, url
       name = el["name"]
       phone = el["phone"]
 
-      #puts "give #{points} points to uid #{uid} #{name} with openid# #{openid}"
+      puts "give #{points} points to uid #{uid} #{name} with openid# #{openid}"
       #next if phone != '13600060044'
 
       req = { 'customerUid' => uid, 'balanceIncrement' => 0.0, 'pointIncrement' => points, 'dataChangeTime' => Time.now }
@@ -136,7 +136,6 @@ end
 def patch_20200506
   list_remained = JSON.parse IO.readlines("give200506-remained.json")[0]
   list_a = list_remained[0..499]
-  list_b = list_remained[500..list_remained.size-1]
   p list_remained.size
   p list_a.size
   p list_b.size
@@ -148,4 +147,10 @@ def patch_20200506_A
   give_points list_a, 500, '共贺丰巢五周年赠送积分, 6-8日随订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
 end
 
-patch_20200506_A
+def patch_20200506_B
+  list_remained = JSON.parse IO.readlines("give200506-remained.json")[0]
+  list_b = list_remained[600..list_remained.size-1]
+  give_points list_a, 500, '共贺丰巢五周年赠送积分, 6-8日随订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
+end
+
+patch_20200506_B
