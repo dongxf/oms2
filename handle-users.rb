@@ -174,17 +174,26 @@ end
 
 # 补发节庆通知
 def send_notice_I
+  message = "[积分任务上新]
+  从今日起，凡收货时发现未附带分拣单，或缺货未在分拣单上注明，请于当天告知丰巢小蜜(18998382701)，我们在收到反馈后，请为您赠送500积分。小蜜未及时处理的，可投诉至丰巢学锋(13600060044)。
+  好的工作作风，需要大家的反馈来贯彻培养。爱你们～
+     (゜-゜)つロ 干杯比芯"
   openids = []
   list = prepare_users_list "where openid != '' and openid is not NULL and ignored = 0"# and unsubscribed = 0"
   list.each do |li|
     openids += [li["openid"]]
   end
   openids.each do |openid|
-    if openid == 'owHN1t0ETyOD1p_J324Gcb9twHuk'
-      res = send_text_message openid, '如果没有补上一条推文的坑：<a href="https://foodtrust.cn/wx/5A-1">详情</a> :)'
-      #ap res # "errmsg" => "response out of time limit or subscription is canceled hint: [5g.OGa0139d437]"
-      puts( (res["errmsg"].include? 'subscription' ) ? 'x' : '.')
-    end
+    #if openid == 'owHN1t0ETyOD1p_J324Gcb9twHuk'
+      res = send_text_message openid, message
+      if res["errcode"] == 0
+        print('.')
+      else
+        puts 'x'
+        puts "opend: #{openid}"
+        ap res
+      end
+    #end
   end
 end
 
