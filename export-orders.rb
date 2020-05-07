@@ -30,7 +30,7 @@ end
 def createCommentsByOrder order
   puts "create comments for order #{order['orderNo']} #{order['orderDateTime']}"
 
-  order["items"][0..1].each do |item| #TEST
+  order["items"].each do |item| #TEST
     createCommentsForItem order, item
   end
 
