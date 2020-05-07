@@ -1,6 +1,6 @@
 #encoding: utf-8
 
-#this tool will export pospal_users into crmeb
+#this tool will export pospal_users into crmeb.eb_users creation sql cmds
 
 require 'mysql2'
 require 'json'
@@ -18,8 +18,6 @@ Usage:  export-users.rb [-w]
 =end
 
 WRITE_MODE = ARGV[0]=='-w' ? true : false
-
-@rds = Mysql2::Client.new(:host => ENV['RDS_AGENT'], :username => "psi_root", :port => '1401', :password => ENV['PSI_PASSWORD'])
 
 def read_pospal_users
 
@@ -141,28 +139,17 @@ def createCrmebUsers users
 
   sqls = []
 
-  inqs = clearCrmebUsersSqls
-  commitTrans inqs if WRITE_MODE
-  sqls += inqs
+  sqls += clearCrmebUsersSqls
 
   idx = 1
   users.each do |user|
     if user['openid'] != ''
-
-      inqs = createSingleUserSqls user, idx
-      commitTrans inqs if WRITE_MODE
-      sqls += inqs
-
-      inq = "update ogoods.pospal_users set crmeb_uid = #{idx} where uid = #{user['uid']};"
-      queryRds(inq) if WRITE_MODE
-      sqls += [inq]
-
+      sqls += createSingleUserSqls user, idx
+      sqls += ["update ogoods.pospal_users set crmeb_uid = #{idx} where uid = #{user['uid']};"]
       idx += 1
-
     end
   end
 
-  puts "done. #{sqls.size}"
   return sqls
 
 end
@@ -176,6 +163,6 @@ save_to_excel fields, users, "pospal-users-all.xls"
 
 puts "creating crmeb users..."
 sqls = createCrmebUsers users
+File.open("2-import-pospal-users.sql","w:UTF-8") { |f| f.write sqls.join("\n") }
 
-fn = "import-pospal-users.sql"
-File.open(fn,"w:UTF-8") { |f| f.write sqls.join("\n") }
+commitTrans sqls if WRITE_MODE
