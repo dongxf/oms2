@@ -29,7 +29,8 @@ def prepare_users_list conditions
     sqlu = "select openid, uid, name, phone from ogoods.pospal_users #{conditions}"
     res = @rds.query sqlu
     res.each do |r|
-        list += [ { :openid => r['openid'], :uid => r['uid'], :name => r['name'], :phone => r['phone'] } ]
+        #传数据，尤其涉及到通过JSON文件转储存，不要用:openid，用"openid"的形式，否则:openid存进去，"openid"读出来
+        list += [ { "openid" => r['openid'], "uid" => r['uid'], "name" => r['name'], "phone" => r['phone'] } ]
     end
     return list
 end
@@ -37,6 +38,11 @@ end
 def give_points list, points, reason, url
 
   list.each do |el|
+
+      uid = ''
+      openid = ''
+      name = ''
+      phone = ''
 
       uid = el["uid"]
       openid = el["openid"]
@@ -50,7 +56,7 @@ def give_points list, points, reason, url
       res = pospal_api :updateBiPi, req
       if res['status'] == 'success'
           puts "sending notice"
-          res = send_specific_points_notice openid, "#{points}分", reason, url, "您的账户余额有变动，详情如下", res['data']['pointAfterUpdate'].to_s
+          res = send_specific_points_notice openid, "#{points}分", reason, url, "#{name}, 您的账户余额有变动，详情如下", res['data']['pointAfterUpdate'].to_s
           if res["errmsg"].include? 'subscribe'
             ap res
             puts "#{openid} #{name}"
@@ -141,16 +147,43 @@ def patch_20200506
   p list_b.size
 end
 
+#已执行
 def patch_20200506_A
   list_remained = JSON.parse IO.readlines("give200506-remained.json")[0]
   list_a = list_remained[0..599]
   give_points list_a, 500, '共贺丰巢五周年赠送积分, 6-8日随订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
 end
 
+#已执行，发现接口数量不足，未发送部分已移入give200507-remained.json
 def patch_20200506_B
   list_remained = JSON.parse IO.readlines("give200506-remained.json")[0]
-  list_b = list_remained[600..list_remained.size-1]
-  give_points list_a, 500, '共贺丰巢五周年赠送积分, 6-8日随订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
+  send_list = list_remained[600..list_remained.size-1]
+  give_points send_list, 500, '共贺丰巢五周年赠送积分, 6-8日随订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
 end
 
-patch_20200506_B
+#测试直接发送
+def give_points_test_a
+
+  list = prepare_users_list "where openid != '' and phone like '13600060044%' and openid is not NULL and ignored = 0"# and unsubscribed = 0"
+  fn = "give-points-test.json"
+  File.open(fn,"w:UTF-8") { |f| f.write list.to_json }
+  ap list
+
+  give_points list, 500, '共贺丰巢五周年赠送积分, 6-8日订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
+end
+
+#测试从文件发送
+def give_points_test_b
+  list = JSON.parse IO.readlines("give-points-test.json")[0]
+  give_points list, 500, '共贺丰巢五周年赠送积分, 6-8日随订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
+end
+
+#待处理
+def patch_5A_III
+  send_list = JSON.parse IO.readlines("give200507-remained.json")[0]
+  puts send_list.size
+  #give_points send_list, 500, '共贺丰巢五周年赠送积分, 6-8日随订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
+end
+
+give_points_test_a
+
