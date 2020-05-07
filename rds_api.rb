@@ -8,6 +8,7 @@ def commitTrans inqs
       rescue => e
         @rds.query('rollback')
         puts ">>>ERROR: #{e}"
+        puts inq
         exit
       end
     end
@@ -19,6 +20,7 @@ def queryRds inq
     @rds.query(inq)
   rescue => e
     puts ">>>ERROR: #{e}"
+    puts inq
     exit
   end
 end
