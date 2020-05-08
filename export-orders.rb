@@ -127,10 +127,10 @@ def createCommentsForItem order, item
   add_time =  (Time.parse(order_time).to_f * 1000).to_i
 
 
-  if @sales[item['productBarcode']].nil?
-    @sales[item['productBarcode']] = item['productQuantity']
+  if @sales[pid].nil?
+    @sales[pid] = item['productQuantity']
   else
-    @sales[item['productBarcode']] += item['productQuantity'] 
+    @sales[pid] += item['productQuantity'] 
   end
 
   inq = "INSERT INTO `crmeb`.`eb_store_product_reply`( `uid`, `oid`, `unique`, `product_id`, `reply_type`, `product_score`, `service_score`, `comment`, `pics`, `add_time`, `merchant_reply_content`, `merchant_reply_time`, `is_del`, `is_reply`, `nickname`, `avatar`) VALUES (#{uid}, #{oid}, uuid(), #{pid}, 'product', 5, 5, '旧系统迁数据移默认好评，订单主人请在待评价订单中重新评论', '', unix_timestamp('#{order_time}'), NULL, NULL, 0, 0, '#{nick_name}', '#{avatar}');"
@@ -148,9 +148,9 @@ def setupTotalSales
   inqs = []
   print "setup total sales\r"
   idx = 0
-  @sales.each do |code, sales|
+  @sales.each do |id, sales|
     print '.'
-    sql = "update crmeb.eb_store_product set sales = #{sales} where pospal_code = '#{code}';"
+    sql = "update crmeb.eb_store_product set sales = #{sales} where id = #{id};"
     #queryRds sql
     inqs += [sql]
     idx += 1
@@ -167,7 +167,7 @@ orders.each do |order|
 end
 sqls += setupTotalSales
 
-File.open("3-import-pospal-comments.sql","w:UTF-8") { |f| f.write sqls.join("\n") }
+File.open("4-import-pospal-comments.sql","w:UTF-8") { |f| f.write sqls.join("\n") }
 File.open("3.1-parse-error-list.json","w:UTF-8") { |f| f.write @parseErrorList.to_json } if @parseErrorList.size > 0
 File.open("3.2-uid-null-list.json","w:UTF-8") { |f| f.write @uidNullList.to_json } if @uidNullList.size > 0
 File.open("3.3-pid-null-list.json","w:UTF-8") { |f| f.write @pidNullList.to_json } if @pidNullList.size > 0

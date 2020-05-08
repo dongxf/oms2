@@ -30,7 +30,7 @@ updateGoodsAttributes
 #generating crmeb db sql cdm
 puts "creating crmeb products..."
 sqls = createDemoProducts + createCrmebProducts
-File.open("1-import-pospal-goods.sql","w:UTF-8") { |f| f.write sqls.join("\n") }
+File.open("2-import-pospal-goods.sql","w:UTF-8") { |f| f.write sqls.join("\n") }
 
 puts "sql statements generated"
 #commitTrans sqls #there's performance issue. Please run sql file in naviCat instead. with love.

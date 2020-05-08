@@ -136,6 +136,6 @@ save_to_excel fields, users, "pospal-users-all.xls"
 
 puts "creating crmeb users..."
 sqls = createCrmebUsers users
-File.open("2-import-pospal-users.sql","w:UTF-8") { |f| f.write sqls.join("\n") }
+File.open("3-import-pospal-users.sql","w:UTF-8") { |f| f.write sqls.join("\n") }
 
 commitTrans sqls if WRITE_MODE
