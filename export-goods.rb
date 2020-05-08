@@ -21,11 +21,11 @@ overwrite_mode=true if args=='-f'
 puts "updating ogoods.pospal_goods from download excel..."
 update_goods = overwrite_mode ?  overwriteOgoodsByExcel(xlsx) : updateOgoodsByExcel(xlsx)
 
+=end
+
 puts "updating image urls and page contents in pospal_goods according to api..."
-#getGoodsImages
 updateGoodsAttributes
 
-=end
 
 #generating crmeb db sql cdm
 puts "creating crmeb products..."

@@ -274,9 +274,8 @@ def getPospalPage code
 end
 
 def genPageContent code
-    #page='&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;抱歉，此商品详情内容尚未完成迁移，&lt;/p&gt;&lt;p&gt;产品管理人员正在快马加鞭复制黏贴。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;点击&lt;a href=&quot;https://v3xg5-24.pospal.cn/m#/details/GOODS_CODE&quot; style=&quot;&quot; target=&quot;_self&quot; title=&quot;银豹系统商品详情页&quot;&gt;&lt;span style=&quot;color:#ff0000&quot;&gt;此处链接&lt;/span&gt;&lt;/a&gt;查看原系统商品描述&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color:#88b04b&quot;&gt;温馨提示：右划屏幕或回退&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;br/&gt;&lt;/p&gt;&lt;hr/&gt;&lt;p&gt;后台产品管理者参考链接&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://undefined&quot;&gt;https://shop.foodtrust.cn/m#/details/GOODS_CODE&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;'
-    page='&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;抱歉，此商品详情内容尚未完成迁移，&lt;/p&gt;&lt;p&gt;产品管理人员正在快马加鞭。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;点击&lt;a href=&quot;https://v3xg5-24.pospal.cn/m#/details/GOODS_CODE&quot; style=&quot;&quot; target=&quot;_self&quot; title=&quot;银豹系统商品详情页&quot;&gt;&lt;span style=&quot;color:#ff0000&quot;&gt;此处链接&lt;/span&gt;&lt;/a&gt;查看原系统商品描述&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color:#88b04b&quot;&gt;温馨提示：右划屏幕或回退&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;br/&gt;&lt;/p&gt;&lt;hr/&gt;&lt;p&gt;后台产品管理者参考链接&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://v3xg5-24.pospal.cn/m#/details/GOODS_CODE&quot;&gt;https://v3xg5-24.pospal.cn/m#/details/GOODS_CODE&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;'
-    return page.gsub('GOODS_CODE',code)
+  return '&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;抱歉，此商品详情内容尚未完成迁移，&lt;/p&gt;&lt;p&gt;产品管理人员正在快马加鞭，黏贴复制中&lt;/p&gt;&lt;hr/&gt;&lt;p&gt;后台产品管理者参考链接&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://shop.foodtrust.cn/m#/search&quot;&gt;https://shop.foodtrust.cn/m#/search&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;'
+  #return page.gsub('GOODS_CODE',code)
 end
 
 def genCategories cat, idx, name
