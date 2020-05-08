@@ -12,6 +12,8 @@ export/
 *.xlsx
 *.xls
 *.json
-export/*.xlsx
-export/*.xls
-export/*.json
+*.sql
+*/*.xlsx
+*/*.xls
+*/*.json
+*/*.sql
