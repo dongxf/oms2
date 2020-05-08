@@ -8,33 +8,39 @@ require 'time'
 load 'rds_api.rb'
 
 @sales = {}
+@parseErrorList = []
+@uidNullList = []
+@pidNullList = []
 
 def getPospalOrders conditions
-  puts "get pospal orders #{conditions}"
+  print "get pospal orders #{conditions}\r"
   orders = []
-  inq = "select order_id, raw_data from ogoods.pospal_orders #{conditions}"
+  inq = "select order_id, customer_id, date_time, raw_data from ogoods.pospal_orders #{conditions}"
   res = queryRds inq
   res.each do |r|
     begin
       order = JSON.parse r["raw_data"]
       orders += [order]
     rescue => e
-      puts ">>>ERROR: #{e}\n   order_id: #{r['order_id']}"
+      puts ">>>ERROR: #{e}\n   order_id##{r['order_id']} customer_id#{r['customer_id']} date_time##{r['date_time']}"
+      @parseErrorList += [r['order_id']]
     end
   end
-  puts "done [#{orders.size}]"
+  print "done [#{orders.size}]\r"
   return orders
 end
 
 #"INSERT INTO `crmeb`.`eb_store_product_reply`( `uid`, `oid`, `unique`, `product_id`, `reply_type`, `product_score`, `service_score`, `comment`, `pics`, `add_time`, `merchant_reply_content`, `merchant_reply_time`, `is_del`, `is_reply`, `nickname`, `avatar`) VALUES (15, 2, uuid(), 259, 'product', 5, 4, '多个商品也应该是一条评论吧', '', 1541270186, NULL, NULL, 0, 0, '丰巢学锋', 'https://wx.qlogo.cn/mmopen/vi_32/OJ0A9NKqRDDdJF4domd4kVzE4mGUthtibiaiawcuvbAicLHzZ1JXib3kueZWjhiaDzK1p19DxGJclkiaZTD3RHb4jnDrg/132');"
 def createCommentsByOrder order
-  puts "create comments for order #{order['orderNo']} #{order['orderDateTime']}"
+  sqls = []
+  print "create comments for order #{order['orderNo']} #{order['orderDateTime']}\r"
 
   order["items"].each do |item| #TEST
-    createCommentsForItem order, item
+    sqls += createCommentsForItem order, item
   end
 
-  puts "done [#{order["items"].size}]"
+  print "done [#{order["items"].size}]\r"
+  return sqls
 end
 
 def uidHash
@@ -83,14 +89,25 @@ def createCommentsForItem order, item
   print '.'
 
   uid = uidHash[order['customerNumber']]
-  return if uid.nil? #已不存在
-  avatar = avatarHash[order['customerNumber']]
-  oid = '0000000' #TBD
   pid = pidHash[item['productBarcode']]
-  return if pid.nil? #已经不存在的商品
+  order_id = order['orderNo'][2..16]
+  if uid.nil?
+    @uidNullList += [order_id]
+    puts ">>>ERROR: uid is NULL\n   order_id##{order_id} date##{order['orderDateTime']} number#{order['customerNumber']} code##{order['productBarcode']}"
+    return [] 
+  end
+  if pid.nil?
+    @pidNullList += [order_id]
+    puts ">>>ERROR: pid is NULL\n   order_id##{order_id} date##{order['orderDateTime']} number#{order['customerNumber']} code##{order['productBarcode']}"
+    return [] 
+  end
+
+  oid = '0000000' #TBD
+  avatar = avatarHash[order['customerNumber']]
   nick_name = order['conatactName']
   order_time = order['orderDateTime']
   add_time =  (Time.parse(order_time).to_f * 1000).to_i
+
 
   if @sales[item['productBarcode']].nil?
     @sales[item['productBarcode']] = item['productQuantity']
@@ -98,31 +115,41 @@ def createCommentsForItem order, item
     @sales[item['productBarcode']] += item['productQuantity'] 
   end
 
-  sql = "INSERT INTO `crmeb`.`eb_store_product_reply`( `uid`, `oid`, `unique`, `product_id`, `reply_type`, `product_score`, `service_score`, `comment`, `pics`, `add_time`, `merchant_reply_content`, `merchant_reply_time`, `is_del`, `is_reply`, `nickname`, `avatar`) VALUES (#{uid}, #{oid}, uuid(), #{pid}, 'product', 5, 5, '旧系统迁数据移默认好评，订单主人请在待评价订单中重新评论', '', unix_timestamp('#{order_time}'), NULL, NULL, 0, 0, '#{nick_name}', '#{avatar}');"
-  queryRds sql
+  inq = "INSERT INTO `crmeb`.`eb_store_product_reply`( `uid`, `oid`, `unique`, `product_id`, `reply_type`, `product_score`, `service_score`, `comment`, `pics`, `add_time`, `merchant_reply_content`, `merchant_reply_time`, `is_del`, `is_reply`, `nickname`, `avatar`) VALUES (#{uid}, #{oid}, uuid(), #{pid}, 'product', 5, 5, '旧系统迁数据移默认好评，订单主人请在待评价订单中重新评论', '', unix_timestamp('#{order_time}'), NULL, NULL, 0, 0, '#{nick_name}', '#{avatar}');"
+
+  return [inq]
+  #queryRds inq
 
 end
 
 def clearAllComments
-  sql = 'delete from crmeb.eb_store_product_reply where 1=1'
-  queryRds sql
+  return ['delete from crmeb.eb_store_product_reply where 1=1;']
 end
 
 def setupTotalSales
-  puts "setup total sales"
+  inqs = []
+  print "setup total sales\r"
   idx = 0
   @sales.each do |code, sales|
     print '.'
     sql = "update crmeb.eb_store_product set sales = #{sales} where pospal_code = '#{code}';"
-    queryRds sql
+    #queryRds sql
+    inqs += [sql]
     idx += 1
   end
-  puts "done [#{idx}]"
+  print "done [#{idx}]\r"
+  return inqs
 end
 
-clearAllComments
+sqls = []
+sqls += clearAllComments
 orders = getPospalOrders " where line != '[X]';"
 orders.each do |order|
-  createCommentsByOrder order
+  sqls += createCommentsByOrder order
 end
-setupTotalSales
+sqls += setupTotalSales
+
+File.open("3-import-pospal-comments.sql","w:UTF-8") { |f| f.write sqls.join("\n") }
+File.open("3.1-parse-error-list.json","w:UTF-8") { |f| f.write @parseErrorList.to_json }
+File.open("3.2-uid-null-list.json","w:UTF-8") { |f| f.write @uidNullList.to_json }
+File.open("3.3-pid-null-list.json","w:UTF-8") { |f| f.write @pidNullList.to_json }
