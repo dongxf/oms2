@@ -37,33 +37,6 @@ def read_pospal_users
   return recs
 end
 
-def save_to_excel names, items, fn
-
-  Spreadsheet.client_encoding="utf-8"
-  book = Spreadsheet::Workbook.new
-  sheet = book.create_worksheet :name => "sheet"
-
-  #生成表头
-  colIndex=0 #col index
-  names.each do |name|
-    sheet.row(0)[colIndex]=name
-    colIndex += 1
-  end
-
-  lineIndex = 1
-  items.each do |item|
-    colIndex=0
-    names.each do |name|
-      sheet.row(lineIndex)[colIndex] = item[name]
-      colIndex +=1
-    end
-    lineIndex += 1
-  end
-
-  book.write fn
-  puts "done. #{items.size}"
-end
-
 def createSingleUserSqls user, idx
 
   sqls = []

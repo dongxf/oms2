@@ -83,23 +83,41 @@ def getAvatarHash
   return avatars
 end
 
+#对于那些被设为ignored的pospal会员号，寻找一个同openid，但被有效导出的会员号作为替代
+def getPrimaryCustomerNumber ignored_number
+  inq = "select number, openid from ogoods.pospal_users where openid in ( select openid from ogoods.pospal_users where number = '#{ignored_number}' group by number ) and ignored = 0;"
+  res = queryRds inq
+  res.each do |r|
+    return r['number']
+  end
+  return nil
+end
+
+def getPrimaryUid number
+  uid = uidHash[number]
+  uid = uidHash[getPrimaryCustomerNumber number] if uid.nil?
+  return uid #could still be nil
+end
 
 def createCommentsForItem order, item
 
   print '.'
 
-  uid = uidHash[order['customerNumber']]
+  uid = getPrimaryUid order['customerNumber']
   pid = pidHash[item['productBarcode']]
-  order_id = order['orderNo'][2..16]
-  if uid.nil?
+  order_id = order['orderNo'][0..16]
+
+  if uid.nil? #同一openid多个手机会员号至迁移一个导致，合并到保留会员号处理
     @uidNullList += [order_id]
     puts ">>>ERROR: uid is NULL\n   order_id##{order_id} date##{order['orderDateTime']} number#{order['customerNumber']} code##{order['productBarcode']}"
     return [] 
+  else
+    print 'o'
   end
-  if pid.nil?
+
+  if pid.nil? #pid被删除或修改导致，在没有对应码表之前，同一迁移到pid=1的系统保留商品
     @pidNullList += [order_id]
-    puts ">>>ERROR: pid is NULL\n   order_id##{order_id} date##{order['orderDateTime']} number#{order['customerNumber']} code##{order['productBarcode']}"
-    return [] 
+    pid = 1
   end
 
   oid = '0000000' #TBD
@@ -150,6 +168,6 @@ end
 sqls += setupTotalSales
 
 File.open("3-import-pospal-comments.sql","w:UTF-8") { |f| f.write sqls.join("\n") }
-File.open("3.1-parse-error-list.json","w:UTF-8") { |f| f.write @parseErrorList.to_json }
-File.open("3.2-uid-null-list.json","w:UTF-8") { |f| f.write @uidNullList.to_json }
-File.open("3.3-pid-null-list.json","w:UTF-8") { |f| f.write @pidNullList.to_json }
+File.open("3.1-parse-error-list.json","w:UTF-8") { |f| f.write @parseErrorList.to_json } if @parseErrorList.size > 0
+File.open("3.2-uid-null-list.json","w:UTF-8") { |f| f.write @uidNullList.to_json } if @uidNullList.size > 0
+File.open("3.3-pid-null-list.json","w:UTF-8") { |f| f.write @pidNullList.to_json } if @pidNullList.size > 0
