@@ -22,19 +22,24 @@ WRITE_MODE = ARGV[0]=='-w' ? true : false
 def read_pospal_users
 
   recs = []
+  founder = {}
   inq = "select * from ogoods.pospal_users where ignored = 0" #and crmeb_uid is NULL"  #when go production add this condition!!!
   res = @rds.query(inq)
 
   res.each do | r |
-    rec = {}
+    #rec = {}
     #basic fields
-    fields = ['uid', 'number', 'name', 'phone', 'openid', 'unionid', 'avatar', 'discount', 'raw_data', 'points', 'discount', 'balance', 'address', 'created']
-    fields.each { |f| rec[f]=r[f] }
-    recs += [rec]
+    #fields = ['uid', 'number', 'name', 'phone', 'openid', 'unionid', 'avatar', 'discount', 'raw_data', 'points', 'discount', 'balance', 'address', 'created']
+    #fields.each { |f| rec[f]=r[f] }
+    if r['openid'] == 'owHN1t0ETyOD1p_J324Gcb9twHuk' #为了避免1号用户某种情下况默认称为新用户的上级，可能带来的佣金问题，选定董学锋做1号用户
+      founder = r
+    else
+      recs += [r] 
+    end
   end
 
   puts "done. #{recs.size}"
-  return recs
+  return [founder] + recs
 end
 
 def createSingleUserSqls user, idx
