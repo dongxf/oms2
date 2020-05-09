@@ -200,6 +200,10 @@ end
 #待处理
 def patch_5A_III
   send_list = JSON.parse IO.readlines("give200507-remained.json")[0]
-  puts send_list.size
-  #give_points send_list, 500, '共贺丰巢五周年赠送积分, 6-8日随订单赠送有机好物，5=12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
+  list_20200509 =  send_list[0..199]
+  list_20200510 =  send_list[200..101]
+  puts list_20200509.size
+  #give_points list_20200510, 500, '共贺丰巢五周年赠送积分, 6-8日随订单赠送有机好物，5-12日订单双倍积分', 'https://foodtrust.cn/wx/5A-1'
 end
+
+patch_5A_III
