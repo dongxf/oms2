@@ -12,6 +12,7 @@ export/
 *.xlsx
 *.xls
 *.sql
+*.json
 */*.xlsx
 */*.xls
 */*.sql

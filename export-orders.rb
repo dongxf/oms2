@@ -131,8 +131,6 @@ def createCommentsForItem order, item
   avatar = avatarHash[order['customerNumber']]
   nick_name = order['conatactName']
   order_time = order['orderDateTime']
-  add_time =  (Time.parse(order_time).to_f * 1000).to_i
-
 
   if @sales[pid].nil?
     @sales[pid] = item['productQuantity']
