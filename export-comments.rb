@@ -1,6 +1,6 @@
 =begin
 
-usage:    将ogoods.pospal_orders中的订单倒入到crmeb中成为完成的历史订单，以便用户追加评论
+usage:    将ogoods.pospal_orders中的订单倒入到crmeb的产品评论中
 comment:  目前只构造默认评论,均采用默认订单为0000000
 
 =end
