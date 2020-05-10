@@ -53,10 +53,14 @@ def gen_pickup_text order
     end
     content += "\n"
 
-   #content += "-　　　　-　　　　　-　　　　　-　　　　　-　　　　-\n"
     content += "----------------------------------------------------\n"
-    content += "品质问题不满意无障碍退换，请联系丰巢小蜜 18998382701\n"
-    content += "　　　　　每一天，更安心的选择　FOODTRUST"
+
+=begin #standard line in pospal watcher
+    content += "----------------------------------------------------\n"
+    content += "-　　　　-　　　　　-　　　　　-　　　　　-　　　　-\n"
+    content += "品质问不题题题题题题题题题题题题满意无障碍退换请联系\n"
+    content += "123456789012345678901234567890123456789012\n"
+=end
 
     return content
 
