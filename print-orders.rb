@@ -18,42 +18,45 @@ stime = etime - bhours*3600 + 1 #leave one second
 
 def gen_pickup_text order
 
-    #add header twice
-    #全角空格字符 (　) (_) (﹏)
-    content ="[#{order['line']}] 　　让健康和友善触手可及　　　　1 of ﹏\n"
-    content += "\n"
-    content += "#{order['order_id']}　#{Time.at order['add_time']}\n"
-    content += order['shipping_type'] == 1 ? "#{order['user_address']}\n" : "补 拍 或 自 提 订 单\n"
-    content += "#{order['real_name']}    #{order['user_phone']}\n"
-    content += order['mark'].to_s == '' ? "\n" : ":: #{order['mark']} ::\n"
-    content += "-　　　　-　　　　　-　　　　　-　　　　　-　　　　-\n"
-    
-    content += order['remark'].to_s == '' ? "\n" : ">> #{order['remark']} <<\n"
-    content += "#{order['order_id']}　#{Time.at order['add_time']} 2 of ﹏\n"
-    content += "#{order['user_address']}\n"
-    content += "#{order['real_name']}    #{order['user_phone']}\n"
-    content += "-----------------------------------------[OTIMES]\n"
-    
     statusHash = { -1 => '已退款', -2 => '退货成功', 0 => '待发货', 1 => '待收货', 2=> '已收货', 3=> '待评价' }
     refundHash = { 0 => '未退款', 1 => '申请退款中', 2 => '已退款' }
+
+    #add header twice
+    #全角空格字符 (　) (_) (﹏)
+    order_time = Time.at(order['add_time']).strftime("%y%m%d %H:%M:%S")
+    content ="[#{order['line']}]　　　　　　　让健康和友善触手可及　　　　1 of ﹏\n"
+    content += "\n"
+    content += "#{order['order_id']}　#{order_time}\n"
+    content += order['shipping_type'] == 1 ? "#{order['user_address']}\n" : "补 拍 或 自 提 订 单\n"
+    content += "#{order['real_name']}    #{order['user_phone']}\n"
+    content += order['mark'].to_s == '' ?  "\n" : ":: #{order['mark']}\n"
+    content += "-　　　　-　　　　　-　　　　　-　　　　　-　2 of ﹏\n"
+    content += order['remark'].to_s == '' ? "\n" : ">> #{order['remark']}\n"
+    content += "#{order['order_id']}　#{order_time}\n"
+    content += "#{order['user_address']}\n"
+    content += "#{order['real_name']}    #{order['user_phone']}\n"
+    #content += "-　　　　-　　　　　-　　　　　-　　　　　-　　　　-\n"
+    content += "----------------------------------------------------\n"
     orderStatus = statusHash[order['status']]
     refundStatus = refundHash[order['refund_status']]
-    content += order['status'] == 0 && order['refund_status'] == 0 ? "\n" : "警告：>>>>>>>>> #{orderStatus} #{refundStatus}\n"
-    content += " 数量     商品名及规格\n\n"
+    content += order['status'] == 0 && order['refund_status'] == 0 ? "\n" : ">>>>>>>>警告>>>>>>>>#{orderStatus}　#{refundStatus}\n"
+    content += "数量　　商品名及规格\n"
 
     items = order['items']
     items.each do |item|
-        bold = "  "
-        bold[1] = "*" if item['cart_info']['cart_num']>1
-        bold[0] = "*" if item['cart_info']['cart_num']>2
-        qty = bold + sprintf("%d",item['cart_info']['cart_num'])
-        content += "#{qty} [   ] #{item['cart_info']['productInfo']['store_name']}\n"
+        bold = "　"
+        bold = " *" if item['cart_info']['cart_num']>1
+        bold = "**" if item['cart_info']['cart_num']>2
+        qty = sprintf("%d",item['cart_info']['cart_num'])
+        suk = item['cart_info']['productInfo']['attrInfo']['suk'] == '默认' ? '' : "##{item['cart_info']['productInfo']['attrInfo']['suk']}"
+        content += "#{bold}#{qty} [　] #{item['cart_info']['productInfo']['store_name']}　#{suk}\n"
     end
     content += "\n"
 
-    #add footer
-    content += "-------------------------------------------------\n"
-    content += "END_OF_PICKUP_LIST"
+   #content += "-　　　　-　　　　　-　　　　　-　　　　　-　　　　-\n"
+    content += "----------------------------------------------------\n"
+    content += "品质问题不满意无障碍退换，请联系丰巢小蜜 18998382701\n"
+    content += "　　　　　每一天，更安心的选择　FOODTRUST"
 
     return content
 
@@ -100,8 +103,9 @@ def update_pickup_book_during stime, etime
       json = '#{@rds.escape order.to_json}', text = '#{@rds.escape text}'
     ;"
 
+    order_time = Time.at(order['add_time']).strftime("%y%m%d-%H%M")
     page.store "id", "#{order['id']}"
-    page.store "time", "#{order['add_time']}"
+    page.store "time", "#{order_time}"
     page.store "line", line
     page.store "phone", order['user_phone']
     page.store "text", text
@@ -116,6 +120,6 @@ end
 
 orders = update_pickup_book_during stime, etime
 orders.each do |order|
-  fn = ".\\incoming\\" + order['time'] + '-' + order['id'] + "-order-" + order['line'] +  "-" + order['phone'] + ".txt"
+  fn = ".\\incoming\\" + order['time'] + "-order-" + order['line'] +  "-" + order['phone'] + ".txt"
   File.open(fn,"w:UTF-8") { |f| f.write order['text'] }
 end
