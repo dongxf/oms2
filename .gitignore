@@ -11,9 +11,7 @@ goods_exported/
 export/
 *.xlsx
 *.xls
-*.json
 *.sql
 */*.xlsx
 */*.xls
-*/*.json
 */*.sql

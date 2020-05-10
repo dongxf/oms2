@@ -11,11 +11,10 @@ load 'rds_api.rb'
 @parseErrorList = []
 @uidNullList = []
 @pidNullList = []
-
-@similarCodes={"0110262"=>"0110268","0110147"=>"0182203","0110005"=>"0110246","0110076"=>"0110385","1001036"=>"0000000","0110001-1"=>"0000000","110004"=>"0110013","9990007"=>"0000000","9990013"=>"0150057","9990008"=>"0000000","110147"=>"0182203","110144"=>"0110144","130075"=>"0000000","150103"=>"0150103","150091"=>"0150091","110076"=>"0110385","110146"=>"0110146","130079"=>"0000000","180013"=>"0180013","160001"=>"0160001","160009"=>"0000000","110079"=>"0110385","140023"=>"0140023","130077"=>"0000000","160003"=>"0160003","160011"=>"0160014","150047"=>"0150047","150077"=>"0150077","130082"=>"0000000","150017"=>"0000000","150057"=>"0000000","150063"=>"0150063","160005"=>"0160005","180014"=>"0180014","160013"=>"0160017","150039"=>"0150039","150065"=>"0150065","150079"=>"0150077","150095"=>"0150095","160017"=>"0160023","150001"=>"0150001","150007"=>"0150007","150015"=>"0150015","150021"=>"0150021","150013"=>"0150013","150019"=>"0150019","150075"=>"0150075","150081"=>"0150081","150061"=>"0000000","150067"=>"0000000","1101479"=>"0000000","150099"=>"0150099","1101478"=>"0110158","150055"=>"0150055","150107"=>"0150109","150109"=>"0150112","150027"=>"0000000","180011"=>"0180011","150073"=>"0150165","150053"=>"0150053","150011"=>"0150011","150105"=>"0150106","150093"=>"0150093","150101"=>"0150101","150009"=>"0150159","180003"=>"0180003","150043"=>"0150043","150051"=>"0150051","160019"=>"0160026","150069"=>"0000000","1150102"=>"0150102","160007"=>"0160008","150033"=>"0150033","150087"=>"0150087","1150104"=>"0150104","110005"=>"0110246","180086"=>"0182258","110262"=>"0110281","110282"=>"0182200"}
+@similarCodes = JSON.parse IO.readlines("similar-codes.json")[0] 
 
 def getPospalOrders conditions
-  print "get pospal orders #{conditions}\r"
+  puts "get pospal orders #{conditions}"
   orders = []
   inq = "select order_id, customer_id, date_time, raw_data from ogoods.pospal_orders #{conditions}"
   res = queryRds inq
@@ -28,7 +27,7 @@ def getPospalOrders conditions
       @parseErrorList += [r['order_id']]
     end
   end
-  print "done [#{orders.size}]\r"
+  puts "done [#{orders.size}]"
   return orders
 end
 
@@ -41,7 +40,7 @@ def createCommentsByOrder order
     sqls += createCommentsForItem order, item
   end
 
-  print "done [#{order["items"].size}]\r"
+  print "done [#{order["items"].size}]                                                                     \r"
   return sqls
 end
 
@@ -176,6 +175,6 @@ end
 sqls += setupTotalSales
 
 File.open("4-import-pospal-comments.sql","w:UTF-8") { |f| f.write sqls.join("\n") }
-File.open("3.1-parse-error-list.json","w:UTF-8") { |f| f.write @parseErrorList.to_json } if @parseErrorList.size > 0
-File.open("3.2-uid-null-list.json","w:UTF-8") { |f| f.write @uidNullList.to_json } if @uidNullList.size > 0
-File.open("3.3-pid-null-list.json","w:UTF-8") { |f| f.write @pidNullList.to_json } if @pidNullList.size > 0
+File.open("3.1-parse-error-list.json","w:UTF-8") { |f| f.write @parseErrorList.to_json } #if @parseErrorList.size > 0
+File.open("3.2-uid-null-list.json","w:UTF-8") { |f| f.write @uidNullList.to_json } #if @uidNullList.size > 0
+File.open("3.3-pid-null-list.json","w:UTF-8") { |f| f.write @pidNullList.to_json } #if @pidNullList.size > 0
