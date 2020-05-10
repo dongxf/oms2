@@ -54,6 +54,8 @@ def gen_pickup_text order
     content += "\n"
 
     content += "----------------------------------------------------\n"
+    content += "品质问题不满意无障碍退换，售后：18998382701\n"
+    content += "每一天，更安心的选择\n"
 
 =begin #standard line in pospal watcher
     content += "----------------------------------------------------\n"
