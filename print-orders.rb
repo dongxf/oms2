@@ -51,11 +51,10 @@ def gen_pickup_text order
         suk = item['cart_info']['productInfo']['attrInfo']['suk'] == '默认' ? '' : "##{item['cart_info']['productInfo']['attrInfo']['suk']}"
         content += "#{bold}#{qty} [　] #{item['cart_info']['productInfo']['store_name']}　#{suk}\n"
     end
-    content += "\n"
 
-    content += "----------------------------------------------------\n"
-    content += "品质问题不满意无障碍退换，售后：18998382701\n"
-    content += "每一天，更安心的选择\n"
+    content += "-　　　　-　　　　　-　　　　　-　　　　　-　　　　-\n"
+    content += "　　缺货商品原路退款，品质问题不满意无障碍退换\n"
+    content += "　　　　每一天，更安心的选择　FOODTRUST\n"
 
 =begin #standard line in pospal watcher
     content += "----------------------------------------------------\n"
