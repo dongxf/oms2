@@ -16,45 +16,106 @@ etime = ( ARGV[0] && ARGV[1] ) ? Time.parse("#{ARGV[0]} #{ARGV[1]}") : Time.now
 bhours = ARGV[2] ? ARGV[2].to_i : 24
 stime = etime - bhours*3600 + 1 #leave one second
 
-def someOrder
-  return {"id"=>1, "order_id"=>"wx158908210027090511", "uid"=>1, "real_name"=>"董学锋", "user_phone"=>"13600060044", "user_address"=>"广东省 广州市 番禺区 钟村街汉溪村汉溪路6号201", "cart_id"=>"[2,1]", "freight_price"=>0.0, "total_num"=>2, "total_price"=>0.4165e2, "total_postage"=>0.0, "pay_price"=>0.0, "pay_postage"=>0.12e2, "deduction_price"=>0.5365e2, "coupon_id"=>0, "coupon_price"=>0.0, "paid"=>1, "pay_time"=>1589082100, "pay_type"=>"yue", "add_time"=>1589082100, "status"=>0, "refund_status"=>0, "refund_reason_wap_img"=>nil, "refund_reason_wap_explain"=>nil, "refund_reason_time"=>nil, "refund_reason_wap"=>nil, "refund_reason"=>nil, "refund_price"=>0.0, "delivery_name"=>nil, "delivery_type"=>nil, "delivery_id"=>nil, "gain_integral"=>0.38e2, "use_integral"=>0.5365e4, "back_integral"=>nil, "mark"=>"", "is_del"=>0, "unique"=>"0dc397cb2ea6f90707bc72fcd57abc71", "remark"=>nil, "mer_id"=>0, "is_mer_check"=>0, "combination_id"=>0, "pink_id"=>0, "cost"=>0.3e2, "seckill_id"=>0, "bargain_id"=>0, "verify_code"=>"", "store_id"=>0, "shipping_type"=>1, "clerk_id"=>0, "is_channel"=>1, "is_remind"=>1, "is_system_del"=>0, "items"=>[{"oid"=>1, "cart_id"=>2, "product_id"=>2, "cart_info"=>"{\"id\":2,\"type\":\"product\",\"product_id\":2,\"product_attr_unique\":\"d9b33bbe\",\"cart_num\":1,\"combination_id\":0,\"seckill_id\":0,\"bargain_id\":0,\"productInfo\":{\"id\":2,\"image\":\"https:\\/\\/oss.foodtrust.cn\\/\\/e0792202004252022151244.png\",\"price\":\"19.00\",\"ot_price\":\"29.00\",\"vip_price\":\"0.00\",\"postage\":\"0.00\",\"give_integral\":\"29.00\",\"sales\":0,\"stock\":4000,\"store_name\":\"\\u6d4b\\u8bd5\\u5546\\u54c1\\u4e59-\\u591a\\u89c4\\u683c\",\"unit_name\":\"\\u4efd\",\"is_postage\":0,\"cost\":\"9.00\",\"is_sub\":0,\"temp_id\":2,\"attrInfo\":{\"product_id\":2,\"suk\":\"\\u8170\\u82b1\",\"stock\":1000,\"sales\":0,\"price\":\"39.00\",\"image\":\"https:\\/\\/oss.foodtrust.cn\\/\\/e0792202004252022151244.png\",\"unique\":\"d9b33bbe\",\"cost\":\"29.00\",\"bar_code\":\"646460-2\",\"ot_price\":\"49.00\",\"weight\":\"0.50\",\"volume\":\"0.01\",\"brokerage\":\"0.00\",\"brokerage_two\":\"0.00\",\"type\":0,\"quota\":0,\"quota_show\":0}},\"truePrice\":33.15,\"vip_truePrice\":5.85,\"trueStock\":1000,\"costPrice\":\"29.00\"}", "unique"=>"3c59dc048e8850243be8079a5c74d079"}, {"oid"=>1, "cart_id"=>1, "product_id"=>1, "cart_info"=>"{\"id\":1,\"type\":\"product\",\"product_id\":1,\"product_attr_unique\":\"d21a1d77\",\"cart_num\":1,\"combination_id\":0,\"seckill_id\":0,\"bargain_id\":0,\"productInfo\":{\"id\":1,\"image\":\"https:\\/\\/oss.foodtrust.cn\\/\\/7739c202004250337006643.jpg\",\"price\":\"9.99\",\"ot_price\":\"19.99\",\"vip_price\":\"0.00\",\"postage\":\"0.00\",\"give_integral\":\"9.00\",\"sales\":35,\"stock\":1000,\"store_name\":\"\\u65e7\\u7cfb\\u7edf\\u5931\\u6548\\u5546\\u54c1\\u8d2d\\u4e70\\u8bb0\\u5f55\\u8fc1\\u79fb\\u7528-\\u5e26\\u89c6\\u9891\",\"unit_name\":\"\\u76d2\",\"is_postage\":0,\"cost\":\"1.00\",\"is_sub\":0,\"temp_id\":1,\"attrInfo\":{\"product_id\":1,\"suk\":\"\\u9ed8\\u8ba4\",\"stock\":1000,\"sales\":0,\"price\":\"9.99\",\"image\":\"https:\\/\\/oss.foodtrust.cn\\/\\/7739c202004250337006643.jpg\",\"unique\":\"d21a1d77\",\"cost\":\"1.00\",\"bar_code\":\"0000000\",\"ot_price\":\"19.99\",\"weight\":\"1.00\",\"volume\":\"0.01\",\"brokerage\":\"0.00\",\"brokerage_two\":\"0.00\",\"type\":0,\"quota\":0,\"quota_show\":0}},\"truePrice\":8.5,\"vip_truePrice\":1.49,\"trueStock\":1000,\"costPrice\":\"1.00\"}", "unique"=>"6512bd43d9caa6e02c990b0a82652dca"}]}
+def gen_pickup_text order
+
+    #add header twice
+    #全角空格字符 (　) (_) (﹏)
+    content ="[#{order['line']}] 　　让健康和友善触手可及　　　　1 of ﹏\n"
+    content += "\n"
+    content += "#{order['order_id']}　#{Time.at order['add_time']}\n"
+    content += order['shipping_type'] == 1 ? "#{order['user_address']}\n" : "补 拍 或 自 提 订 单\n"
+    content += "#{order['real_name']}    #{order['user_phone']}\n"
+    content += order['mark'].to_s == '' ? "\n" : ":: #{order['mark']} ::\n"
+    content += "-　　　　-　　　　　-　　　　　-　　　　　-　　　　-\n"
+    
+    content += order['remark'].to_s == '' ? "\n" : ">> #{order['remark']} <<\n"
+    content += "#{order['order_id']}　#{Time.at order['add_time']} 2 of ﹏\n"
+    content += "#{order['user_address']}\n"
+    content += "#{order['real_name']}    #{order['user_phone']}\n"
+    content += "-----------------------------------------[OTIMES]\n"
+    
+    statusHash = { -1 => '已退款', -2 => '退货成功', 0 => '待发货', 1 => '待收货', 2=> '已收货', 3=> '待评价' }
+    refundHash = { 0 => '未退款', 1 => '申请退款中', 2 => '已退款' }
+    orderStatus = statusHash[order['status']]
+    refundStatus = refundHash[order['refund_status']]
+    content += order['status'] == 0 && order['refund_status'] == 0 ? "\n" : "警告：>>>>>>>>> #{orderStatus} #{refundStatus}\n"
+    content += " 数量     商品名及规格\n\n"
+
+    items = order['items']
+    items.each do |item|
+        bold = "  "
+        bold[1] = "*" if item['cart_info']['cart_num']>1
+        bold[0] = "*" if item['cart_info']['cart_num']>2
+        qty = bold + sprintf("%d",item['cart_info']['cart_num'])
+        content += "#{qty} [   ] #{item['cart_info']['productInfo']['store_name']}\n"
+    end
+    content += "\n"
+
+    #add footer
+    content += "-------------------------------------------------\n"
+    content += "END_OF_PICKUP_LIST"
+
+    return content
+
 end
 
-def get_crmeb_orders_during stime, etime
+#根据地址分配配送线路
+def allocate_line order
+  return "K" #TBD
+end
 
-  orders = []
-  res = queryRds "select * from crmeb.eb_store_order where add_time >= #{stime.to_i} and add_time <= #{etime.to_i};" #using unix_timestamp
-  res.each do |order|
+#数据库类型BigDecimal,在Hash中还是45.13的格式，但转为JSON字符串后它会被转为"0.4513e2"这样的字符串，等待用parseFloat来提取, 很讨厌，待解
+def update_pickup_book_during stime, etime
 
+  list = []
+  res = @rds.query "select * from crmeb.eb_store_order where add_time >= #{stime.to_i} and add_time <= #{etime.to_i};" #using unix_timestamp
+  res.each do |r|
+
+    page = {}
+
+    order = r
     #append cart itmes to records
     items = []
-    res2 = queryRds "select * from crmeb.eb_store_order_cart_info where oid = #{order['id']};"
-    res2.each { |r2| items += [r2] }
+    its = queryRds "select * from crmeb.eb_store_order_cart_info where oid = #{order['id']};"
+    its.each do |its| 
+      items += [its] 
+      #item中的cartinfo是用JSON String保存的，需要转换为正常对象
+      cart_info = items.last['cart_info']
+      items.last.store 'cart_info', JSON.parse(cart_info)
+    end
     order.store "items", items
 
-    #update orders information to fc_order_book with generating plain text
-    text = genOrderText order
+    #append line information to records
+    line = allocate_line order
+    order.store "line", "K"
 
-    queryRds "insert into crmeb.fc_order_book ( oid, uid, add_time, update_time, json, text) values (
+    #update orders information to fc_pickup_book with generating plain text
+    text = gen_pickup_text order
+
+    queryRds "insert into crmeb.fc_pickup_book ( oid, uid, add_time, update_time, json, text ) values (
         #{order['id']}, #{order['uid']}, #{order['add_time']}, unix_timestamp(#{Time.now.to_i}),
         '#{@rds.escape order.to_json}', '#{@rds.escape text}'
     ) on duplicate key update
       oid = #{order['id']}, uid = #{order['uid']}, add_time = #{order['add_time']}, update_time = unix_timestamp(#{Time.now.to_i}),
-      json = '#{@rds.escape text}', text= '#{@rds.escape text}'
+      json = '#{@rds.escape order.to_json}', text = '#{@rds.escape text}'
     ;"
 
-    orders += [order]
+    page.store "id", "#{order['id']}"
+    page.store "time", "#{order['add_time']}"
+    page.store "line", line
+    page.store "phone", order['user_phone']
+    page.store "text", text
+
+    list += [page]
 
   end
 
-  return orders
+  return list
 
 end
-#get_crmeb_orders_during stime, etime
 
-def genOrderText order
-  ap order
-  return 'hjsdf'
+orders = update_pickup_book_during stime, etime
+orders.each do |order|
+  fn = ".\\incoming\\" + order['time'] + '-' + order['id'] + "-order-" + order['line'] +  "-" + order['phone'] + ".txt"
+  File.open(fn,"w:UTF-8") { |f| f.write order['text'] }
 end
-
-p genOrderText someOrder
