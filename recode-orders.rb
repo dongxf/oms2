@@ -17,7 +17,7 @@ stime = etime - bhours*3600 + 1 #leave one second
 #为减少风险，只搜寻有pay_time，也就是已付过款的订单
 def get_uncoded_orders_during stime, etime
   orders = []
-  inq = "select id, pay_time, order_id, uid, cart_id, shipping_type  from crmeb.eb_store_order
+  inq = "select id, pay_time, order_id, uid, cart_id, shipping_type status, refund_status from crmeb.eb_store_order
      where add_time >= #{stime.to_i} and add_time <= #{etime.to_i} and pay_time is not NULL and order_id not like 'FC%';"
   res = @rds.query inq
   res.each { |order| orders += [order] }
@@ -25,8 +25,8 @@ def get_uncoded_orders_during stime, etime
 end
 
 def recode_able? order
-  #只有付过款、且未重编码的订单才可以被编码
-  return order['pay_time'] && order['order_id'][0..2] != 'FC4'
+  #只有付过款、未发货、未退款、且未重编码的订单才可以被编码
+  return order['pay_time'] && order['status'] ==0 && order['order_id'][0..2] != 'FC4' && order['status'] == 0 && order['refund_status'] != 2
 end
 
 def pickup_able? order
